@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 LogiMentor
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  repo-hygiene:
+    name: Repository hygiene checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run repository hygiene checks
+        run: python3 scripts/check_repo_hygiene.py --all-refs
+
+  ghdl-regression:
+    name: GHDL self-checking testbenches
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install GHDL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ghdl
+          ghdl --version
+
+      - name: Install Python model dependencies
+        run: python3 -m pip install -r requirements-dev.txt
+
+      - name: Run Python fixed-point model tests
+        run: python3 scripts/run_python_model_tests.py
+
+      - name: Run VHDL self-checking testbenches
+        run: python3 scripts/run_ghdl_tests.py
+
+      - name: Verify generated outputs stayed under build
+        run: python3 scripts/check_repo_hygiene.py --no-history

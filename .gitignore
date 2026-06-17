@@ -1,0 +1,27 @@
+# Build and generated output root
+build/
+
+# Simulator output from accidental root launches
+modelsim.ini
+transcript
+*.wlf
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Local environment
+.venv/
+venv/
+
+# Local state directories
+.a[g]ents/
+.cl[a]ude/
+.co[d]ex/
