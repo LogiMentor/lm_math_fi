@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 LogiMentor
+
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+
+repos:
+  - repo: local
+    hooks:
+      - id: repository-hygiene
+        name: repository hygiene
+        entry: python scripts/check_repo_hygiene.py --no-history
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+      - id: repository-hygiene-pre-push
+        name: repository hygiene pre-push
+        entry: python scripts/check_repo_hygiene.py
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+      - id: repository-hygiene-message
+        name: repository hygiene commit message
+        entry: python scripts/check_repo_hygiene.py --message-file
+        language: system
+        stages: [commit-msg]
