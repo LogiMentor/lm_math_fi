@@ -13,8 +13,12 @@ Each vector records a replayable operation plus the model's exact outputs
 (bits, raw_signed, raw_unsigned, hex, float). raw_signed / raw_unsigned are
 emitted as decimal strings so values wider than 53 bits survive JSON.
 
-Provenance (fxpmath version and the repository git commit) is embedded in the
-output for downstream auditing.
+The output is a pure function of this generator and the installed fxpmath version:
+it embeds no git commit, timestamp, or other volatile field, so it is byte-for-byte
+reproducible (and safe to sha256-pin downstream). The only provenance recorded is
+the deterministic top-level `fxpmath_version` (asserted to equal 0.4.10) alongside
+`count` and the vector array. The file is written and `--check`ed as raw UTF-8
+bytes with LF line endings so no platform newline translation can occur.
 """
 
 from __future__ import annotations
@@ -669,17 +673,25 @@ def main() -> int:
             print(f"  - {op} [{note}]: {exc}: {msg}")
 
     serialized = json.dumps(doc, indent=1, ensure_ascii=False) + "\n"
+    serialized_bytes = serialized.encode("utf-8")
 
     if args.check:
         if not OUT_PATH.exists():
             print(f"error: {OUT_PATH.relative_to(ROOT)} is missing; run the generator", file=sys.stderr)
             return 1
-        # Byte-for-byte comparison: NO field is masked or excluded.
-        committed_bytes = OUT_PATH.read_text(encoding="utf-8")
-        if committed_bytes != serialized:
+        # Compare RAW BYTES, not text: text mode would normalize CRLF/CR to LF and
+        # could pass a line-ending-mutated file. Downstream pins a sha256 of the raw
+        # bytes (which does not normalize newlines), so EOL drift must fail here.
+        on_disk = OUT_PATH.read_bytes()
+        if on_disk != serialized_bytes:
             print(
                 "error: committed js/golden_vectors.json does not match the current generator "
                 "byte-for-byte; regenerate with 'python scripts/gen_js_golden_vectors.py'",
+                file=sys.stderr,
+            )
+            print(
+                f"  on-disk {len(on_disk)} bytes vs generated {len(serialized_bytes)} bytes"
+                f" (CR on disk: {on_disk.count(chr(13).encode())}, generated: 0)",
                 file=sys.stderr,
             )
             return 1
@@ -687,7 +699,9 @@ def main() -> int:
         return 0
 
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OUT_PATH.write_text(serialized, encoding="utf-8", newline="\n")
+    # Write RAW BYTES so there is no platform newline translation; the file is pure
+    # UTF-8 with LF line endings and a single trailing newline on every platform.
+    OUT_PATH.write_bytes(serialized_bytes)
 
     print(f"wrote {len(entries)} vectors to {OUT_PATH.relative_to(ROOT)}")
     print(f"fxpmath=={fxp_version}")
