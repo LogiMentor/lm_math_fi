@@ -474,6 +474,66 @@ def build_vectors():
     b.add_error("fi", ctor_fi(vstr("0b10000"), 4, 0, False), note="review: fi 0b10000 (4,0,u) raises")
     b.add("fi", ctor_fi(vstr("0b1.1"), 4, 2, False), note="review: fi 0b1.1 (4,2,u) == 1.5")
 
+    # ---- 7b. non-canonical-but-valid (and invalid) string literals -----------
+
+    # Uppercase radix prefixes are NOT based literals (detection is case-sensitive),
+    # so they reach the base-10 parser and are rejected exactly as Python int()/
+    # float() reject them. Octal prefixes too. All expected-error.
+    for signed in (True, False):
+        for lit in ["0XF", "0Xf", "0B1", "0B10", "0XFF", "0O17", "0o17"]:
+            b.add_error("fi", ctor_fi(vstr(lit), 8, 0, signed),
+                        note=f"uppercase/oct prefix {lit} ->(8,0) signed={signed}")
+        # fractional format takes the float base-10 path; still rejected
+        for lit in ["0X1", "0B1"]:
+            b.add_error("fi", ctor_fi(vstr(lit), 8, 4, signed),
+                        note=f"uppercase prefix frac {lit} ->(8,4) signed={signed}")
+
+    # Underscore digit separators (Python int(x, base) consumes them; the
+    # underscore counts toward length, so 0b1_0 sign-extends to width 4 -> -6).
+    b.add("fi", ctor_fi(vstr("0b1_0"), 4, 0, True), note="underscore 0b1_0 (4,0,s) == -6")
+    b.add("fi", ctor_fi(vstr("0b1_0"), 4, 0, False), note="underscore 0b1_0 (4,0,u) == 2")
+    b.add("fi", ctor_fi(vstr("0x1_F"), 8, 0, True), note="underscore 0x1_F (8,0,s) == 31")
+    b.add("fi", ctor_fi(vstr("0x1_F"), 8, 0, False), note="underscore 0x1_F (8,0,u) == 31")
+    underscore_literals = [
+        "0b1_0", "0b10_1", "0b1_0_1", "0b1_011", "0x1_F", "0xF_F", "0xA_B", "0x1_a",
+        "0b1_0.0_1", "0x1_F.8",  # underscore + point: per fxpmath length / hex rules
+        "0b_10", "0b10_", "0b1__0", "0x_1F", "0x1F_", "0x1__F",  # invalid underscores
+    ]
+    for signed in (True, False):
+        for lit in underscore_literals:
+            b.add_auto("fi", ctor_fi(vstr(lit), 8, 0, signed),
+                       note=f"underscore {lit} ->(8,0) signed={signed}")
+            b.add_auto("fi", ctor_fi(vstr(lit), 8, 4, signed),
+                       note=f"underscore {lit} ->(8,4) signed={signed}")
+
+    # Hex literals with a binary point: fxpmath rejects all of them (int(hexbody,16)
+    # chokes on '.'), at any binpnt. No valid case exists; recorded as it behaves.
+    for signed in (True, False):
+        for lit in ["0x1.8", "0xF.8", "0x1F.8", "0x0.4", "0xA.C", "0x.8"]:
+            b.add_auto("fi", ctor_fi(vstr(lit), 8, 4, signed),
+                       note=f"hex point {lit} ->(8,4) signed={signed}")
+            b.add_auto("fi", ctor_fi(vstr(lit), 8, 0, signed),
+                       note=f"hex point {lit} ->(8,0) signed={signed}")
+
+    # High-width out-of-domain for add, sub, mult_add (only mul and direct-int were
+    # pinned before). Wide operands whose result leaves the 64-bit range, narrowed to
+    # a sub-64-bit format, raise under wrap; saturate clips instead.
+    a70 = ctor_raw(1 << 68, 70, 0, True)
+    b.add_error("add", {"left": a70, "right": a70, "fmt": fmt_spec(32, 0, True), "overflow": "wrap"},
+                note="out-of-domain add narrow to 32-bit wrap")
+    b.add_auto("add", {"left": a70, "right": a70, "fmt": fmt_spec(32, 0, True), "overflow": "saturate"},
+               note="out-of-domain add narrow to 32-bit saturate (clips)")
+    b.add_error("sub", {"left": a70, "right": ctor_raw(-(1 << 68), 70, 0, True),
+                        "fmt": fmt_spec(32, 0, True), "overflow": "wrap"},
+                note="out-of-domain sub narrow to 32-bit wrap")
+    ma = ctor_raw(1 << 40, 60, 0, True)
+    b.add_error("mult_add", {"left": ma, "right": ma, "addend": ctor_raw(7, 80, 0, True),
+                             "fmt": fmt_spec(32, 0, True), "overflow": "wrap"},
+                note="out-of-domain mult_add narrow to 32-bit wrap")
+    b.add_auto("mult_add", {"left": ma, "right": ma, "addend": ctor_raw(7, 80, 0, True),
+                            "fmt": fmt_spec(32, 0, True), "overflow": "saturate"},
+               note="out-of-domain mult_add narrow to 32-bit saturate (clips)")
+
     # ---- 8. every case already asserted in test_lm_math_fi_model.py ---------
     add_unittest_cases(b)
 
