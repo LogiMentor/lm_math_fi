@@ -3,9 +3,10 @@
 
 // Node built-in test runner (no third-party deps). Replays the JSON golden
 // vectors emitted by scripts/gen_js_golden_vectors.py and asserts the JS library
-// reproduces every entry bit-for-bit.
+// reproduces every entry bit-for-bit (including the cases where fxpmath raises,
+// which are recorded as expected-error vectors).
 //
-// Run with:  node --test js/test/
+// Run with:  node --test js/test/golden.test.mjs
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -113,6 +114,21 @@ test("golden vectors reproduce the Python/fxpmath model bit-for-bit", () => {
   let checked = 0;
   const failures = [];
   for (const entry of doc.vectors) {
+    const e = entry.expect;
+    // Expected-error vectors: fxpmath raised, so the JS port must throw too.
+    if (e.error) {
+      let threw = false;
+      try {
+        runOp(entry);
+      } catch {
+        threw = true;
+      }
+      if (!threw) {
+        failures.push(`#${entry.id} (${entry.op}, ${entry.note}): expected to throw (${e.error}) but returned a value`);
+      }
+      checked++;
+      continue;
+    }
     let value;
     try {
       value = runOp(entry);
@@ -120,7 +136,6 @@ test("golden vectors reproduce the Python/fxpmath model bit-for-bit", () => {
       failures.push(`#${entry.id} (${entry.op}, ${entry.note}): threw ${err.message}`);
       continue;
     }
-    const e = entry.expect;
     const mismatches = [];
     if (value.bits !== e.bits) mismatches.push(`bits ${value.bits} != ${e.bits}`);
     if (value.raw_signed !== BigInt(e.raw_signed)) mismatches.push(`raw_signed ${value.raw_signed} != ${e.raw_signed}`);

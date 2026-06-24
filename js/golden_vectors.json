@@ -3,7 +3,7 @@
  "provenance": {
   "fxpmath_version": "0.4.10",
   "model": "lm_math_fi_model",
-  "source_git_commit": "54edff48e47d6c790c58da954fa5e244e42ad242",
+  "source_git_commit": "309bb9f762511ac6b27762b7d0d9fc796654222d",
   "rounding_keys": [
    "bit_trunc",
    "ceil",
@@ -31,7 +31,7 @@
   ]
  },
  "rtl_overlap_checked": true,
- "count": 5825,
+ "count": 6227,
  "vectors": [
   {
    "id": 1,
@@ -198144,6 +198144,41 @@
   },
   {
    "id": 5784,
+   "op": "mul",
+   "note": "hw mul narrow round",
+   "spec": {
+    "left": {
+     "ctor": "raw",
+     "value": "1125899906854969",
+     "fmt": [
+      60,
+      0,
+      true
+     ]
+    },
+    "right": {
+     "ctor": "raw",
+     "value": "1125899906842691",
+     "fmt": [
+      60,
+      0,
+      true
+     ]
+    },
+    "fmt": [
+     32,
+     0,
+     true
+    ],
+    "rounding": "round",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "OverflowError"
+   }
+  },
+  {
+   "id": 5785,
    "op": "add",
    "note": "hw add",
    "spec": {
@@ -198182,7 +198217,7 @@
    }
   },
   {
-   "id": 5785,
+   "id": 5786,
    "op": "sub",
    "note": "hw sub",
    "spec": {
@@ -198221,7 +198256,7 @@
    }
   },
   {
-   "id": 5786,
+   "id": 5787,
    "op": "mul",
    "note": "hw mul full",
    "spec": {
@@ -198260,7 +198295,42 @@
    }
   },
   {
-   "id": 5787,
+   "id": 5788,
+   "op": "mul",
+   "note": "hw mul narrow round",
+   "spec": {
+    "left": {
+     "ctor": "raw",
+     "value": "4611686018427387909",
+     "fmt": [
+      64,
+      0,
+      true
+     ]
+    },
+    "right": {
+     "ctor": "raw",
+     "value": "-4611686018427387895",
+     "fmt": [
+      64,
+      0,
+      true
+     ]
+    },
+    "fmt": [
+     32,
+     0,
+     true
+    ],
+    "rounding": "round",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "OverflowError"
+   }
+  },
+  {
+   "id": 5789,
    "op": "add",
    "note": "hw add",
    "spec": {
@@ -198299,7 +198369,7 @@
    }
   },
   {
-   "id": 5788,
+   "id": 5790,
    "op": "sub",
    "note": "hw sub",
    "spec": {
@@ -198338,7 +198408,7 @@
    }
   },
   {
-   "id": 5789,
+   "id": 5791,
    "op": "mul",
    "note": "hw mul full",
    "spec": {
@@ -198377,7 +198447,7 @@
    }
   },
   {
-   "id": 5790,
+   "id": 5792,
    "op": "mul",
    "note": "hw mul narrow round",
    "spec": {
@@ -198416,7 +198486,7 @@
    }
   },
   {
-   "id": 5791,
+   "id": 5793,
    "op": "add",
    "note": "hw add",
    "spec": {
@@ -198455,7 +198525,7 @@
    }
   },
   {
-   "id": 5792,
+   "id": 5794,
    "op": "sub",
    "note": "hw sub",
    "spec": {
@@ -198494,7 +198564,7 @@
    }
   },
   {
-   "id": 5793,
+   "id": 5795,
    "op": "mul",
    "note": "hw mul full",
    "spec": {
@@ -198533,7 +198603,42 @@
    }
   },
   {
-   "id": 5794,
+   "id": 5796,
+   "op": "mul",
+   "note": "hw mul narrow round",
+   "spec": {
+    "left": {
+     "ctor": "raw",
+     "value": "549755813889",
+     "fmt": [
+      40,
+      0,
+      false
+     ]
+    },
+    "right": {
+     "ctor": "raw",
+     "value": "549755813886",
+     "fmt": [
+      40,
+      0,
+      false
+     ]
+    },
+    "fmt": [
+     32,
+     0,
+     false
+    ],
+    "rounding": "round",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "OverflowError"
+   }
+  },
+  {
+   "id": 5797,
    "op": "add",
    "note": "hw add",
    "spec": {
@@ -198572,7 +198677,7 @@
    }
   },
   {
-   "id": 5795,
+   "id": 5798,
    "op": "sub",
    "note": "hw sub",
    "spec": {
@@ -198611,106 +198716,572 @@
    }
   },
   {
-   "id": 5796,
-   "op": "fi",
-   "note": "fi -0.0",
-   "spec": {
-    "ctor": "fi",
-    "value": {
-     "t": "float",
-     "v": -0.0
-    },
-    "fmt": [
-     8,
-     4,
-     true
-    ],
-    "rounding": "trunc_bits",
-    "overflow": "wrap"
-   },
-   "expect": {
-    "bits": "00000000",
-    "raw_signed": "0",
-    "raw_unsigned": "0",
-    "hex": "0x00",
-    "float": 0.0
-   }
-  },
-  {
-   "id": 5797,
-   "op": "fi",
-   "note": "fi 0.0",
-   "spec": {
-    "ctor": "fi",
-    "value": {
-     "t": "float",
-     "v": 0.0
-    },
-    "fmt": [
-     8,
-     4,
-     true
-    ],
-    "rounding": "trunc_bits",
-    "overflow": "wrap"
-   },
-   "expect": {
-    "bits": "00000000",
-    "raw_signed": "0",
-    "raw_unsigned": "0",
-    "hex": "0x00",
-    "float": 0.0
-   }
-  },
-  {
-   "id": 5798,
-   "op": "raw",
-   "note": "raw 0",
-   "spec": {
-    "ctor": "raw",
-    "value": "0",
-    "fmt": [
-     8,
-     4,
-     true
-    ]
-   },
-   "expect": {
-    "bits": "00000000",
-    "raw_signed": "0",
-    "raw_unsigned": "0",
-    "hex": "0x00",
-    "float": 0.0
-   }
-  },
-  {
    "id": 5799,
-   "op": "fi",
-   "note": "fi -0.0",
+   "op": "mul",
+   "note": "out-of-domain mul narrow to 32-bit wrap",
    "spec": {
-    "ctor": "fi",
-    "value": {
-     "t": "float",
-     "v": -0.0
+    "left": {
+     "ctor": "raw",
+     "value": "576460752303423487",
+     "fmt": [
+      60,
+      0,
+      true
+     ]
+    },
+    "right": {
+     "ctor": "raw",
+     "value": "576460752303423487",
+     "fmt": [
+      60,
+      0,
+      true
+     ]
     },
     "fmt": [
-     8,
-     4,
-     false
+     32,
+     0,
+     true
     ],
     "rounding": "trunc_bits",
     "overflow": "wrap"
    },
    "expect": {
-    "bits": "00000000",
-    "raw_signed": "0",
-    "raw_unsigned": "0",
-    "hex": "0x00",
-    "float": 0.0
+    "error": "OverflowError"
    }
   },
   {
    "id": 5800,
+   "op": "mul",
+   "note": "narrow to 32-bit saturate (clips, no raise)",
+   "spec": {
+    "left": {
+     "ctor": "raw",
+     "value": "576460752303423487",
+     "fmt": [
+      60,
+      0,
+      true
+     ]
+    },
+    "right": {
+     "ctor": "raw",
+     "value": "576460752303423487",
+     "fmt": [
+      60,
+      0,
+      true
+     ]
+    },
+    "fmt": [
+     32,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "saturate"
+   },
+   "expect": {
+    "bits": "01111111111111111111111111111111",
+    "raw_signed": "2147483647",
+    "raw_unsigned": "2147483647",
+    "hex": "0x7FFFFFFF",
+    "float": 2147483647.0
+   }
+  },
+  {
+   "id": 5801,
+   "op": "mul",
+   "note": "out-of-domain mul narrow to 32-bit wrap",
+   "spec": {
+    "left": {
+     "ctor": "raw",
+     "value": "4611686018427387904",
+     "fmt": [
+      64,
+      0,
+      true
+     ]
+    },
+    "right": {
+     "ctor": "raw",
+     "value": "4611686018427387904",
+     "fmt": [
+      64,
+      0,
+      true
+     ]
+    },
+    "fmt": [
+     32,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "OverflowError"
+   }
+  },
+  {
+   "id": 5802,
+   "op": "mul",
+   "note": "narrow to 32-bit saturate (clips, no raise)",
+   "spec": {
+    "left": {
+     "ctor": "raw",
+     "value": "4611686018427387904",
+     "fmt": [
+      64,
+      0,
+      true
+     ]
+    },
+    "right": {
+     "ctor": "raw",
+     "value": "4611686018427387904",
+     "fmt": [
+      64,
+      0,
+      true
+     ]
+    },
+    "fmt": [
+     32,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "saturate"
+   },
+   "expect": {
+    "bits": "01111111111111111111111111111111",
+    "raw_signed": "2147483647",
+    "raw_unsigned": "2147483647",
+    "hex": "0x7FFFFFFF",
+    "float": 2147483647.0
+   }
+  },
+  {
+   "id": 5803,
+   "op": "mul",
+   "note": "out-of-domain mul narrow to 32-bit wrap",
+   "spec": {
+    "left": {
+     "ctor": "raw",
+     "value": "549755813888",
+     "fmt": [
+      40,
+      0,
+      false
+     ]
+    },
+    "right": {
+     "ctor": "raw",
+     "value": "549755813888",
+     "fmt": [
+      40,
+      0,
+      false
+     ]
+    },
+    "fmt": [
+     32,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "OverflowError"
+   }
+  },
+  {
+   "id": 5804,
+   "op": "mul",
+   "note": "narrow to 32-bit saturate (clips, no raise)",
+   "spec": {
+    "left": {
+     "ctor": "raw",
+     "value": "549755813888",
+     "fmt": [
+      40,
+      0,
+      false
+     ]
+    },
+    "right": {
+     "ctor": "raw",
+     "value": "549755813888",
+     "fmt": [
+      40,
+      0,
+      false
+     ]
+    },
+    "fmt": [
+     32,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "saturate"
+   },
+   "expect": {
+    "bits": "11111111111111111111111111111111",
+    "raw_signed": "4294967295",
+    "raw_unsigned": "4294967295",
+    "hex": "0xFFFFFFFF",
+    "float": 4294967295.0
+   }
+  },
+  {
+   "id": 5805,
+   "op": "fi",
+   "note": "fi int 2**64 ->32 wrap signed=True",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "int",
+     "v": "18446744073709551616"
+    },
+    "fmt": [
+     32,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "OverflowError"
+   }
+  },
+  {
+   "id": 5806,
+   "op": "fi",
+   "note": "fi int -(2**63)-1 ->32 wrap signed=True",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "int",
+     "v": "-9223372036854775809"
+    },
+    "fmt": [
+     32,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "OverflowError"
+   }
+  },
+  {
+   "id": 5807,
+   "op": "fi",
+   "note": "fi int 2**64 ->64 wrap (width>=64, no raise) signed=True",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "int",
+     "v": "18446744073709551616"
+    },
+    "fmt": [
+     64,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0000000000000000000000000000000000000000000000000000000000000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x0000000000000000",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5808,
+   "op": "fi",
+   "note": "fi int 2**64 ->32 saturate (clips) signed=True",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "int",
+     "v": "18446744073709551616"
+    },
+    "fmt": [
+     32,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "saturate"
+   },
+   "expect": {
+    "bits": "01111111111111111111111111111111",
+    "raw_signed": "2147483647",
+    "raw_unsigned": "2147483647",
+    "hex": "0x7FFFFFFF",
+    "float": 2147483647.0
+   }
+  },
+  {
+   "id": 5809,
+   "op": "fi",
+   "note": "fi int 2**64 ->32 wrap signed=False",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "int",
+     "v": "18446744073709551616"
+    },
+    "fmt": [
+     32,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "OverflowError"
+   }
+  },
+  {
+   "id": 5810,
+   "op": "fi",
+   "note": "fi int -(2**63)-1 ->32 wrap signed=False",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "int",
+     "v": "-9223372036854775809"
+    },
+    "fmt": [
+     32,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "OverflowError"
+   }
+  },
+  {
+   "id": 5811,
+   "op": "fi",
+   "note": "fi int 2**64 ->64 wrap (width>=64, no raise) signed=False",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "int",
+     "v": "18446744073709551616"
+    },
+    "fmt": [
+     64,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0000000000000000000000000000000000000000000000000000000000000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x0000000000000000",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5812,
+   "op": "fi",
+   "note": "fi int 2**64 ->32 saturate (clips) signed=False",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "int",
+     "v": "18446744073709551616"
+    },
+    "fmt": [
+     32,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "saturate"
+   },
+   "expect": {
+    "bits": "11111111111111111111111111111111",
+    "raw_signed": "4294967295",
+    "raw_unsigned": "4294967295",
+    "hex": "0xFFFFFFFF",
+    "float": 4294967295.0
+   }
+  },
+  {
+   "id": 5813,
+   "op": "fi",
+   "note": "fi int (2**60)+1 ->(32,4) wrap (pre-shift in range) signed=True",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "int",
+     "v": "1152921504606846977"
+    },
+    "fmt": [
+     32,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000000000000000000000010000",
+    "raw_signed": "16",
+    "raw_unsigned": "16",
+    "hex": "0x00000010",
+    "float": 1.0
+   }
+  },
+  {
+   "id": 5814,
+   "op": "fi",
+   "note": "fi int (2**60)+1 ->(32,4) wrap (pre-shift in range) signed=False",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "int",
+     "v": "1152921504606846977"
+    },
+    "fmt": [
+     32,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000000000000000000000010000",
+    "raw_signed": "16",
+    "raw_unsigned": "16",
+    "hex": "0x00000010",
+    "float": 1.0
+   }
+  },
+  {
+   "id": 5815,
+   "op": "fi",
+   "note": "fi -0.0",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "float",
+     "v": -0.0
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5816,
+   "op": "fi",
+   "note": "fi 0.0",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "float",
+     "v": 0.0
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5817,
+   "op": "raw",
+   "note": "raw 0",
+   "spec": {
+    "ctor": "raw",
+    "value": "0",
+    "fmt": [
+     8,
+     4,
+     true
+    ]
+   },
+   "expect": {
+    "bits": "00000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5818,
+   "op": "fi",
+   "note": "fi -0.0",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "float",
+     "v": -0.0
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5819,
    "op": "fi",
    "note": "fi 0.0",
    "spec": {
@@ -198736,7 +199307,7 @@
    }
   },
   {
-   "id": 5801,
+   "id": 5820,
    "op": "raw",
    "note": "raw 0",
    "spec": {
@@ -198757,7 +199328,7 @@
    }
   },
   {
-   "id": 5802,
+   "id": 5821,
    "op": "quantize",
    "note": "quantize -0.0",
    "spec": {
@@ -198791,7 +199362,9809 @@
    }
   },
   {
-   "id": 5803,
+   "id": 5822,
+   "op": "fi",
+   "note": "str bin 0b0 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x0",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5823,
+   "op": "fi",
+   "note": "str bin 0b1 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1111",
+    "raw_signed": "-1",
+    "raw_unsigned": "15",
+    "hex": "0xF",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 5824,
+   "op": "fi",
+   "note": "str bin 0b10 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b10"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1110",
+    "raw_signed": "-2",
+    "raw_unsigned": "14",
+    "hex": "0xE",
+    "float": -2.0
+   }
+  },
+  {
+   "id": 5825,
+   "op": "fi",
+   "note": "str bin 0b11 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b11"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1111",
+    "raw_signed": "-1",
+    "raw_unsigned": "15",
+    "hex": "0xF",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 5826,
+   "op": "fi",
+   "note": "str bin 0b101 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b101"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1101",
+    "raw_signed": "-3",
+    "raw_unsigned": "13",
+    "hex": "0xD",
+    "float": -3.0
+   }
+  },
+  {
+   "id": 5827,
+   "op": "fi",
+   "note": "str bin 0b1011 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1011"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1011",
+    "raw_signed": "-5",
+    "raw_unsigned": "11",
+    "hex": "0xB",
+    "float": -5.0
+   }
+  },
+  {
+   "id": 5828,
+   "op": "fi",
+   "note": "str bin 0b0101 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0101"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0101",
+    "raw_signed": "5",
+    "raw_unsigned": "5",
+    "hex": "0x5",
+    "float": 5.0
+   }
+  },
+  {
+   "id": 5829,
+   "op": "fi",
+   "note": "str bin 0b1.1 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.1"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1111",
+    "raw_signed": "-1",
+    "raw_unsigned": "15",
+    "hex": "0xF",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 5830,
+   "op": "fi",
+   "note": "str bin 0b0.1 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0.1"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x1",
+    "float": 1.0
+   }
+  },
+  {
+   "id": 5831,
+   "op": "fi",
+   "note": "str bin 0b1.0 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.0"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1110",
+    "raw_signed": "-2",
+    "raw_unsigned": "14",
+    "hex": "0xE",
+    "float": -2.0
+   }
+  },
+  {
+   "id": 5832,
+   "op": "fi",
+   "note": "str bin 0b11.01 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b11.01"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1101",
+    "raw_signed": "-3",
+    "raw_unsigned": "13",
+    "hex": "0xD",
+    "float": -3.0
+   }
+  },
+  {
+   "id": 5833,
+   "op": "fi",
+   "note": "str bin 0b1.11 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.11"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1111",
+    "raw_signed": "-1",
+    "raw_unsigned": "15",
+    "hex": "0xF",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 5834,
+   "op": "fi",
+   "note": "str bin 0b0.11 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0.11"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0011",
+    "raw_signed": "3",
+    "raw_unsigned": "3",
+    "hex": "0x3",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 5835,
+   "op": "fi",
+   "note": "str bin 0b10000 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b10000"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5836,
+   "op": "fi",
+   "note": "str bin 0b111111 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b111111"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5837,
+   "op": "fi",
+   "note": "str bin 0b111.11 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b111.11"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5838,
+   "op": "fi",
+   "note": "str hex 0x0 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x0"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x0",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5839,
+   "op": "fi",
+   "note": "str hex 0x1 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x1",
+    "float": 1.0
+   }
+  },
+  {
+   "id": 5840,
+   "op": "fi",
+   "note": "str hex 0x7 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x7"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0111",
+    "raw_signed": "7",
+    "raw_unsigned": "7",
+    "hex": "0x7",
+    "float": 7.0
+   }
+  },
+  {
+   "id": 5841,
+   "op": "fi",
+   "note": "str hex 0x8 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x8"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1000",
+    "raw_signed": "-8",
+    "raw_unsigned": "8",
+    "hex": "0x8",
+    "float": -8.0
+   }
+  },
+  {
+   "id": 5842,
+   "op": "fi",
+   "note": "str hex 0xA fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xA"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1010",
+    "raw_signed": "-6",
+    "raw_unsigned": "10",
+    "hex": "0xA",
+    "float": -6.0
+   }
+  },
+  {
+   "id": 5843,
+   "op": "fi",
+   "note": "str hex 0xF fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xF"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1111",
+    "raw_signed": "-1",
+    "raw_unsigned": "15",
+    "hex": "0xF",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 5844,
+   "op": "fi",
+   "note": "str hex 0x10 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x10"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5845,
+   "op": "fi",
+   "note": "str hex 0x1F fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1F"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5846,
+   "op": "fi",
+   "note": "str hex 0xFF fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xFF"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5847,
+   "op": "fi",
+   "note": "str hex 0x6 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x6"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0110",
+    "raw_signed": "6",
+    "raw_unsigned": "6",
+    "hex": "0x6",
+    "float": 6.0
+   }
+  },
+  {
+   "id": 5848,
+   "op": "fi",
+   "note": "str hex 0xC fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xC"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1100",
+    "raw_signed": "-4",
+    "raw_unsigned": "12",
+    "hex": "0xC",
+    "float": -4.0
+   }
+  },
+  {
+   "id": 5849,
+   "op": "fi",
+   "note": "str hex 0x1A fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1A"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5850,
+   "op": "fi",
+   "note": "str hex 0x7F fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x7F"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5851,
+   "op": "fi",
+   "note": "str dec 1.5 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "1.5"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x1",
+    "float": 1.0
+   }
+  },
+  {
+   "id": 5852,
+   "op": "fi",
+   "note": "str dec -2.25 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-2.25"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1101",
+    "raw_signed": "-3",
+    "raw_unsigned": "13",
+    "hex": "0xD",
+    "float": -3.0
+   }
+  },
+  {
+   "id": 5853,
+   "op": "fi",
+   "note": "str dec 0.1 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0.1"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x0",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5854,
+   "op": "fi",
+   "note": "str dec -0.1 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-0.1"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1111",
+    "raw_signed": "-1",
+    "raw_unsigned": "15",
+    "hex": "0xF",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 5855,
+   "op": "fi",
+   "note": "str dec 3 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "3"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0011",
+    "raw_signed": "3",
+    "raw_unsigned": "3",
+    "hex": "0x3",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 5856,
+   "op": "fi",
+   "note": "str dec -5 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-5"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1011",
+    "raw_signed": "-5",
+    "raw_unsigned": "11",
+    "hex": "0xB",
+    "float": -5.0
+   }
+  },
+  {
+   "id": 5857,
+   "op": "fi",
+   "note": "str dec 0.0 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0.0"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x0",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5858,
+   "op": "fi",
+   "note": "str dec -0.0 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-0.0"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x0",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5859,
+   "op": "fi",
+   "note": "str dec 7 fmt=(4, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "7"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0111",
+    "raw_signed": "7",
+    "raw_unsigned": "7",
+    "hex": "0x7",
+    "float": 7.0
+   }
+  },
+  {
+   "id": 5860,
+   "op": "fi",
+   "note": "str bin 0b0 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x0",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5861,
+   "op": "fi",
+   "note": "str bin 0b1 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x1",
+    "float": 1.0
+   }
+  },
+  {
+   "id": 5862,
+   "op": "fi",
+   "note": "str bin 0b10 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b10"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0010",
+    "raw_signed": "2",
+    "raw_unsigned": "2",
+    "hex": "0x2",
+    "float": 2.0
+   }
+  },
+  {
+   "id": 5863,
+   "op": "fi",
+   "note": "str bin 0b11 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b11"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0011",
+    "raw_signed": "3",
+    "raw_unsigned": "3",
+    "hex": "0x3",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 5864,
+   "op": "fi",
+   "note": "str bin 0b101 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b101"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0101",
+    "raw_signed": "5",
+    "raw_unsigned": "5",
+    "hex": "0x5",
+    "float": 5.0
+   }
+  },
+  {
+   "id": 5865,
+   "op": "fi",
+   "note": "str bin 0b1011 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1011"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1011",
+    "raw_signed": "11",
+    "raw_unsigned": "11",
+    "hex": "0xB",
+    "float": 11.0
+   }
+  },
+  {
+   "id": 5866,
+   "op": "fi",
+   "note": "str bin 0b0101 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0101"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0101",
+    "raw_signed": "5",
+    "raw_unsigned": "5",
+    "hex": "0x5",
+    "float": 5.0
+   }
+  },
+  {
+   "id": 5867,
+   "op": "fi",
+   "note": "str bin 0b1.1 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.1"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0011",
+    "raw_signed": "3",
+    "raw_unsigned": "3",
+    "hex": "0x3",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 5868,
+   "op": "fi",
+   "note": "str bin 0b0.1 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0.1"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x1",
+    "float": 1.0
+   }
+  },
+  {
+   "id": 5869,
+   "op": "fi",
+   "note": "str bin 0b1.0 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.0"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0010",
+    "raw_signed": "2",
+    "raw_unsigned": "2",
+    "hex": "0x2",
+    "float": 2.0
+   }
+  },
+  {
+   "id": 5870,
+   "op": "fi",
+   "note": "str bin 0b11.01 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b11.01"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1101",
+    "raw_signed": "13",
+    "raw_unsigned": "13",
+    "hex": "0xD",
+    "float": 13.0
+   }
+  },
+  {
+   "id": 5871,
+   "op": "fi",
+   "note": "str bin 0b1.11 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.11"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0111",
+    "raw_signed": "7",
+    "raw_unsigned": "7",
+    "hex": "0x7",
+    "float": 7.0
+   }
+  },
+  {
+   "id": 5872,
+   "op": "fi",
+   "note": "str bin 0b0.11 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0.11"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0011",
+    "raw_signed": "3",
+    "raw_unsigned": "3",
+    "hex": "0x3",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 5873,
+   "op": "fi",
+   "note": "str bin 0b10000 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b10000"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5874,
+   "op": "fi",
+   "note": "str bin 0b111111 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b111111"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5875,
+   "op": "fi",
+   "note": "str bin 0b111.11 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b111.11"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5876,
+   "op": "fi",
+   "note": "str hex 0x0 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x0"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x0",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5877,
+   "op": "fi",
+   "note": "str hex 0x1 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x1",
+    "float": 1.0
+   }
+  },
+  {
+   "id": 5878,
+   "op": "fi",
+   "note": "str hex 0x7 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x7"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0111",
+    "raw_signed": "7",
+    "raw_unsigned": "7",
+    "hex": "0x7",
+    "float": 7.0
+   }
+  },
+  {
+   "id": 5879,
+   "op": "fi",
+   "note": "str hex 0x8 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x8"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1000",
+    "raw_signed": "8",
+    "raw_unsigned": "8",
+    "hex": "0x8",
+    "float": 8.0
+   }
+  },
+  {
+   "id": 5880,
+   "op": "fi",
+   "note": "str hex 0xA fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xA"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1010",
+    "raw_signed": "10",
+    "raw_unsigned": "10",
+    "hex": "0xA",
+    "float": 10.0
+   }
+  },
+  {
+   "id": 5881,
+   "op": "fi",
+   "note": "str hex 0xF fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xF"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1111",
+    "raw_signed": "15",
+    "raw_unsigned": "15",
+    "hex": "0xF",
+    "float": 15.0
+   }
+  },
+  {
+   "id": 5882,
+   "op": "fi",
+   "note": "str hex 0x10 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x10"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5883,
+   "op": "fi",
+   "note": "str hex 0x1F fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1F"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5884,
+   "op": "fi",
+   "note": "str hex 0xFF fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xFF"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5885,
+   "op": "fi",
+   "note": "str hex 0x6 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x6"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0110",
+    "raw_signed": "6",
+    "raw_unsigned": "6",
+    "hex": "0x6",
+    "float": 6.0
+   }
+  },
+  {
+   "id": 5886,
+   "op": "fi",
+   "note": "str hex 0xC fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xC"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1100",
+    "raw_signed": "12",
+    "raw_unsigned": "12",
+    "hex": "0xC",
+    "float": 12.0
+   }
+  },
+  {
+   "id": 5887,
+   "op": "fi",
+   "note": "str hex 0x1A fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1A"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5888,
+   "op": "fi",
+   "note": "str hex 0x7F fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x7F"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5889,
+   "op": "fi",
+   "note": "str dec 1.5 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "1.5"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x1",
+    "float": 1.0
+   }
+  },
+  {
+   "id": 5890,
+   "op": "fi",
+   "note": "str dec -2.25 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-2.25"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1101",
+    "raw_signed": "13",
+    "raw_unsigned": "13",
+    "hex": "0xD",
+    "float": 13.0
+   }
+  },
+  {
+   "id": 5891,
+   "op": "fi",
+   "note": "str dec 0.1 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0.1"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x0",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5892,
+   "op": "fi",
+   "note": "str dec -0.1 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-0.1"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1111",
+    "raw_signed": "15",
+    "raw_unsigned": "15",
+    "hex": "0xF",
+    "float": 15.0
+   }
+  },
+  {
+   "id": 5893,
+   "op": "fi",
+   "note": "str dec 3 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "3"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0011",
+    "raw_signed": "3",
+    "raw_unsigned": "3",
+    "hex": "0x3",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 5894,
+   "op": "fi",
+   "note": "str dec -5 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-5"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1011",
+    "raw_signed": "11",
+    "raw_unsigned": "11",
+    "hex": "0xB",
+    "float": 11.0
+   }
+  },
+  {
+   "id": 5895,
+   "op": "fi",
+   "note": "str dec 0.0 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0.0"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x0",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5896,
+   "op": "fi",
+   "note": "str dec -0.0 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-0.0"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x0",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5897,
+   "op": "fi",
+   "note": "str dec 7 fmt=(4, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "7"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0111",
+    "raw_signed": "7",
+    "raw_unsigned": "7",
+    "hex": "0x7",
+    "float": 7.0
+   }
+  },
+  {
+   "id": 5898,
+   "op": "fi",
+   "note": "str bin 0b0 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5899,
+   "op": "fi",
+   "note": "str bin 0b1 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111",
+    "raw_signed": "-1",
+    "raw_unsigned": "31",
+    "hex": "0x1F",
+    "float": -0.25
+   }
+  },
+  {
+   "id": 5900,
+   "op": "fi",
+   "note": "str bin 0b10 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b10"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11110",
+    "raw_signed": "-2",
+    "raw_unsigned": "30",
+    "hex": "0x1E",
+    "float": -0.5
+   }
+  },
+  {
+   "id": 5901,
+   "op": "fi",
+   "note": "str bin 0b11 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b11"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111",
+    "raw_signed": "-1",
+    "raw_unsigned": "31",
+    "hex": "0x1F",
+    "float": -0.25
+   }
+  },
+  {
+   "id": 5902,
+   "op": "fi",
+   "note": "str bin 0b101 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b101"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11101",
+    "raw_signed": "-3",
+    "raw_unsigned": "29",
+    "hex": "0x1D",
+    "float": -0.75
+   }
+  },
+  {
+   "id": 5903,
+   "op": "fi",
+   "note": "str bin 0b1011 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1011"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11011",
+    "raw_signed": "-5",
+    "raw_unsigned": "27",
+    "hex": "0x1B",
+    "float": -1.25
+   }
+  },
+  {
+   "id": 5904,
+   "op": "fi",
+   "note": "str bin 0b0101 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0101"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00101",
+    "raw_signed": "5",
+    "raw_unsigned": "5",
+    "hex": "0x05",
+    "float": 1.25
+   }
+  },
+  {
+   "id": 5905,
+   "op": "fi",
+   "note": "str bin 0b1.1 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.1"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11110",
+    "raw_signed": "-2",
+    "raw_unsigned": "30",
+    "hex": "0x1E",
+    "float": -0.5
+   }
+  },
+  {
+   "id": 5906,
+   "op": "fi",
+   "note": "str bin 0b0.1 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0.1"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00010",
+    "raw_signed": "2",
+    "raw_unsigned": "2",
+    "hex": "0x02",
+    "float": 0.5
+   }
+  },
+  {
+   "id": 5907,
+   "op": "fi",
+   "note": "str bin 0b1.0 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.0"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11100",
+    "raw_signed": "-4",
+    "raw_unsigned": "28",
+    "hex": "0x1C",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 5908,
+   "op": "fi",
+   "note": "str bin 0b11.01 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b11.01"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11101",
+    "raw_signed": "-3",
+    "raw_unsigned": "29",
+    "hex": "0x1D",
+    "float": -0.75
+   }
+  },
+  {
+   "id": 5909,
+   "op": "fi",
+   "note": "str bin 0b1.11 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.11"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111",
+    "raw_signed": "-1",
+    "raw_unsigned": "31",
+    "hex": "0x1F",
+    "float": -0.25
+   }
+  },
+  {
+   "id": 5910,
+   "op": "fi",
+   "note": "str bin 0b0.11 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0.11"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00011",
+    "raw_signed": "3",
+    "raw_unsigned": "3",
+    "hex": "0x03",
+    "float": 0.75
+   }
+  },
+  {
+   "id": 5911,
+   "op": "fi",
+   "note": "str bin 0b10000 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b10000"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "10000",
+    "raw_signed": "-16",
+    "raw_unsigned": "16",
+    "hex": "0x10",
+    "float": -4.0
+   }
+  },
+  {
+   "id": 5912,
+   "op": "fi",
+   "note": "str bin 0b111111 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b111111"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5913,
+   "op": "fi",
+   "note": "str bin 0b111.11 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b111.11"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111",
+    "raw_signed": "-1",
+    "raw_unsigned": "31",
+    "hex": "0x1F",
+    "float": -0.25
+   }
+  },
+  {
+   "id": 5914,
+   "op": "fi",
+   "note": "str hex 0x0 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x0"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5915,
+   "op": "fi",
+   "note": "str hex 0x1 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x01",
+    "float": 0.25
+   }
+  },
+  {
+   "id": 5916,
+   "op": "fi",
+   "note": "str hex 0x7 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x7"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00111",
+    "raw_signed": "7",
+    "raw_unsigned": "7",
+    "hex": "0x07",
+    "float": 1.75
+   }
+  },
+  {
+   "id": 5917,
+   "op": "fi",
+   "note": "str hex 0x8 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x8"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "01000",
+    "raw_signed": "8",
+    "raw_unsigned": "8",
+    "hex": "0x08",
+    "float": 2.0
+   }
+  },
+  {
+   "id": 5918,
+   "op": "fi",
+   "note": "str hex 0xA fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xA"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "01010",
+    "raw_signed": "10",
+    "raw_unsigned": "10",
+    "hex": "0x0A",
+    "float": 2.5
+   }
+  },
+  {
+   "id": 5919,
+   "op": "fi",
+   "note": "str hex 0xF fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xF"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "01111",
+    "raw_signed": "15",
+    "raw_unsigned": "15",
+    "hex": "0x0F",
+    "float": 3.75
+   }
+  },
+  {
+   "id": 5920,
+   "op": "fi",
+   "note": "str hex 0x10 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x10"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "10000",
+    "raw_signed": "-16",
+    "raw_unsigned": "16",
+    "hex": "0x10",
+    "float": -4.0
+   }
+  },
+  {
+   "id": 5921,
+   "op": "fi",
+   "note": "str hex 0x1F fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1F"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111",
+    "raw_signed": "-1",
+    "raw_unsigned": "31",
+    "hex": "0x1F",
+    "float": -0.25
+   }
+  },
+  {
+   "id": 5922,
+   "op": "fi",
+   "note": "str hex 0xFF fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xFF"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5923,
+   "op": "fi",
+   "note": "str hex 0x6 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x6"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00110",
+    "raw_signed": "6",
+    "raw_unsigned": "6",
+    "hex": "0x06",
+    "float": 1.5
+   }
+  },
+  {
+   "id": 5924,
+   "op": "fi",
+   "note": "str hex 0xC fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xC"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "01100",
+    "raw_signed": "12",
+    "raw_unsigned": "12",
+    "hex": "0x0C",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 5925,
+   "op": "fi",
+   "note": "str hex 0x1A fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1A"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11010",
+    "raw_signed": "-6",
+    "raw_unsigned": "26",
+    "hex": "0x1A",
+    "float": -1.5
+   }
+  },
+  {
+   "id": 5926,
+   "op": "fi",
+   "note": "str hex 0x7F fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x7F"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5927,
+   "op": "fi",
+   "note": "str dec 1.5 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "1.5"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00110",
+    "raw_signed": "6",
+    "raw_unsigned": "6",
+    "hex": "0x06",
+    "float": 1.5
+   }
+  },
+  {
+   "id": 5928,
+   "op": "fi",
+   "note": "str dec -2.25 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-2.25"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "10111",
+    "raw_signed": "-9",
+    "raw_unsigned": "23",
+    "hex": "0x17",
+    "float": -2.25
+   }
+  },
+  {
+   "id": 5929,
+   "op": "fi",
+   "note": "str dec 0.1 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0.1"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5930,
+   "op": "fi",
+   "note": "str dec -0.1 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-0.1"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111",
+    "raw_signed": "-1",
+    "raw_unsigned": "31",
+    "hex": "0x1F",
+    "float": -0.25
+   }
+  },
+  {
+   "id": 5931,
+   "op": "fi",
+   "note": "str dec 3 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "3"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "01100",
+    "raw_signed": "12",
+    "raw_unsigned": "12",
+    "hex": "0x0C",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 5932,
+   "op": "fi",
+   "note": "str dec -5 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-5"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "01100",
+    "raw_signed": "12",
+    "raw_unsigned": "12",
+    "hex": "0x0C",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 5933,
+   "op": "fi",
+   "note": "str dec 0.0 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0.0"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5934,
+   "op": "fi",
+   "note": "str dec -0.0 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-0.0"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5935,
+   "op": "fi",
+   "note": "str dec 7 fmt=(5, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "7"
+    },
+    "fmt": [
+     5,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11100",
+    "raw_signed": "-4",
+    "raw_unsigned": "28",
+    "hex": "0x1C",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 5936,
+   "op": "fi",
+   "note": "str bin 0b0 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5937,
+   "op": "fi",
+   "note": "str bin 0b1 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x01",
+    "float": 0.25
+   }
+  },
+  {
+   "id": 5938,
+   "op": "fi",
+   "note": "str bin 0b10 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b10"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00010",
+    "raw_signed": "2",
+    "raw_unsigned": "2",
+    "hex": "0x02",
+    "float": 0.5
+   }
+  },
+  {
+   "id": 5939,
+   "op": "fi",
+   "note": "str bin 0b11 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b11"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00011",
+    "raw_signed": "3",
+    "raw_unsigned": "3",
+    "hex": "0x03",
+    "float": 0.75
+   }
+  },
+  {
+   "id": 5940,
+   "op": "fi",
+   "note": "str bin 0b101 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b101"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00101",
+    "raw_signed": "5",
+    "raw_unsigned": "5",
+    "hex": "0x05",
+    "float": 1.25
+   }
+  },
+  {
+   "id": 5941,
+   "op": "fi",
+   "note": "str bin 0b1011 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1011"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "01011",
+    "raw_signed": "11",
+    "raw_unsigned": "11",
+    "hex": "0x0B",
+    "float": 2.75
+   }
+  },
+  {
+   "id": 5942,
+   "op": "fi",
+   "note": "str bin 0b0101 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0101"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00101",
+    "raw_signed": "5",
+    "raw_unsigned": "5",
+    "hex": "0x05",
+    "float": 1.25
+   }
+  },
+  {
+   "id": 5943,
+   "op": "fi",
+   "note": "str bin 0b1.1 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.1"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00110",
+    "raw_signed": "6",
+    "raw_unsigned": "6",
+    "hex": "0x06",
+    "float": 1.5
+   }
+  },
+  {
+   "id": 5944,
+   "op": "fi",
+   "note": "str bin 0b0.1 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0.1"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00010",
+    "raw_signed": "2",
+    "raw_unsigned": "2",
+    "hex": "0x02",
+    "float": 0.5
+   }
+  },
+  {
+   "id": 5945,
+   "op": "fi",
+   "note": "str bin 0b1.0 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.0"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00100",
+    "raw_signed": "4",
+    "raw_unsigned": "4",
+    "hex": "0x04",
+    "float": 1.0
+   }
+  },
+  {
+   "id": 5946,
+   "op": "fi",
+   "note": "str bin 0b11.01 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b11.01"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "01101",
+    "raw_signed": "13",
+    "raw_unsigned": "13",
+    "hex": "0x0D",
+    "float": 3.25
+   }
+  },
+  {
+   "id": 5947,
+   "op": "fi",
+   "note": "str bin 0b1.11 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.11"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00111",
+    "raw_signed": "7",
+    "raw_unsigned": "7",
+    "hex": "0x07",
+    "float": 1.75
+   }
+  },
+  {
+   "id": 5948,
+   "op": "fi",
+   "note": "str bin 0b0.11 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0.11"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00011",
+    "raw_signed": "3",
+    "raw_unsigned": "3",
+    "hex": "0x03",
+    "float": 0.75
+   }
+  },
+  {
+   "id": 5949,
+   "op": "fi",
+   "note": "str bin 0b10000 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b10000"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "10000",
+    "raw_signed": "16",
+    "raw_unsigned": "16",
+    "hex": "0x10",
+    "float": 4.0
+   }
+  },
+  {
+   "id": 5950,
+   "op": "fi",
+   "note": "str bin 0b111111 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b111111"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5951,
+   "op": "fi",
+   "note": "str bin 0b111.11 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b111.11"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111",
+    "raw_signed": "31",
+    "raw_unsigned": "31",
+    "hex": "0x1F",
+    "float": 7.75
+   }
+  },
+  {
+   "id": 5952,
+   "op": "fi",
+   "note": "str hex 0x0 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x0"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5953,
+   "op": "fi",
+   "note": "str hex 0x1 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x01",
+    "float": 0.25
+   }
+  },
+  {
+   "id": 5954,
+   "op": "fi",
+   "note": "str hex 0x7 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x7"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00111",
+    "raw_signed": "7",
+    "raw_unsigned": "7",
+    "hex": "0x07",
+    "float": 1.75
+   }
+  },
+  {
+   "id": 5955,
+   "op": "fi",
+   "note": "str hex 0x8 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x8"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "01000",
+    "raw_signed": "8",
+    "raw_unsigned": "8",
+    "hex": "0x08",
+    "float": 2.0
+   }
+  },
+  {
+   "id": 5956,
+   "op": "fi",
+   "note": "str hex 0xA fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xA"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "01010",
+    "raw_signed": "10",
+    "raw_unsigned": "10",
+    "hex": "0x0A",
+    "float": 2.5
+   }
+  },
+  {
+   "id": 5957,
+   "op": "fi",
+   "note": "str hex 0xF fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xF"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "01111",
+    "raw_signed": "15",
+    "raw_unsigned": "15",
+    "hex": "0x0F",
+    "float": 3.75
+   }
+  },
+  {
+   "id": 5958,
+   "op": "fi",
+   "note": "str hex 0x10 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x10"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "10000",
+    "raw_signed": "16",
+    "raw_unsigned": "16",
+    "hex": "0x10",
+    "float": 4.0
+   }
+  },
+  {
+   "id": 5959,
+   "op": "fi",
+   "note": "str hex 0x1F fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1F"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111",
+    "raw_signed": "31",
+    "raw_unsigned": "31",
+    "hex": "0x1F",
+    "float": 7.75
+   }
+  },
+  {
+   "id": 5960,
+   "op": "fi",
+   "note": "str hex 0xFF fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xFF"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5961,
+   "op": "fi",
+   "note": "str hex 0x6 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x6"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00110",
+    "raw_signed": "6",
+    "raw_unsigned": "6",
+    "hex": "0x06",
+    "float": 1.5
+   }
+  },
+  {
+   "id": 5962,
+   "op": "fi",
+   "note": "str hex 0xC fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xC"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "01100",
+    "raw_signed": "12",
+    "raw_unsigned": "12",
+    "hex": "0x0C",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 5963,
+   "op": "fi",
+   "note": "str hex 0x1A fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1A"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11010",
+    "raw_signed": "26",
+    "raw_unsigned": "26",
+    "hex": "0x1A",
+    "float": 6.5
+   }
+  },
+  {
+   "id": 5964,
+   "op": "fi",
+   "note": "str hex 0x7F fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x7F"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5965,
+   "op": "fi",
+   "note": "str dec 1.5 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "1.5"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00110",
+    "raw_signed": "6",
+    "raw_unsigned": "6",
+    "hex": "0x06",
+    "float": 1.5
+   }
+  },
+  {
+   "id": 5966,
+   "op": "fi",
+   "note": "str dec -2.25 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-2.25"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "10111",
+    "raw_signed": "23",
+    "raw_unsigned": "23",
+    "hex": "0x17",
+    "float": 5.75
+   }
+  },
+  {
+   "id": 5967,
+   "op": "fi",
+   "note": "str dec 0.1 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0.1"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5968,
+   "op": "fi",
+   "note": "str dec -0.1 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-0.1"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111",
+    "raw_signed": "31",
+    "raw_unsigned": "31",
+    "hex": "0x1F",
+    "float": 7.75
+   }
+  },
+  {
+   "id": 5969,
+   "op": "fi",
+   "note": "str dec 3 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "3"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "01100",
+    "raw_signed": "12",
+    "raw_unsigned": "12",
+    "hex": "0x0C",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 5970,
+   "op": "fi",
+   "note": "str dec -5 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-5"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "01100",
+    "raw_signed": "12",
+    "raw_unsigned": "12",
+    "hex": "0x0C",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 5971,
+   "op": "fi",
+   "note": "str dec 0.0 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0.0"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5972,
+   "op": "fi",
+   "note": "str dec -0.0 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-0.0"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5973,
+   "op": "fi",
+   "note": "str dec 7 fmt=(5, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "7"
+    },
+    "fmt": [
+     5,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11100",
+    "raw_signed": "28",
+    "raw_unsigned": "28",
+    "hex": "0x1C",
+    "float": 7.0
+   }
+  },
+  {
+   "id": 5974,
+   "op": "fi",
+   "note": "str bin 0b0 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x0",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5975,
+   "op": "fi",
+   "note": "str bin 0b1 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1111",
+    "raw_signed": "-1",
+    "raw_unsigned": "15",
+    "hex": "0xF",
+    "float": -0.25
+   }
+  },
+  {
+   "id": 5976,
+   "op": "fi",
+   "note": "str bin 0b10 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b10"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1110",
+    "raw_signed": "-2",
+    "raw_unsigned": "14",
+    "hex": "0xE",
+    "float": -0.5
+   }
+  },
+  {
+   "id": 5977,
+   "op": "fi",
+   "note": "str bin 0b11 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b11"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1111",
+    "raw_signed": "-1",
+    "raw_unsigned": "15",
+    "hex": "0xF",
+    "float": -0.25
+   }
+  },
+  {
+   "id": 5978,
+   "op": "fi",
+   "note": "str bin 0b101 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b101"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1101",
+    "raw_signed": "-3",
+    "raw_unsigned": "13",
+    "hex": "0xD",
+    "float": -0.75
+   }
+  },
+  {
+   "id": 5979,
+   "op": "fi",
+   "note": "str bin 0b1011 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1011"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1011",
+    "raw_signed": "-5",
+    "raw_unsigned": "11",
+    "hex": "0xB",
+    "float": -1.25
+   }
+  },
+  {
+   "id": 5980,
+   "op": "fi",
+   "note": "str bin 0b0101 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0101"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0101",
+    "raw_signed": "5",
+    "raw_unsigned": "5",
+    "hex": "0x5",
+    "float": 1.25
+   }
+  },
+  {
+   "id": 5981,
+   "op": "fi",
+   "note": "str bin 0b1.1 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.1"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1110",
+    "raw_signed": "-2",
+    "raw_unsigned": "14",
+    "hex": "0xE",
+    "float": -0.5
+   }
+  },
+  {
+   "id": 5982,
+   "op": "fi",
+   "note": "str bin 0b0.1 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0.1"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0010",
+    "raw_signed": "2",
+    "raw_unsigned": "2",
+    "hex": "0x2",
+    "float": 0.5
+   }
+  },
+  {
+   "id": 5983,
+   "op": "fi",
+   "note": "str bin 0b1.0 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.0"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1100",
+    "raw_signed": "-4",
+    "raw_unsigned": "12",
+    "hex": "0xC",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 5984,
+   "op": "fi",
+   "note": "str bin 0b11.01 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b11.01"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1101",
+    "raw_signed": "-3",
+    "raw_unsigned": "13",
+    "hex": "0xD",
+    "float": -0.75
+   }
+  },
+  {
+   "id": 5985,
+   "op": "fi",
+   "note": "str bin 0b1.11 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.11"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1111",
+    "raw_signed": "-1",
+    "raw_unsigned": "15",
+    "hex": "0xF",
+    "float": -0.25
+   }
+  },
+  {
+   "id": 5986,
+   "op": "fi",
+   "note": "str bin 0b0.11 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0.11"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0011",
+    "raw_signed": "3",
+    "raw_unsigned": "3",
+    "hex": "0x3",
+    "float": 0.75
+   }
+  },
+  {
+   "id": 5987,
+   "op": "fi",
+   "note": "str bin 0b10000 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b10000"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5988,
+   "op": "fi",
+   "note": "str bin 0b111111 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b111111"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5989,
+   "op": "fi",
+   "note": "str bin 0b111.11 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b111.11"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5990,
+   "op": "fi",
+   "note": "str hex 0x0 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x0"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x0",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 5991,
+   "op": "fi",
+   "note": "str hex 0x1 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x1",
+    "float": 0.25
+   }
+  },
+  {
+   "id": 5992,
+   "op": "fi",
+   "note": "str hex 0x7 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x7"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0111",
+    "raw_signed": "7",
+    "raw_unsigned": "7",
+    "hex": "0x7",
+    "float": 1.75
+   }
+  },
+  {
+   "id": 5993,
+   "op": "fi",
+   "note": "str hex 0x8 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x8"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1000",
+    "raw_signed": "-8",
+    "raw_unsigned": "8",
+    "hex": "0x8",
+    "float": -2.0
+   }
+  },
+  {
+   "id": 5994,
+   "op": "fi",
+   "note": "str hex 0xA fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xA"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1010",
+    "raw_signed": "-6",
+    "raw_unsigned": "10",
+    "hex": "0xA",
+    "float": -1.5
+   }
+  },
+  {
+   "id": 5995,
+   "op": "fi",
+   "note": "str hex 0xF fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xF"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1111",
+    "raw_signed": "-1",
+    "raw_unsigned": "15",
+    "hex": "0xF",
+    "float": -0.25
+   }
+  },
+  {
+   "id": 5996,
+   "op": "fi",
+   "note": "str hex 0x10 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x10"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5997,
+   "op": "fi",
+   "note": "str hex 0x1F fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1F"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5998,
+   "op": "fi",
+   "note": "str hex 0xFF fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xFF"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 5999,
+   "op": "fi",
+   "note": "str hex 0x6 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x6"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0110",
+    "raw_signed": "6",
+    "raw_unsigned": "6",
+    "hex": "0x6",
+    "float": 1.5
+   }
+  },
+  {
+   "id": 6000,
+   "op": "fi",
+   "note": "str hex 0xC fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xC"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1100",
+    "raw_signed": "-4",
+    "raw_unsigned": "12",
+    "hex": "0xC",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 6001,
+   "op": "fi",
+   "note": "str hex 0x1A fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1A"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 6002,
+   "op": "fi",
+   "note": "str hex 0x7F fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x7F"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 6003,
+   "op": "fi",
+   "note": "str dec 1.5 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "1.5"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0110",
+    "raw_signed": "6",
+    "raw_unsigned": "6",
+    "hex": "0x6",
+    "float": 1.5
+   }
+  },
+  {
+   "id": 6004,
+   "op": "fi",
+   "note": "str dec -2.25 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-2.25"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0111",
+    "raw_signed": "7",
+    "raw_unsigned": "7",
+    "hex": "0x7",
+    "float": 1.75
+   }
+  },
+  {
+   "id": 6005,
+   "op": "fi",
+   "note": "str dec 0.1 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0.1"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x0",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6006,
+   "op": "fi",
+   "note": "str dec -0.1 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-0.1"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1111",
+    "raw_signed": "-1",
+    "raw_unsigned": "15",
+    "hex": "0xF",
+    "float": -0.25
+   }
+  },
+  {
+   "id": 6007,
+   "op": "fi",
+   "note": "str dec 3 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "3"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1100",
+    "raw_signed": "-4",
+    "raw_unsigned": "12",
+    "hex": "0xC",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 6008,
+   "op": "fi",
+   "note": "str dec -5 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-5"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1100",
+    "raw_signed": "-4",
+    "raw_unsigned": "12",
+    "hex": "0xC",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 6009,
+   "op": "fi",
+   "note": "str dec 0.0 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0.0"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x0",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6010,
+   "op": "fi",
+   "note": "str dec -0.0 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-0.0"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x0",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6011,
+   "op": "fi",
+   "note": "str dec 7 fmt=(4, 2, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "7"
+    },
+    "fmt": [
+     4,
+     2,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1100",
+    "raw_signed": "-4",
+    "raw_unsigned": "12",
+    "hex": "0xC",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 6012,
+   "op": "fi",
+   "note": "str bin 0b0 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x0",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6013,
+   "op": "fi",
+   "note": "str bin 0b1 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x1",
+    "float": 0.25
+   }
+  },
+  {
+   "id": 6014,
+   "op": "fi",
+   "note": "str bin 0b10 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b10"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0010",
+    "raw_signed": "2",
+    "raw_unsigned": "2",
+    "hex": "0x2",
+    "float": 0.5
+   }
+  },
+  {
+   "id": 6015,
+   "op": "fi",
+   "note": "str bin 0b11 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b11"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0011",
+    "raw_signed": "3",
+    "raw_unsigned": "3",
+    "hex": "0x3",
+    "float": 0.75
+   }
+  },
+  {
+   "id": 6016,
+   "op": "fi",
+   "note": "str bin 0b101 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b101"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0101",
+    "raw_signed": "5",
+    "raw_unsigned": "5",
+    "hex": "0x5",
+    "float": 1.25
+   }
+  },
+  {
+   "id": 6017,
+   "op": "fi",
+   "note": "str bin 0b1011 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1011"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1011",
+    "raw_signed": "11",
+    "raw_unsigned": "11",
+    "hex": "0xB",
+    "float": 2.75
+   }
+  },
+  {
+   "id": 6018,
+   "op": "fi",
+   "note": "str bin 0b0101 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0101"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0101",
+    "raw_signed": "5",
+    "raw_unsigned": "5",
+    "hex": "0x5",
+    "float": 1.25
+   }
+  },
+  {
+   "id": 6019,
+   "op": "fi",
+   "note": "str bin 0b1.1 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.1"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0110",
+    "raw_signed": "6",
+    "raw_unsigned": "6",
+    "hex": "0x6",
+    "float": 1.5
+   }
+  },
+  {
+   "id": 6020,
+   "op": "fi",
+   "note": "str bin 0b0.1 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0.1"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0010",
+    "raw_signed": "2",
+    "raw_unsigned": "2",
+    "hex": "0x2",
+    "float": 0.5
+   }
+  },
+  {
+   "id": 6021,
+   "op": "fi",
+   "note": "str bin 0b1.0 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.0"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0100",
+    "raw_signed": "4",
+    "raw_unsigned": "4",
+    "hex": "0x4",
+    "float": 1.0
+   }
+  },
+  {
+   "id": 6022,
+   "op": "fi",
+   "note": "str bin 0b11.01 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b11.01"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1101",
+    "raw_signed": "13",
+    "raw_unsigned": "13",
+    "hex": "0xD",
+    "float": 3.25
+   }
+  },
+  {
+   "id": 6023,
+   "op": "fi",
+   "note": "str bin 0b1.11 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.11"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0111",
+    "raw_signed": "7",
+    "raw_unsigned": "7",
+    "hex": "0x7",
+    "float": 1.75
+   }
+  },
+  {
+   "id": 6024,
+   "op": "fi",
+   "note": "str bin 0b0.11 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0.11"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0011",
+    "raw_signed": "3",
+    "raw_unsigned": "3",
+    "hex": "0x3",
+    "float": 0.75
+   }
+  },
+  {
+   "id": 6025,
+   "op": "fi",
+   "note": "str bin 0b10000 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b10000"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 6026,
+   "op": "fi",
+   "note": "str bin 0b111111 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b111111"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 6027,
+   "op": "fi",
+   "note": "str bin 0b111.11 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b111.11"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 6028,
+   "op": "fi",
+   "note": "str hex 0x0 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x0"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x0",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6029,
+   "op": "fi",
+   "note": "str hex 0x1 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x1",
+    "float": 0.25
+   }
+  },
+  {
+   "id": 6030,
+   "op": "fi",
+   "note": "str hex 0x7 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x7"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0111",
+    "raw_signed": "7",
+    "raw_unsigned": "7",
+    "hex": "0x7",
+    "float": 1.75
+   }
+  },
+  {
+   "id": 6031,
+   "op": "fi",
+   "note": "str hex 0x8 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x8"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1000",
+    "raw_signed": "8",
+    "raw_unsigned": "8",
+    "hex": "0x8",
+    "float": 2.0
+   }
+  },
+  {
+   "id": 6032,
+   "op": "fi",
+   "note": "str hex 0xA fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xA"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1010",
+    "raw_signed": "10",
+    "raw_unsigned": "10",
+    "hex": "0xA",
+    "float": 2.5
+   }
+  },
+  {
+   "id": 6033,
+   "op": "fi",
+   "note": "str hex 0xF fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xF"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1111",
+    "raw_signed": "15",
+    "raw_unsigned": "15",
+    "hex": "0xF",
+    "float": 3.75
+   }
+  },
+  {
+   "id": 6034,
+   "op": "fi",
+   "note": "str hex 0x10 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x10"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 6035,
+   "op": "fi",
+   "note": "str hex 0x1F fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1F"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 6036,
+   "op": "fi",
+   "note": "str hex 0xFF fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xFF"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 6037,
+   "op": "fi",
+   "note": "str hex 0x6 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x6"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0110",
+    "raw_signed": "6",
+    "raw_unsigned": "6",
+    "hex": "0x6",
+    "float": 1.5
+   }
+  },
+  {
+   "id": 6038,
+   "op": "fi",
+   "note": "str hex 0xC fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xC"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1100",
+    "raw_signed": "12",
+    "raw_unsigned": "12",
+    "hex": "0xC",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 6039,
+   "op": "fi",
+   "note": "str hex 0x1A fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1A"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 6040,
+   "op": "fi",
+   "note": "str hex 0x7F fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x7F"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 6041,
+   "op": "fi",
+   "note": "str dec 1.5 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "1.5"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0110",
+    "raw_signed": "6",
+    "raw_unsigned": "6",
+    "hex": "0x6",
+    "float": 1.5
+   }
+  },
+  {
+   "id": 6042,
+   "op": "fi",
+   "note": "str dec -2.25 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-2.25"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0111",
+    "raw_signed": "7",
+    "raw_unsigned": "7",
+    "hex": "0x7",
+    "float": 1.75
+   }
+  },
+  {
+   "id": 6043,
+   "op": "fi",
+   "note": "str dec 0.1 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0.1"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x0",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6044,
+   "op": "fi",
+   "note": "str dec -0.1 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-0.1"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1111",
+    "raw_signed": "15",
+    "raw_unsigned": "15",
+    "hex": "0xF",
+    "float": 3.75
+   }
+  },
+  {
+   "id": 6045,
+   "op": "fi",
+   "note": "str dec 3 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "3"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1100",
+    "raw_signed": "12",
+    "raw_unsigned": "12",
+    "hex": "0xC",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 6046,
+   "op": "fi",
+   "note": "str dec -5 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-5"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1100",
+    "raw_signed": "12",
+    "raw_unsigned": "12",
+    "hex": "0xC",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 6047,
+   "op": "fi",
+   "note": "str dec 0.0 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0.0"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x0",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6048,
+   "op": "fi",
+   "note": "str dec -0.0 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-0.0"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x0",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6049,
+   "op": "fi",
+   "note": "str dec 7 fmt=(4, 2, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "7"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1100",
+    "raw_signed": "12",
+    "raw_unsigned": "12",
+    "hex": "0xC",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 6050,
+   "op": "fi",
+   "note": "str bin 0b0 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6051,
+   "op": "fi",
+   "note": "str bin 0b1 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111111",
+    "raw_signed": "-1",
+    "raw_unsigned": "255",
+    "hex": "0xFF",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 6052,
+   "op": "fi",
+   "note": "str bin 0b10 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b10"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111110",
+    "raw_signed": "-2",
+    "raw_unsigned": "254",
+    "hex": "0xFE",
+    "float": -2.0
+   }
+  },
+  {
+   "id": 6053,
+   "op": "fi",
+   "note": "str bin 0b11 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b11"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111111",
+    "raw_signed": "-1",
+    "raw_unsigned": "255",
+    "hex": "0xFF",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 6054,
+   "op": "fi",
+   "note": "str bin 0b101 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b101"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111101",
+    "raw_signed": "-3",
+    "raw_unsigned": "253",
+    "hex": "0xFD",
+    "float": -3.0
+   }
+  },
+  {
+   "id": 6055,
+   "op": "fi",
+   "note": "str bin 0b1011 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1011"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111011",
+    "raw_signed": "-5",
+    "raw_unsigned": "251",
+    "hex": "0xFB",
+    "float": -5.0
+   }
+  },
+  {
+   "id": 6056,
+   "op": "fi",
+   "note": "str bin 0b0101 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0101"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000101",
+    "raw_signed": "5",
+    "raw_unsigned": "5",
+    "hex": "0x05",
+    "float": 5.0
+   }
+  },
+  {
+   "id": 6057,
+   "op": "fi",
+   "note": "str bin 0b1.1 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.1"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111111",
+    "raw_signed": "-1",
+    "raw_unsigned": "255",
+    "hex": "0xFF",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 6058,
+   "op": "fi",
+   "note": "str bin 0b0.1 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0.1"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x01",
+    "float": 1.0
+   }
+  },
+  {
+   "id": 6059,
+   "op": "fi",
+   "note": "str bin 0b1.0 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.0"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111110",
+    "raw_signed": "-2",
+    "raw_unsigned": "254",
+    "hex": "0xFE",
+    "float": -2.0
+   }
+  },
+  {
+   "id": 6060,
+   "op": "fi",
+   "note": "str bin 0b11.01 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b11.01"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111101",
+    "raw_signed": "-3",
+    "raw_unsigned": "253",
+    "hex": "0xFD",
+    "float": -3.0
+   }
+  },
+  {
+   "id": 6061,
+   "op": "fi",
+   "note": "str bin 0b1.11 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.11"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111111",
+    "raw_signed": "-1",
+    "raw_unsigned": "255",
+    "hex": "0xFF",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 6062,
+   "op": "fi",
+   "note": "str bin 0b0.11 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0.11"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000011",
+    "raw_signed": "3",
+    "raw_unsigned": "3",
+    "hex": "0x03",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 6063,
+   "op": "fi",
+   "note": "str bin 0b10000 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b10000"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11110000",
+    "raw_signed": "-16",
+    "raw_unsigned": "240",
+    "hex": "0xF0",
+    "float": -16.0
+   }
+  },
+  {
+   "id": 6064,
+   "op": "fi",
+   "note": "str bin 0b111111 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b111111"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111111",
+    "raw_signed": "-1",
+    "raw_unsigned": "255",
+    "hex": "0xFF",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 6065,
+   "op": "fi",
+   "note": "str bin 0b111.11 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b111.11"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111111",
+    "raw_signed": "-1",
+    "raw_unsigned": "255",
+    "hex": "0xFF",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 6066,
+   "op": "fi",
+   "note": "str hex 0x0 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x0"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6067,
+   "op": "fi",
+   "note": "str hex 0x1 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x01",
+    "float": 1.0
+   }
+  },
+  {
+   "id": 6068,
+   "op": "fi",
+   "note": "str hex 0x7 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x7"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000111",
+    "raw_signed": "7",
+    "raw_unsigned": "7",
+    "hex": "0x07",
+    "float": 7.0
+   }
+  },
+  {
+   "id": 6069,
+   "op": "fi",
+   "note": "str hex 0x8 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x8"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001000",
+    "raw_signed": "8",
+    "raw_unsigned": "8",
+    "hex": "0x08",
+    "float": 8.0
+   }
+  },
+  {
+   "id": 6070,
+   "op": "fi",
+   "note": "str hex 0xA fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xA"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001010",
+    "raw_signed": "10",
+    "raw_unsigned": "10",
+    "hex": "0x0A",
+    "float": 10.0
+   }
+  },
+  {
+   "id": 6071,
+   "op": "fi",
+   "note": "str hex 0xF fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xF"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001111",
+    "raw_signed": "15",
+    "raw_unsigned": "15",
+    "hex": "0x0F",
+    "float": 15.0
+   }
+  },
+  {
+   "id": 6072,
+   "op": "fi",
+   "note": "str hex 0x10 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x10"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00010000",
+    "raw_signed": "16",
+    "raw_unsigned": "16",
+    "hex": "0x10",
+    "float": 16.0
+   }
+  },
+  {
+   "id": 6073,
+   "op": "fi",
+   "note": "str hex 0x1F fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1F"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00011111",
+    "raw_signed": "31",
+    "raw_unsigned": "31",
+    "hex": "0x1F",
+    "float": 31.0
+   }
+  },
+  {
+   "id": 6074,
+   "op": "fi",
+   "note": "str hex 0xFF fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xFF"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111111",
+    "raw_signed": "-1",
+    "raw_unsigned": "255",
+    "hex": "0xFF",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 6075,
+   "op": "fi",
+   "note": "str hex 0x6 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x6"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000110",
+    "raw_signed": "6",
+    "raw_unsigned": "6",
+    "hex": "0x06",
+    "float": 6.0
+   }
+  },
+  {
+   "id": 6076,
+   "op": "fi",
+   "note": "str hex 0xC fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xC"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001100",
+    "raw_signed": "12",
+    "raw_unsigned": "12",
+    "hex": "0x0C",
+    "float": 12.0
+   }
+  },
+  {
+   "id": 6077,
+   "op": "fi",
+   "note": "str hex 0x1A fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1A"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00011010",
+    "raw_signed": "26",
+    "raw_unsigned": "26",
+    "hex": "0x1A",
+    "float": 26.0
+   }
+  },
+  {
+   "id": 6078,
+   "op": "fi",
+   "note": "str hex 0x7F fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x7F"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "01111111",
+    "raw_signed": "127",
+    "raw_unsigned": "127",
+    "hex": "0x7F",
+    "float": 127.0
+   }
+  },
+  {
+   "id": 6079,
+   "op": "fi",
+   "note": "str dec 1.5 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "1.5"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x01",
+    "float": 1.0
+   }
+  },
+  {
+   "id": 6080,
+   "op": "fi",
+   "note": "str dec -2.25 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-2.25"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111101",
+    "raw_signed": "-3",
+    "raw_unsigned": "253",
+    "hex": "0xFD",
+    "float": -3.0
+   }
+  },
+  {
+   "id": 6081,
+   "op": "fi",
+   "note": "str dec 0.1 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0.1"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6082,
+   "op": "fi",
+   "note": "str dec -0.1 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-0.1"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111111",
+    "raw_signed": "-1",
+    "raw_unsigned": "255",
+    "hex": "0xFF",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 6083,
+   "op": "fi",
+   "note": "str dec 3 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "3"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000011",
+    "raw_signed": "3",
+    "raw_unsigned": "3",
+    "hex": "0x03",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 6084,
+   "op": "fi",
+   "note": "str dec -5 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-5"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111011",
+    "raw_signed": "-5",
+    "raw_unsigned": "251",
+    "hex": "0xFB",
+    "float": -5.0
+   }
+  },
+  {
+   "id": 6085,
+   "op": "fi",
+   "note": "str dec 0.0 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0.0"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6086,
+   "op": "fi",
+   "note": "str dec -0.0 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-0.0"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6087,
+   "op": "fi",
+   "note": "str dec 7 fmt=(8, 0, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "7"
+    },
+    "fmt": [
+     8,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000111",
+    "raw_signed": "7",
+    "raw_unsigned": "7",
+    "hex": "0x07",
+    "float": 7.0
+   }
+  },
+  {
+   "id": 6088,
+   "op": "fi",
+   "note": "str bin 0b0 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6089,
+   "op": "fi",
+   "note": "str bin 0b1 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x01",
+    "float": 1.0
+   }
+  },
+  {
+   "id": 6090,
+   "op": "fi",
+   "note": "str bin 0b10 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b10"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000010",
+    "raw_signed": "2",
+    "raw_unsigned": "2",
+    "hex": "0x02",
+    "float": 2.0
+   }
+  },
+  {
+   "id": 6091,
+   "op": "fi",
+   "note": "str bin 0b11 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b11"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000011",
+    "raw_signed": "3",
+    "raw_unsigned": "3",
+    "hex": "0x03",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 6092,
+   "op": "fi",
+   "note": "str bin 0b101 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b101"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000101",
+    "raw_signed": "5",
+    "raw_unsigned": "5",
+    "hex": "0x05",
+    "float": 5.0
+   }
+  },
+  {
+   "id": 6093,
+   "op": "fi",
+   "note": "str bin 0b1011 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1011"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001011",
+    "raw_signed": "11",
+    "raw_unsigned": "11",
+    "hex": "0x0B",
+    "float": 11.0
+   }
+  },
+  {
+   "id": 6094,
+   "op": "fi",
+   "note": "str bin 0b0101 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0101"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000101",
+    "raw_signed": "5",
+    "raw_unsigned": "5",
+    "hex": "0x05",
+    "float": 5.0
+   }
+  },
+  {
+   "id": 6095,
+   "op": "fi",
+   "note": "str bin 0b1.1 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.1"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000011",
+    "raw_signed": "3",
+    "raw_unsigned": "3",
+    "hex": "0x03",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 6096,
+   "op": "fi",
+   "note": "str bin 0b0.1 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0.1"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x01",
+    "float": 1.0
+   }
+  },
+  {
+   "id": 6097,
+   "op": "fi",
+   "note": "str bin 0b1.0 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.0"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000010",
+    "raw_signed": "2",
+    "raw_unsigned": "2",
+    "hex": "0x02",
+    "float": 2.0
+   }
+  },
+  {
+   "id": 6098,
+   "op": "fi",
+   "note": "str bin 0b11.01 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b11.01"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001101",
+    "raw_signed": "13",
+    "raw_unsigned": "13",
+    "hex": "0x0D",
+    "float": 13.0
+   }
+  },
+  {
+   "id": 6099,
+   "op": "fi",
+   "note": "str bin 0b1.11 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.11"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000111",
+    "raw_signed": "7",
+    "raw_unsigned": "7",
+    "hex": "0x07",
+    "float": 7.0
+   }
+  },
+  {
+   "id": 6100,
+   "op": "fi",
+   "note": "str bin 0b0.11 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0.11"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000011",
+    "raw_signed": "3",
+    "raw_unsigned": "3",
+    "hex": "0x03",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 6101,
+   "op": "fi",
+   "note": "str bin 0b10000 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b10000"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00010000",
+    "raw_signed": "16",
+    "raw_unsigned": "16",
+    "hex": "0x10",
+    "float": 16.0
+   }
+  },
+  {
+   "id": 6102,
+   "op": "fi",
+   "note": "str bin 0b111111 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b111111"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00111111",
+    "raw_signed": "63",
+    "raw_unsigned": "63",
+    "hex": "0x3F",
+    "float": 63.0
+   }
+  },
+  {
+   "id": 6103,
+   "op": "fi",
+   "note": "str bin 0b111.11 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b111.11"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00011111",
+    "raw_signed": "31",
+    "raw_unsigned": "31",
+    "hex": "0x1F",
+    "float": 31.0
+   }
+  },
+  {
+   "id": 6104,
+   "op": "fi",
+   "note": "str hex 0x0 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x0"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6105,
+   "op": "fi",
+   "note": "str hex 0x1 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x01",
+    "float": 1.0
+   }
+  },
+  {
+   "id": 6106,
+   "op": "fi",
+   "note": "str hex 0x7 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x7"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000111",
+    "raw_signed": "7",
+    "raw_unsigned": "7",
+    "hex": "0x07",
+    "float": 7.0
+   }
+  },
+  {
+   "id": 6107,
+   "op": "fi",
+   "note": "str hex 0x8 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x8"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001000",
+    "raw_signed": "8",
+    "raw_unsigned": "8",
+    "hex": "0x08",
+    "float": 8.0
+   }
+  },
+  {
+   "id": 6108,
+   "op": "fi",
+   "note": "str hex 0xA fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xA"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001010",
+    "raw_signed": "10",
+    "raw_unsigned": "10",
+    "hex": "0x0A",
+    "float": 10.0
+   }
+  },
+  {
+   "id": 6109,
+   "op": "fi",
+   "note": "str hex 0xF fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xF"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001111",
+    "raw_signed": "15",
+    "raw_unsigned": "15",
+    "hex": "0x0F",
+    "float": 15.0
+   }
+  },
+  {
+   "id": 6110,
+   "op": "fi",
+   "note": "str hex 0x10 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x10"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00010000",
+    "raw_signed": "16",
+    "raw_unsigned": "16",
+    "hex": "0x10",
+    "float": 16.0
+   }
+  },
+  {
+   "id": 6111,
+   "op": "fi",
+   "note": "str hex 0x1F fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1F"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00011111",
+    "raw_signed": "31",
+    "raw_unsigned": "31",
+    "hex": "0x1F",
+    "float": 31.0
+   }
+  },
+  {
+   "id": 6112,
+   "op": "fi",
+   "note": "str hex 0xFF fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xFF"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111111",
+    "raw_signed": "255",
+    "raw_unsigned": "255",
+    "hex": "0xFF",
+    "float": 255.0
+   }
+  },
+  {
+   "id": 6113,
+   "op": "fi",
+   "note": "str hex 0x6 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x6"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000110",
+    "raw_signed": "6",
+    "raw_unsigned": "6",
+    "hex": "0x06",
+    "float": 6.0
+   }
+  },
+  {
+   "id": 6114,
+   "op": "fi",
+   "note": "str hex 0xC fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xC"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001100",
+    "raw_signed": "12",
+    "raw_unsigned": "12",
+    "hex": "0x0C",
+    "float": 12.0
+   }
+  },
+  {
+   "id": 6115,
+   "op": "fi",
+   "note": "str hex 0x1A fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1A"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00011010",
+    "raw_signed": "26",
+    "raw_unsigned": "26",
+    "hex": "0x1A",
+    "float": 26.0
+   }
+  },
+  {
+   "id": 6116,
+   "op": "fi",
+   "note": "str hex 0x7F fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x7F"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "01111111",
+    "raw_signed": "127",
+    "raw_unsigned": "127",
+    "hex": "0x7F",
+    "float": 127.0
+   }
+  },
+  {
+   "id": 6117,
+   "op": "fi",
+   "note": "str dec 1.5 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "1.5"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x01",
+    "float": 1.0
+   }
+  },
+  {
+   "id": 6118,
+   "op": "fi",
+   "note": "str dec -2.25 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-2.25"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111101",
+    "raw_signed": "253",
+    "raw_unsigned": "253",
+    "hex": "0xFD",
+    "float": 253.0
+   }
+  },
+  {
+   "id": 6119,
+   "op": "fi",
+   "note": "str dec 0.1 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0.1"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6120,
+   "op": "fi",
+   "note": "str dec -0.1 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-0.1"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111111",
+    "raw_signed": "255",
+    "raw_unsigned": "255",
+    "hex": "0xFF",
+    "float": 255.0
+   }
+  },
+  {
+   "id": 6121,
+   "op": "fi",
+   "note": "str dec 3 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "3"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000011",
+    "raw_signed": "3",
+    "raw_unsigned": "3",
+    "hex": "0x03",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 6122,
+   "op": "fi",
+   "note": "str dec -5 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-5"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111011",
+    "raw_signed": "251",
+    "raw_unsigned": "251",
+    "hex": "0xFB",
+    "float": 251.0
+   }
+  },
+  {
+   "id": 6123,
+   "op": "fi",
+   "note": "str dec 0.0 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0.0"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6124,
+   "op": "fi",
+   "note": "str dec -0.0 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-0.0"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6125,
+   "op": "fi",
+   "note": "str dec 7 fmt=(8, 0, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "7"
+    },
+    "fmt": [
+     8,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000111",
+    "raw_signed": "7",
+    "raw_unsigned": "7",
+    "hex": "0x07",
+    "float": 7.0
+   }
+  },
+  {
+   "id": 6126,
+   "op": "fi",
+   "note": "str bin 0b0 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6127,
+   "op": "fi",
+   "note": "str bin 0b1 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111111",
+    "raw_signed": "-1",
+    "raw_unsigned": "255",
+    "hex": "0xFF",
+    "float": -0.0625
+   }
+  },
+  {
+   "id": 6128,
+   "op": "fi",
+   "note": "str bin 0b10 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b10"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111110",
+    "raw_signed": "-2",
+    "raw_unsigned": "254",
+    "hex": "0xFE",
+    "float": -0.125
+   }
+  },
+  {
+   "id": 6129,
+   "op": "fi",
+   "note": "str bin 0b11 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b11"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111111",
+    "raw_signed": "-1",
+    "raw_unsigned": "255",
+    "hex": "0xFF",
+    "float": -0.0625
+   }
+  },
+  {
+   "id": 6130,
+   "op": "fi",
+   "note": "str bin 0b101 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b101"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111101",
+    "raw_signed": "-3",
+    "raw_unsigned": "253",
+    "hex": "0xFD",
+    "float": -0.1875
+   }
+  },
+  {
+   "id": 6131,
+   "op": "fi",
+   "note": "str bin 0b1011 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1011"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111011",
+    "raw_signed": "-5",
+    "raw_unsigned": "251",
+    "hex": "0xFB",
+    "float": -0.3125
+   }
+  },
+  {
+   "id": 6132,
+   "op": "fi",
+   "note": "str bin 0b0101 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0101"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000101",
+    "raw_signed": "5",
+    "raw_unsigned": "5",
+    "hex": "0x05",
+    "float": 0.3125
+   }
+  },
+  {
+   "id": 6133,
+   "op": "fi",
+   "note": "str bin 0b1.1 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.1"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111000",
+    "raw_signed": "-8",
+    "raw_unsigned": "248",
+    "hex": "0xF8",
+    "float": -0.5
+   }
+  },
+  {
+   "id": 6134,
+   "op": "fi",
+   "note": "str bin 0b0.1 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0.1"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001000",
+    "raw_signed": "8",
+    "raw_unsigned": "8",
+    "hex": "0x08",
+    "float": 0.5
+   }
+  },
+  {
+   "id": 6135,
+   "op": "fi",
+   "note": "str bin 0b1.0 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.0"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11110000",
+    "raw_signed": "-16",
+    "raw_unsigned": "240",
+    "hex": "0xF0",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 6136,
+   "op": "fi",
+   "note": "str bin 0b11.01 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b11.01"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11110100",
+    "raw_signed": "-12",
+    "raw_unsigned": "244",
+    "hex": "0xF4",
+    "float": -0.75
+   }
+  },
+  {
+   "id": 6137,
+   "op": "fi",
+   "note": "str bin 0b1.11 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.11"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111100",
+    "raw_signed": "-4",
+    "raw_unsigned": "252",
+    "hex": "0xFC",
+    "float": -0.25
+   }
+  },
+  {
+   "id": 6138,
+   "op": "fi",
+   "note": "str bin 0b0.11 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0.11"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001100",
+    "raw_signed": "12",
+    "raw_unsigned": "12",
+    "hex": "0x0C",
+    "float": 0.75
+   }
+  },
+  {
+   "id": 6139,
+   "op": "fi",
+   "note": "str bin 0b10000 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b10000"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11110000",
+    "raw_signed": "-16",
+    "raw_unsigned": "240",
+    "hex": "0xF0",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 6140,
+   "op": "fi",
+   "note": "str bin 0b111111 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b111111"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111111",
+    "raw_signed": "-1",
+    "raw_unsigned": "255",
+    "hex": "0xFF",
+    "float": -0.0625
+   }
+  },
+  {
+   "id": 6141,
+   "op": "fi",
+   "note": "str bin 0b111.11 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b111.11"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111100",
+    "raw_signed": "-4",
+    "raw_unsigned": "252",
+    "hex": "0xFC",
+    "float": -0.25
+   }
+  },
+  {
+   "id": 6142,
+   "op": "fi",
+   "note": "str hex 0x0 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x0"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6143,
+   "op": "fi",
+   "note": "str hex 0x1 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x01",
+    "float": 0.0625
+   }
+  },
+  {
+   "id": 6144,
+   "op": "fi",
+   "note": "str hex 0x7 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x7"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000111",
+    "raw_signed": "7",
+    "raw_unsigned": "7",
+    "hex": "0x07",
+    "float": 0.4375
+   }
+  },
+  {
+   "id": 6145,
+   "op": "fi",
+   "note": "str hex 0x8 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x8"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001000",
+    "raw_signed": "8",
+    "raw_unsigned": "8",
+    "hex": "0x08",
+    "float": 0.5
+   }
+  },
+  {
+   "id": 6146,
+   "op": "fi",
+   "note": "str hex 0xA fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xA"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001010",
+    "raw_signed": "10",
+    "raw_unsigned": "10",
+    "hex": "0x0A",
+    "float": 0.625
+   }
+  },
+  {
+   "id": 6147,
+   "op": "fi",
+   "note": "str hex 0xF fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xF"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001111",
+    "raw_signed": "15",
+    "raw_unsigned": "15",
+    "hex": "0x0F",
+    "float": 0.9375
+   }
+  },
+  {
+   "id": 6148,
+   "op": "fi",
+   "note": "str hex 0x10 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x10"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00010000",
+    "raw_signed": "16",
+    "raw_unsigned": "16",
+    "hex": "0x10",
+    "float": 1.0
+   }
+  },
+  {
+   "id": 6149,
+   "op": "fi",
+   "note": "str hex 0x1F fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1F"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00011111",
+    "raw_signed": "31",
+    "raw_unsigned": "31",
+    "hex": "0x1F",
+    "float": 1.9375
+   }
+  },
+  {
+   "id": 6150,
+   "op": "fi",
+   "note": "str hex 0xFF fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xFF"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111111",
+    "raw_signed": "-1",
+    "raw_unsigned": "255",
+    "hex": "0xFF",
+    "float": -0.0625
+   }
+  },
+  {
+   "id": 6151,
+   "op": "fi",
+   "note": "str hex 0x6 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x6"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000110",
+    "raw_signed": "6",
+    "raw_unsigned": "6",
+    "hex": "0x06",
+    "float": 0.375
+   }
+  },
+  {
+   "id": 6152,
+   "op": "fi",
+   "note": "str hex 0xC fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xC"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001100",
+    "raw_signed": "12",
+    "raw_unsigned": "12",
+    "hex": "0x0C",
+    "float": 0.75
+   }
+  },
+  {
+   "id": 6153,
+   "op": "fi",
+   "note": "str hex 0x1A fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1A"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00011010",
+    "raw_signed": "26",
+    "raw_unsigned": "26",
+    "hex": "0x1A",
+    "float": 1.625
+   }
+  },
+  {
+   "id": 6154,
+   "op": "fi",
+   "note": "str hex 0x7F fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x7F"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "01111111",
+    "raw_signed": "127",
+    "raw_unsigned": "127",
+    "hex": "0x7F",
+    "float": 7.9375
+   }
+  },
+  {
+   "id": 6155,
+   "op": "fi",
+   "note": "str dec 1.5 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "1.5"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00011000",
+    "raw_signed": "24",
+    "raw_unsigned": "24",
+    "hex": "0x18",
+    "float": 1.5
+   }
+  },
+  {
+   "id": 6156,
+   "op": "fi",
+   "note": "str dec -2.25 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-2.25"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11011100",
+    "raw_signed": "-36",
+    "raw_unsigned": "220",
+    "hex": "0xDC",
+    "float": -2.25
+   }
+  },
+  {
+   "id": 6157,
+   "op": "fi",
+   "note": "str dec 0.1 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0.1"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x01",
+    "float": 0.0625
+   }
+  },
+  {
+   "id": 6158,
+   "op": "fi",
+   "note": "str dec -0.1 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-0.1"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111110",
+    "raw_signed": "-2",
+    "raw_unsigned": "254",
+    "hex": "0xFE",
+    "float": -0.125
+   }
+  },
+  {
+   "id": 6159,
+   "op": "fi",
+   "note": "str dec 3 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "3"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00110000",
+    "raw_signed": "48",
+    "raw_unsigned": "48",
+    "hex": "0x30",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 6160,
+   "op": "fi",
+   "note": "str dec -5 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-5"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "10110000",
+    "raw_signed": "-80",
+    "raw_unsigned": "176",
+    "hex": "0xB0",
+    "float": -5.0
+   }
+  },
+  {
+   "id": 6161,
+   "op": "fi",
+   "note": "str dec 0.0 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0.0"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6162,
+   "op": "fi",
+   "note": "str dec -0.0 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-0.0"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6163,
+   "op": "fi",
+   "note": "str dec 7 fmt=(8, 4, True)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "7"
+    },
+    "fmt": [
+     8,
+     4,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "01110000",
+    "raw_signed": "112",
+    "raw_unsigned": "112",
+    "hex": "0x70",
+    "float": 7.0
+   }
+  },
+  {
+   "id": 6164,
+   "op": "fi",
+   "note": "str bin 0b0 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6165,
+   "op": "fi",
+   "note": "str bin 0b1 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x01",
+    "float": 0.0625
+   }
+  },
+  {
+   "id": 6166,
+   "op": "fi",
+   "note": "str bin 0b10 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b10"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000010",
+    "raw_signed": "2",
+    "raw_unsigned": "2",
+    "hex": "0x02",
+    "float": 0.125
+   }
+  },
+  {
+   "id": 6167,
+   "op": "fi",
+   "note": "str bin 0b11 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b11"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000011",
+    "raw_signed": "3",
+    "raw_unsigned": "3",
+    "hex": "0x03",
+    "float": 0.1875
+   }
+  },
+  {
+   "id": 6168,
+   "op": "fi",
+   "note": "str bin 0b101 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b101"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000101",
+    "raw_signed": "5",
+    "raw_unsigned": "5",
+    "hex": "0x05",
+    "float": 0.3125
+   }
+  },
+  {
+   "id": 6169,
+   "op": "fi",
+   "note": "str bin 0b1011 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1011"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001011",
+    "raw_signed": "11",
+    "raw_unsigned": "11",
+    "hex": "0x0B",
+    "float": 0.6875
+   }
+  },
+  {
+   "id": 6170,
+   "op": "fi",
+   "note": "str bin 0b0101 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0101"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000101",
+    "raw_signed": "5",
+    "raw_unsigned": "5",
+    "hex": "0x05",
+    "float": 0.3125
+   }
+  },
+  {
+   "id": 6171,
+   "op": "fi",
+   "note": "str bin 0b1.1 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.1"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00011000",
+    "raw_signed": "24",
+    "raw_unsigned": "24",
+    "hex": "0x18",
+    "float": 1.5
+   }
+  },
+  {
+   "id": 6172,
+   "op": "fi",
+   "note": "str bin 0b0.1 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0.1"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001000",
+    "raw_signed": "8",
+    "raw_unsigned": "8",
+    "hex": "0x08",
+    "float": 0.5
+   }
+  },
+  {
+   "id": 6173,
+   "op": "fi",
+   "note": "str bin 0b1.0 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.0"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00010000",
+    "raw_signed": "16",
+    "raw_unsigned": "16",
+    "hex": "0x10",
+    "float": 1.0
+   }
+  },
+  {
+   "id": 6174,
+   "op": "fi",
+   "note": "str bin 0b11.01 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b11.01"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00110100",
+    "raw_signed": "52",
+    "raw_unsigned": "52",
+    "hex": "0x34",
+    "float": 3.25
+   }
+  },
+  {
+   "id": 6175,
+   "op": "fi",
+   "note": "str bin 0b1.11 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.11"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00011100",
+    "raw_signed": "28",
+    "raw_unsigned": "28",
+    "hex": "0x1C",
+    "float": 1.75
+   }
+  },
+  {
+   "id": 6176,
+   "op": "fi",
+   "note": "str bin 0b0.11 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b0.11"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001100",
+    "raw_signed": "12",
+    "raw_unsigned": "12",
+    "hex": "0x0C",
+    "float": 0.75
+   }
+  },
+  {
+   "id": 6177,
+   "op": "fi",
+   "note": "str bin 0b10000 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b10000"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00010000",
+    "raw_signed": "16",
+    "raw_unsigned": "16",
+    "hex": "0x10",
+    "float": 1.0
+   }
+  },
+  {
+   "id": 6178,
+   "op": "fi",
+   "note": "str bin 0b111111 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b111111"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00111111",
+    "raw_signed": "63",
+    "raw_unsigned": "63",
+    "hex": "0x3F",
+    "float": 3.9375
+   }
+  },
+  {
+   "id": 6179,
+   "op": "fi",
+   "note": "str bin 0b111.11 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b111.11"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "01111100",
+    "raw_signed": "124",
+    "raw_unsigned": "124",
+    "hex": "0x7C",
+    "float": 7.75
+   }
+  },
+  {
+   "id": 6180,
+   "op": "fi",
+   "note": "str hex 0x0 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x0"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6181,
+   "op": "fi",
+   "note": "str hex 0x1 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x01",
+    "float": 0.0625
+   }
+  },
+  {
+   "id": 6182,
+   "op": "fi",
+   "note": "str hex 0x7 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x7"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000111",
+    "raw_signed": "7",
+    "raw_unsigned": "7",
+    "hex": "0x07",
+    "float": 0.4375
+   }
+  },
+  {
+   "id": 6183,
+   "op": "fi",
+   "note": "str hex 0x8 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x8"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001000",
+    "raw_signed": "8",
+    "raw_unsigned": "8",
+    "hex": "0x08",
+    "float": 0.5
+   }
+  },
+  {
+   "id": 6184,
+   "op": "fi",
+   "note": "str hex 0xA fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xA"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001010",
+    "raw_signed": "10",
+    "raw_unsigned": "10",
+    "hex": "0x0A",
+    "float": 0.625
+   }
+  },
+  {
+   "id": 6185,
+   "op": "fi",
+   "note": "str hex 0xF fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xF"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001111",
+    "raw_signed": "15",
+    "raw_unsigned": "15",
+    "hex": "0x0F",
+    "float": 0.9375
+   }
+  },
+  {
+   "id": 6186,
+   "op": "fi",
+   "note": "str hex 0x10 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x10"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00010000",
+    "raw_signed": "16",
+    "raw_unsigned": "16",
+    "hex": "0x10",
+    "float": 1.0
+   }
+  },
+  {
+   "id": 6187,
+   "op": "fi",
+   "note": "str hex 0x1F fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1F"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00011111",
+    "raw_signed": "31",
+    "raw_unsigned": "31",
+    "hex": "0x1F",
+    "float": 1.9375
+   }
+  },
+  {
+   "id": 6188,
+   "op": "fi",
+   "note": "str hex 0xFF fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xFF"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111111",
+    "raw_signed": "255",
+    "raw_unsigned": "255",
+    "hex": "0xFF",
+    "float": 15.9375
+   }
+  },
+  {
+   "id": 6189,
+   "op": "fi",
+   "note": "str hex 0x6 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x6"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000110",
+    "raw_signed": "6",
+    "raw_unsigned": "6",
+    "hex": "0x06",
+    "float": 0.375
+   }
+  },
+  {
+   "id": 6190,
+   "op": "fi",
+   "note": "str hex 0xC fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0xC"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00001100",
+    "raw_signed": "12",
+    "raw_unsigned": "12",
+    "hex": "0x0C",
+    "float": 0.75
+   }
+  },
+  {
+   "id": 6191,
+   "op": "fi",
+   "note": "str hex 0x1A fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x1A"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00011010",
+    "raw_signed": "26",
+    "raw_unsigned": "26",
+    "hex": "0x1A",
+    "float": 1.625
+   }
+  },
+  {
+   "id": 6192,
+   "op": "fi",
+   "note": "str hex 0x7F fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0x7F"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "01111111",
+    "raw_signed": "127",
+    "raw_unsigned": "127",
+    "hex": "0x7F",
+    "float": 7.9375
+   }
+  },
+  {
+   "id": 6193,
+   "op": "fi",
+   "note": "str dec 1.5 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "1.5"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00011000",
+    "raw_signed": "24",
+    "raw_unsigned": "24",
+    "hex": "0x18",
+    "float": 1.5
+   }
+  },
+  {
+   "id": 6194,
+   "op": "fi",
+   "note": "str dec -2.25 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-2.25"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11011100",
+    "raw_signed": "220",
+    "raw_unsigned": "220",
+    "hex": "0xDC",
+    "float": 13.75
+   }
+  },
+  {
+   "id": 6195,
+   "op": "fi",
+   "note": "str dec 0.1 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0.1"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000001",
+    "raw_signed": "1",
+    "raw_unsigned": "1",
+    "hex": "0x01",
+    "float": 0.0625
+   }
+  },
+  {
+   "id": 6196,
+   "op": "fi",
+   "note": "str dec -0.1 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-0.1"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "11111110",
+    "raw_signed": "254",
+    "raw_unsigned": "254",
+    "hex": "0xFE",
+    "float": 15.875
+   }
+  },
+  {
+   "id": 6197,
+   "op": "fi",
+   "note": "str dec 3 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "3"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00110000",
+    "raw_signed": "48",
+    "raw_unsigned": "48",
+    "hex": "0x30",
+    "float": 3.0
+   }
+  },
+  {
+   "id": 6198,
+   "op": "fi",
+   "note": "str dec -5 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-5"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "10110000",
+    "raw_signed": "176",
+    "raw_unsigned": "176",
+    "hex": "0xB0",
+    "float": 11.0
+   }
+  },
+  {
+   "id": 6199,
+   "op": "fi",
+   "note": "str dec 0.0 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0.0"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6200,
+   "op": "fi",
+   "note": "str dec -0.0 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "-0.0"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "00000000",
+    "raw_signed": "0",
+    "raw_unsigned": "0",
+    "hex": "0x00",
+    "float": 0.0
+   }
+  },
+  {
+   "id": 6201,
+   "op": "fi",
+   "note": "str dec 7 fmt=(8, 4, False)",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "7"
+    },
+    "fmt": [
+     8,
+     4,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "01110000",
+    "raw_signed": "112",
+    "raw_unsigned": "112",
+    "hex": "0x70",
+    "float": 7.0
+   }
+  },
+  {
+   "id": 6202,
+   "op": "fi",
+   "note": "review: fi 0b1 (4,0,s) == -1",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1"
+    },
+    "fmt": [
+     4,
+     0,
+     true
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "1111",
+    "raw_signed": "-1",
+    "raw_unsigned": "15",
+    "hex": "0xF",
+    "float": -1.0
+   }
+  },
+  {
+   "id": 6203,
+   "op": "fi",
+   "note": "review: fi 0b10000 (4,0,u) raises",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b10000"
+    },
+    "fmt": [
+     4,
+     0,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "error": "ValueError"
+   }
+  },
+  {
+   "id": 6204,
+   "op": "fi",
+   "note": "review: fi 0b1.1 (4,2,u) == 1.5",
+   "spec": {
+    "ctor": "fi",
+    "value": {
+     "t": "str",
+     "v": "0b1.1"
+    },
+    "fmt": [
+     4,
+     2,
+     false
+    ],
+    "rounding": "trunc_bits",
+    "overflow": "wrap"
+   },
+   "expect": {
+    "bits": "0110",
+    "raw_signed": "6",
+    "raw_unsigned": "6",
+    "hex": "0x6",
+    "float": 1.5
+   }
+  },
+  {
+   "id": 6205,
    "op": "bits",
    "note": "ut bits_and_raw_values",
    "spec": {
@@ -198812,7 +209185,7 @@
    }
   },
   {
-   "id": 5804,
+   "id": 6206,
    "op": "quantize",
    "note": "ut trunc_bits",
    "spec": {
@@ -198841,7 +209214,7 @@
    }
   },
   {
-   "id": 5805,
+   "id": 6207,
    "op": "quantize",
    "note": "ut trunc_zero",
    "spec": {
@@ -198870,7 +209243,7 @@
    }
   },
   {
-   "id": 5806,
+   "id": 6208,
    "op": "quantize",
    "note": "ut round even neg",
    "spec": {
@@ -198899,7 +209272,7 @@
    }
   },
   {
-   "id": 5807,
+   "id": 6209,
    "op": "quantize",
    "note": "ut round even pos",
    "spec": {
@@ -198928,7 +209301,7 @@
    }
   },
   {
-   "id": 5808,
+   "id": 6210,
    "op": "quantize",
    "note": "ut tie floor 01001",
    "spec": {
@@ -198957,7 +209330,7 @@
    }
   },
   {
-   "id": 5809,
+   "id": 6211,
    "op": "quantize",
    "note": "ut tie ceil 10111",
    "spec": {
@@ -198986,7 +209359,7 @@
    }
   },
   {
-   "id": 5810,
+   "id": 6212,
    "op": "quantize",
    "note": "ut tie round_pos_inf 01001",
    "spec": {
@@ -199015,7 +209388,7 @@
    }
   },
   {
-   "id": 5811,
+   "id": 6213,
    "op": "quantize",
    "note": "ut tie round_pos_inf 10111",
    "spec": {
@@ -199044,7 +209417,7 @@
    }
   },
   {
-   "id": 5812,
+   "id": 6214,
    "op": "quantize",
    "note": "ut tie round_neg_inf 01001",
    "spec": {
@@ -199073,7 +209446,7 @@
    }
   },
   {
-   "id": 5813,
+   "id": 6215,
    "op": "quantize",
    "note": "ut tie round_neg_inf 10111",
    "spec": {
@@ -199102,7 +209475,7 @@
    }
   },
   {
-   "id": 5814,
+   "id": 6216,
    "op": "quantize",
    "note": "ut tie round_zero 01001",
    "spec": {
@@ -199131,7 +209504,7 @@
    }
   },
   {
-   "id": 5815,
+   "id": 6217,
    "op": "quantize",
    "note": "ut tie round_zero 10111",
    "spec": {
@@ -199160,7 +209533,7 @@
    }
   },
   {
-   "id": 5816,
+   "id": 6218,
    "op": "quantize",
    "note": "ut tie round_away 01001",
    "spec": {
@@ -199189,7 +209562,7 @@
    }
   },
   {
-   "id": 5817,
+   "id": 6219,
    "op": "quantize",
    "note": "ut tie round_away 10111",
    "spec": {
@@ -199218,7 +209591,7 @@
    }
   },
   {
-   "id": 5818,
+   "id": 6220,
    "op": "quantize",
    "note": "ut tie round_inf 01001",
    "spec": {
@@ -199247,7 +209620,7 @@
    }
   },
   {
-   "id": 5819,
+   "id": 6221,
    "op": "quantize",
    "note": "ut tie round_inf 10111",
    "spec": {
@@ -199276,7 +209649,7 @@
    }
   },
   {
-   "id": 5820,
+   "id": 6222,
    "op": "sub",
    "note": "ut unsigned sub wrap",
    "spec": {
@@ -199313,7 +209686,7 @@
    }
   },
   {
-   "id": 5821,
+   "id": 6223,
    "op": "quantize",
    "note": "ut u2s sat",
    "spec": {
@@ -199342,7 +209715,7 @@
    }
   },
   {
-   "id": 5822,
+   "id": 6224,
    "op": "quantize",
    "note": "ut u2s widen",
    "spec": {
@@ -199371,7 +209744,7 @@
    }
   },
   {
-   "id": 5823,
+   "id": 6225,
    "op": "add",
    "note": "ut add rtl",
    "spec": {
@@ -199408,7 +209781,7 @@
    }
   },
   {
-   "id": 5824,
+   "id": 6226,
    "op": "mul",
    "note": "ut mul rtl",
    "spec": {
@@ -199445,7 +209818,7 @@
    }
   },
   {
-   "id": 5825,
+   "id": 6227,
    "op": "mult_add",
    "note": "ut mult_add round",
    "spec": {

@@ -197,6 +197,44 @@ class Builder:
             self.skipped.append((op, note, type(exc).__name__, str(exc)))
             return None
 
+    def _record_error(self, op, spec, note, exc):
+        self._id += 1
+        self.entries.append({
+            "id": self._id,
+            "op": op,
+            "note": note,
+            "spec": spec,
+            "expect": {"error": type(exc).__name__},
+        })
+
+    def add_auto(self, op, spec, note=""):
+        """Add a vector recording either the model's value or, if the model raises,
+        an expected-error vector. The JS port must reproduce the same outcome
+        (value bit-for-bit, or a thrown exception)."""
+        try:
+            value = run_op({"op": op, "spec": spec})
+        except Exception as exc:  # noqa: BLE001 - faithfully record fxpmath raising
+            self._record_error(op, spec, note, exc)
+            return None
+        self._id += 1
+        self.entries.append({
+            "id": self._id,
+            "op": op,
+            "note": note,
+            "spec": spec,
+            "expect": expect_of(value),
+        })
+        return value
+
+    def add_error(self, op, spec, note=""):
+        """Add an expected-error vector, asserting the model actually raises."""
+        try:
+            run_op({"op": op, "spec": spec})
+        except Exception as exc:  # noqa: BLE001 - the expected outcome
+            self._record_error(op, spec, note, exc)
+            return
+        raise AssertionError(f"expected {op} [{note}] to raise, but it returned a value")
+
 
 def build_vectors():
     b = Builder()
@@ -345,18 +383,55 @@ def build_vectors():
     for (lf, rf, lv, rv) in hw_pairs:
         left = ctor_raw(lv, *lf)
         right = ctor_raw(rv, *rf)
-        # product is exact and wide; narrow back below the float64 boundary too.
-        # try_add skips cases fxpmath itself cannot compute (extreme >64-bit).
-        b.try_add("mul", {"left": left, "right": right,
-                          "fmt": fmt_spec(lf[0] + rf[0], lf[1] + rf[1], lf[2] or rf[2]),
-                          "rounding": "trunc_bits", "overflow": "wrap"}, note="hw mul full")
-        b.try_add("mul", {"left": left, "right": right,
-                          "fmt": fmt_spec(32, max(lf[1], rf[1]), lf[2] or rf[2]),
-                          "rounding": "round", "overflow": "wrap"}, note="hw mul narrow round")
+        # add_auto records the value when fxpmath computes one, or an expected-error
+        # vector when it raises (e.g. narrowing a >64-bit product to a sub-64-bit
+        # width, which the JS port must also raise on).
+        b.add_auto("mul", {"left": left, "right": right,
+                           "fmt": fmt_spec(lf[0] + rf[0], lf[1] + rf[1], lf[2] or rf[2]),
+                           "rounding": "trunc_bits", "overflow": "wrap"}, note="hw mul full")
+        b.add_auto("mul", {"left": left, "right": right,
+                           "fmt": fmt_spec(32, max(lf[1], rf[1]), lf[2] or rf[2]),
+                           "rounding": "round", "overflow": "wrap"}, note="hw mul narrow round")
         for op in ("add", "sub"):
-            b.try_add(op, {"left": left, "right": right,
-                           "fmt": fmt_spec(max(lf[0], rf[0]) + 2, max(lf[1], rf[1]), lf[2] or rf[2]),
-                           "rounding": "trunc_bits", "overflow": "wrap"}, note=f"hw {op}")
+            b.add_auto(op, {"left": left, "right": right,
+                            "fmt": fmt_spec(max(lf[0], rf[0]) + 2, max(lf[1], rf[1]), lf[2] or rf[2]),
+                            "rounding": "trunc_bits", "overflow": "wrap"}, note=f"hw {op}")
+
+    # ---- 5c. high-width out-of-domain: products narrowed to a sub-64-bit format.
+    #          fxpmath raises OverflowError here; the JS port must too. Includes the
+    #          three review cases. Saturate clips instead of raising (a value).
+    overflow_error_cases = [
+        # (op, left, right, out_fmt) expected to RAISE
+        ("mul", ctor_raw((1 << 59) - 1, 60, 0, True), ctor_raw((1 << 59) - 1, 60, 0, True), fmt_spec(32, 0, True)),
+        ("mul", ctor_raw(1 << 62, 64, 0, True), ctor_raw(1 << 62, 64, 0, True), fmt_spec(32, 0, True)),
+        ("mul", ctor_raw(1 << 39, 40, 0, False), ctor_raw(1 << 39, 40, 0, False), fmt_spec(32, 0, False)),
+    ]
+    for (op, left, right, out_fmt) in overflow_error_cases:
+        b.add_error(op, {"left": left, "right": right, "fmt": out_fmt,
+                         "rounding": "trunc_bits", "overflow": "wrap"},
+                    note=f"out-of-domain {op} narrow to {out_fmt[0]}-bit wrap")
+        # the same narrowing with saturate clips to the bound instead of raising
+        b.add_auto(op, {"left": left, "right": right, "fmt": out_fmt,
+                        "rounding": "trunc_bits", "overflow": "saturate"},
+                   note=f"narrow to {out_fmt[0]}-bit saturate (clips, no raise)")
+
+    # direct out-of-range integer inputs: fi(bigint) above uint64 / below int64 min
+    # raises under wrap at width < 64, but not at width >= 64, nor under saturate.
+    for signed in (True, False):
+        b.add_error("fi", ctor_fi(vint(1 << 64), 32, 0, signed, overflow="wrap"),
+                    note=f"fi int 2**64 ->32 wrap signed={signed}")
+        b.add_error("fi", ctor_fi(vint(-(1 << 63) - 1), 32, 0, signed, overflow="wrap"),
+                    note=f"fi int -(2**63)-1 ->32 wrap signed={signed}")
+        b.add_auto("fi", ctor_fi(vint(1 << 64), 64, 0, signed, overflow="wrap"),
+                   note=f"fi int 2**64 ->64 wrap (width>=64, no raise) signed={signed}")
+        b.add_auto("fi", ctor_fi(vint(1 << 64), 32, 0, signed, overflow="saturate"),
+                   note=f"fi int 2**64 ->32 saturate (clips) signed={signed}")
+    # the critical "check is on the pre-shift integer" case: fi((2**60)+1, (32,4))
+    # has a shifted candidate >2**64 yet must NOT raise (fxpmath's int64 multiply
+    # wraps silently). Recorded as a value.
+    for signed in (True, False):
+        b.add_auto("fi", ctor_fi(vint((1 << 60) + 1), 32, 4, signed, overflow="wrap"),
+                   note=f"fi int (2**60)+1 ->(32,4) wrap (pre-shift in range) signed={signed}")
 
     # ---- 6. negative zero in several forms ----------------------------------
     for signed in (True, False):
@@ -366,7 +441,40 @@ def build_vectors():
     b.add("quantize", {"source": ctor_fi(vfloat(-0.0), 8, 4, True), "fmt": fmt_spec(4, 1, True), "rounding": "round"},
           note="quantize -0.0")
 
-    # ---- 7. every case already asserted in test_lm_math_fi_model.py ---------
+    # ---- 7. string-input vectors (fi with binary/hex/decimal literals) -------
+    #         Exercises fxpmath's str2num rules: short signed literals are
+    #         sign-extended (binary) or zero-padded (hex), over-wide literals
+    #         raise, and a binary point is honored. add_auto records a value or an
+    #         expected-error per the model.
+    str_fmts = [
+        (4, 0, True), (4, 0, False), (5, 2, True), (5, 2, False),
+        (4, 2, True), (4, 2, False), (8, 0, True), (8, 0, False),
+        (8, 4, True), (8, 4, False),
+    ]
+    binary_literals = [
+        "0b0", "0b1", "0b10", "0b11", "0b101", "0b1011", "0b0101",
+        "0b1.1", "0b0.1", "0b1.0", "0b11.01", "0b1.11", "0b0.11",
+        "0b10000", "0b111111", "0b111.11",  # some over-wide -> raise
+    ]
+    hex_literals = [
+        "0x0", "0x1", "0x7", "0x8", "0xA", "0xF", "0x10", "0x1F",
+        "0xFF", "0x6", "0xC", "0x1A", "0x7F",
+    ]
+    decimal_literals = ["1.5", "-2.25", "0.1", "-0.1", "3", "-5", "0.0", "-0.0", "7"]
+    for fmt in str_fmts:
+        for lit in binary_literals:
+            b.add_auto("fi", ctor_fi(vstr(lit), *fmt), note=f"str bin {lit} fmt={fmt}")
+        for lit in hex_literals:
+            b.add_auto("fi", ctor_fi(vstr(lit), *fmt), note=f"str hex {lit} fmt={fmt}")
+        for lit in decimal_literals:
+            b.add_auto("fi", ctor_fi(vstr(lit), *fmt), note=f"str dec {lit} fmt={fmt}")
+
+    # The exact FIX-1 review cases, asserted explicitly.
+    b.add("fi", ctor_fi(vstr("0b1"), 4, 0, True), note="review: fi 0b1 (4,0,s) == -1")
+    b.add_error("fi", ctor_fi(vstr("0b10000"), 4, 0, False), note="review: fi 0b10000 (4,0,u) raises")
+    b.add("fi", ctor_fi(vstr("0b1.1"), 4, 2, False), note="review: fi 0b1.1 (4,2,u) == 1.5")
+
+    # ---- 8. every case already asserted in test_lm_math_fi_model.py ---------
     add_unittest_cases(b)
 
     return b
