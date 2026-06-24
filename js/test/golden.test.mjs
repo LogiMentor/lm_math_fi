@@ -103,9 +103,9 @@ function runOp(entry) {
   }
 }
 
-test(`golden vectors provenance (fxpmath ${doc.provenance?.fxpmath_version})`, () => {
+test(`golden vectors provenance (fxpmath ${doc.fxpmath_version})`, () => {
   assert.equal(doc.schema, "lm_math_fi.golden.v1");
-  assert.equal(doc.provenance.fxpmath_version, "0.4.10");
+  assert.equal(doc.fxpmath_version, "0.4.10");
   assert.equal(doc.count, doc.vectors.length);
   assert.ok(doc.count > 0);
 });
@@ -115,16 +115,23 @@ test("golden vectors reproduce the Python/fxpmath model bit-for-bit", () => {
   const failures = [];
   for (const entry of doc.vectors) {
     const e = entry.expect;
-    // Expected-error vectors: fxpmath raised, so the JS port must throw too.
+    // Expected-error vectors: fxpmath raised, so the JS port must throw AND the
+    // thrown error's category must equal the category fxpmath's exception mapped
+    // to. An unrelated JS error with the wrong category fails the vector.
     if (e.error) {
-      let threw = false;
+      const wantCategory = e.error.category;
+      let caught;
       try {
         runOp(entry);
-      } catch {
-        threw = true;
+      } catch (err) {
+        caught = err;
       }
-      if (!threw) {
-        failures.push(`#${entry.id} (${entry.op}, ${entry.note}): expected to throw (${e.error}) but returned a value`);
+      if (!caught) {
+        failures.push(`#${entry.id} (${entry.op}, ${entry.note}): expected to throw (${wantCategory}) but returned a value`);
+      } else if (caught.category !== wantCategory) {
+        failures.push(
+          `#${entry.id} (${entry.op}, ${entry.note}): threw category '${caught.category}' (${caught.message}) but expected '${wantCategory}'`
+        );
       }
       checked++;
       continue;

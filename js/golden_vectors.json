@@ -1,35 +1,31 @@
 {
  "schema": "lm_math_fi.golden.v1",
- "provenance": {
-  "fxpmath_version": "0.4.10",
-  "model": "lm_math_fi_model",
-  "source_git_commit": "64b14a872cb35563157a98db8de1d70ef591d00b",
-  "rounding_keys": [
-   "bit_trunc",
-   "ceil",
-   "fix",
-   "floor",
-   "nearest_away",
-   "nearest_even",
-   "nearest_neginf",
-   "nearest_posinf",
-   "nearest_zero",
-   "round",
-   "round_away",
-   "round_even",
-   "round_inf",
-   "round_neg_inf",
-   "round_pos_inf",
-   "round_zero",
-   "trunc",
-   "trunc_bits",
-   "trunc_zero"
-  ],
-  "overflow_keys": [
-   "wrap",
-   "saturate"
-  ]
- },
+ "fxpmath_version": "0.4.10",
+ "rounding_keys": [
+  "bit_trunc",
+  "ceil",
+  "fix",
+  "floor",
+  "nearest_away",
+  "nearest_even",
+  "nearest_neginf",
+  "nearest_posinf",
+  "nearest_zero",
+  "round",
+  "round_away",
+  "round_even",
+  "round_inf",
+  "round_neg_inf",
+  "round_pos_inf",
+  "round_zero",
+  "trunc",
+  "trunc_bits",
+  "trunc_zero"
+ ],
+ "overflow_keys": [
+  "wrap",
+  "saturate"
+ ],
  "rtl_overlap_checked": true,
  "count": 6342,
  "vectors": [
@@ -198174,7 +198170,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "OverflowError"
+    "error": {
+     "category": "domain_error",
+     "py_type": "OverflowError"
+    }
    }
   },
   {
@@ -198326,7 +198325,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "OverflowError"
+    "error": {
+     "category": "domain_error",
+     "py_type": "OverflowError"
+    }
    }
   },
   {
@@ -198634,7 +198636,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "OverflowError"
+    "error": {
+     "category": "domain_error",
+     "py_type": "OverflowError"
+    }
    }
   },
   {
@@ -198747,7 +198752,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "OverflowError"
+    "error": {
+     "category": "domain_error",
+     "py_type": "OverflowError"
+    }
    }
   },
   {
@@ -198821,7 +198829,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "OverflowError"
+    "error": {
+     "category": "domain_error",
+     "py_type": "OverflowError"
+    }
    }
   },
   {
@@ -198895,7 +198906,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "OverflowError"
+    "error": {
+     "category": "domain_error",
+     "py_type": "OverflowError"
+    }
    }
   },
   {
@@ -198956,7 +198970,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "OverflowError"
+    "error": {
+     "category": "domain_error",
+     "py_type": "OverflowError"
+    }
    }
   },
   {
@@ -198978,7 +198995,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "OverflowError"
+    "error": {
+     "category": "domain_error",
+     "py_type": "OverflowError"
+    }
    }
   },
   {
@@ -199052,7 +199072,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "OverflowError"
+    "error": {
+     "category": "domain_error",
+     "py_type": "OverflowError"
+    }
    }
   },
   {
@@ -199074,7 +199097,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "OverflowError"
+    "error": {
+     "category": "domain_error",
+     "py_type": "OverflowError"
+    }
    }
   },
   {
@@ -199718,7 +199744,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -199740,7 +199769,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -199762,7 +199794,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -199940,7 +199975,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -199962,7 +200000,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -199984,7 +200025,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -200058,7 +200102,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -200080,7 +200127,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -200674,7 +200724,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -200696,7 +200749,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -200718,7 +200774,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -200896,7 +200955,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -200918,7 +200980,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -200940,7 +201005,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -201014,7 +201082,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -201036,7 +201107,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -201656,7 +201730,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -201912,7 +201989,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -202012,7 +202092,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -202632,7 +202715,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -202888,7 +202974,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -202988,7 +203077,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -203582,7 +203674,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -203604,7 +203699,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -203626,7 +203724,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -203804,7 +203905,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -203826,7 +203930,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -203848,7 +203955,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -203922,7 +204032,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -203944,7 +204057,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -204538,7 +204654,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -204560,7 +204679,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -204582,7 +204704,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -204760,7 +204885,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -204782,7 +204910,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -204804,7 +204935,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -204878,7 +205012,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -204900,7 +205037,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -209134,7 +209274,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -209182,7 +209325,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -209204,7 +209350,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -209226,7 +209375,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -209248,7 +209400,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -209270,7 +209425,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -209292,7 +209450,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -209314,7 +209475,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -209336,7 +209500,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -209358,7 +209525,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -209380,7 +209550,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -209402,7 +209575,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -209424,7 +209600,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -209446,7 +209625,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -209468,7 +209650,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -209490,7 +209675,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -209512,7 +209700,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -209534,7 +209725,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -209556,7 +209750,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -210150,7 +210347,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -210172,7 +210372,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -210194,7 +210397,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -210216,7 +210422,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -210238,7 +210447,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -210260,7 +210472,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -210282,7 +210497,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -210304,7 +210522,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -210326,7 +210547,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -210348,7 +210572,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -210370,7 +210597,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -210392,7 +210622,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -210414,7 +210647,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -210436,7 +210672,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -210926,7 +211165,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -210948,7 +211190,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211022,7 +211267,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211044,7 +211292,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211066,7 +211317,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211088,7 +211342,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211110,7 +211367,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211132,7 +211392,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211154,7 +211417,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211176,7 +211442,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211198,7 +211467,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211220,7 +211492,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211242,7 +211517,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211264,7 +211542,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211286,7 +211567,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211308,7 +211592,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211330,7 +211617,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211352,7 +211642,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211374,7 +211667,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211396,7 +211692,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211418,7 +211717,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211440,7 +211742,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211462,7 +211767,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211484,7 +211792,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211506,7 +211817,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211528,7 +211842,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211550,7 +211867,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211572,7 +211892,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211594,7 +211917,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211616,7 +211942,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211638,7 +211967,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211660,7 +211992,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211682,7 +212017,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211704,7 +212042,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211726,7 +212067,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211748,7 +212092,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "ValueError"
+    "error": {
+     "category": "parse_error",
+     "py_type": "ValueError"
+    }
    }
   },
   {
@@ -211782,7 +212129,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "OverflowError"
+    "error": {
+     "category": "domain_error",
+     "py_type": "OverflowError"
+    }
    }
   },
   {
@@ -211854,7 +212204,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "OverflowError"
+    "error": {
+     "category": "domain_error",
+     "py_type": "OverflowError"
+    }
    }
   },
   {
@@ -211897,7 +212250,10 @@
     "overflow": "wrap"
    },
    "expect": {
-    "error": "OverflowError"
+    "error": {
+     "category": "domain_error",
+     "py_type": "OverflowError"
+    }
    }
   },
   {
