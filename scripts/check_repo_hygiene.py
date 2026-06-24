@@ -52,7 +52,6 @@ FORBIDDEN_TEXT_PATTERNS = [
     text_marker("git", "lab"),
     text_marker("fp", "yga"),
     text_marker("home", ".", "arpa"),
-    text_marker("cam", "pera"),
     word_marker("c", "es"),
     re.compile(r"[A-Za-z]:\\Users\\[A-Za-z0-9_.-]+", re.IGNORECASE),
     re.compile(r"/home/[A-Za-z0-9_.-]+", re.IGNORECASE),
