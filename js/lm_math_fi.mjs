@@ -238,18 +238,22 @@ export class FiValue {
 
     // String inputs. fxpmath.utils.str2num detects a binary literal when 'b' is in
     // the first two characters and a hex literal when 'x' is (after replacing 'h'
-    // with 'x'); otherwise it is a base-10 literal. Base-10 uses float(x) when it
-    // has a '.' or n_frac > 0, else int(x).
+    // with 'x'); otherwise it is a base-10 literal parsed with Python int(x)/float(x).
+    // Detection is case-sensitive, so uppercase prefixes ("0X", "0B") are NOT based
+    // literals and reach the base-10 parser, which rejects them (Python int("0XF")
+    // raises). Base-10 uses float(x) when the string has a '.' or n_frac > 0, else
+    // int(x); _decToNumber / _decToBigInt reproduce Python's grammar (rejecting
+    // radix prefixes and other non-decimal forms, accepting underscore separators).
     if (typeof value === "string") {
       const s = value.trim();
       const head = s.replace(/h/g, "x").slice(0, 2);
       if (head.includes("b") || head.includes("x")) {
         return FiValue._fromBased(s, fmt, method, ovf);
       }
-      if (s.includes(".") || /[eE]/.test(s) || fmt.binpnt > 0) {
-        return FiValue._fromFloat(Number(s), fmt, method, ovf);
+      if (s.includes(".") || fmt.binpnt > 0) {
+        return FiValue._fromFloat(_decToNumber(s), fmt, method, ovf);
       }
-      return FiValue._fromInteger(BigInt(s), fmt, fmt.binpnt, ovf);
+      return FiValue._fromInteger(_decToBigInt(s), fmt, fmt.binpnt, ovf);
     }
 
     // BigInt -> exact integer input (mirrors a Python int: no float, no rounding).
@@ -420,6 +424,46 @@ function _nint(fmt) {
   return fmt.width - fmt.binpnt - (fmt.signed ? 1 : 0);
 }
 
+// Convert a digit string to a BigInt the way Python's int(str, base) does:
+// single underscores are accepted as separators BETWEEN digits (never leading,
+// trailing, or doubled) and stripped; anything else raises (matching the Python
+// ValueError fxpmath surfaces). Used for both based literals and decimal input.
+function _intFromDigits(digits, base) {
+  const re = base === 2 ? /^[01](?:_?[01])*$/ : /^[0-9a-fA-F](?:_?[0-9a-fA-F])*$/;
+  if (!re.test(digits)) {
+    throw new Error(`invalid base-${base} digit string: ${digits}`);
+  }
+  return BigInt((base === 2 ? "0b" : "0x") + digits.replace(/_/g, ""));
+}
+
+// Base-10 parsing matching Python int(x) / float(x): a decimal grammar with
+// optional sign and underscore separators between digits, and NO radix prefix
+// (so "0XF", "0B1", "0o17" are rejected exactly as Python int()/float() reject
+// them). These guard against JS BigInt()/Number() being more lenient.
+const _DEC_GROUP = String.raw`\d(?:_?\d)*`;
+const _DEC_INT_RE = new RegExp(`^[+-]?${_DEC_GROUP}$`);
+const _DEC_FLOAT_RE = new RegExp(
+  `^[+-]?(?:${_DEC_GROUP}(?:\\.(?:${_DEC_GROUP})?)?|\\.${_DEC_GROUP})(?:[eE][+-]?${_DEC_GROUP})?$`
+);
+
+function _decToBigInt(s) {
+  const t = s.trim();
+  if (!_DEC_INT_RE.test(t)) {
+    throw new Error(`invalid decimal integer literal: ${s}`);
+  }
+  let clean = t.replace(/_/g, "");
+  if (clean[0] === "+") clean = clean.slice(1); // BigInt() rejects a leading '+'
+  return BigInt(clean);
+}
+
+function _decToNumber(s) {
+  const t = s.trim();
+  if (!_DEC_FLOAT_RE.test(t)) {
+    throw new Error(`invalid decimal literal: ${s}`);
+  }
+  return Number(t.replace(/_/g, ""));
+}
+
 // fxpmath.utils.strbin2int: parse a binary literal to an exact integer (BigInt).
 // Mirrors the length/sign rules precisely:
 //   - strip "0b"/"b", spaces and "+"; a leading "-" sets an explicit sign;
@@ -434,9 +478,13 @@ function _strbin2int(litStr, signed, nWord) {
     sign = -1n;
     x = x.replace(/-/g, "");
   }
-  if (x.length === 0 || !/^[01]+$/.test(x)) {
+  if (x.length === 0) {
     throw new Error(`invalid binary literal: ${litStr}`);
   }
+  // Underscores are kept here: fxpmath does not strip them before the length and
+  // sign-extension logic (they count as characters, like Python's int(x, 2)), so
+  // the digit count used for sign-extension includes them. They are consumed by
+  // _intFromDigits at conversion. Invalid characters are rejected there too.
   if (x.length < nWord) {
     x = (signed ? x[0] : "0").repeat(nWord - x.length) + x;
   } else if (x.length > nWord) {
@@ -447,12 +495,12 @@ function _strbin2int(litStr, signed, nWord) {
     if (x.length < 2) {
       throw new Error("signed binary with not enough bits!");
     }
-    val = BigInt("0b" + x.slice(1));
+    val = _intFromDigits(x.slice(1), 2); // Python int(x[1:], 2)
     if (x[0] === "1") {
       val = -((1n << BigInt(nWord - 1)) - val);
     }
   } else {
-    val = BigInt("0b" + x);
+    val = _intFromDigits(x, 2); // Python int(x, 2)
   }
   return sign * val;
 }
@@ -478,10 +526,9 @@ function _strbin2float(litStr, signed, nWord, nFrac) {
 // zero-extended, NOT sign-extended). Over-wide literals are rejected by strbin2int.
 function _strhex2int(litStr, signed, nWord) {
   const body = litStr.replace(/0x/g, "");
-  if (body.length === 0 || !/^[0-9a-fA-F]+$/.test(body)) {
-    throw new Error(`invalid hex literal: ${litStr}`);
-  }
-  let xbin = BigInt("0x" + body).toString(2);
+  // fxpmath does int(body, 16) (consuming underscores, rejecting '.', etc.) then
+  // converts to binary and zero-pads to n_word before the two's-complement read.
+  let xbin = _intFromDigits(body, 16).toString(2);
   if (xbin.length < nWord) {
     xbin = "0".repeat(nWord - xbin.length) + xbin;
   }
