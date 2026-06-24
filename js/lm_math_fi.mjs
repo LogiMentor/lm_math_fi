@@ -236,13 +236,14 @@ export class FiValue {
       return value.quantize(fmt, { rounding, overflow });
     }
 
-    // String inputs: based literals route through the bit/raw parser; decimal
-    // strings route through the float path (or exact-integer path, mirroring
-    // fxpmath.utils.str2num which uses int(x) only when no '.' and n_frac == 0).
+    // String inputs. fxpmath.utils.str2num detects a binary literal when 'b' is in
+    // the first two characters and a hex literal when 'x' is (after replacing 'h'
+    // with 'x'); otherwise it is a base-10 literal. Base-10 uses float(x) when it
+    // has a '.' or n_frac > 0, else int(x).
     if (typeof value === "string") {
       const s = value.trim();
-      const low = s.toLowerCase();
-      if (low.startsWith("0b") || low.startsWith("0x") || low.startsWith("-0b") || low.startsWith("-0x")) {
+      const head = s.replace(/h/g, "x").slice(0, 2);
+      if (head.includes("b") || head.includes("x")) {
         return FiValue._fromBased(s, fmt, method, ovf);
       }
       if (s.includes(".") || /[eE]/.test(s) || fmt.binpnt > 0) {
@@ -297,51 +298,32 @@ export class FiValue {
   }
 
   // Exact-integer path (Python int input): scale by an exact BigInt shift, no
-  // rounding (the raw-domain value is already integral), then overflow.
+  // rounding (the raw-domain value is already integral), then overflow. Uses the
+  // integer-path domain guard so it raises exactly where fxpmath does.
   static _fromInteger(intVal, fmt, binpnt, ovf) {
     const cand = intVal << BigInt(binpnt);
-    return new FiValue(_overflowStore(cand, fmt.width, fmt.signed, ovf), fmt);
+    // conv_factor = 2**binpnt here, so the domain check is on intVal (pre-shift):
+    // fxpmath's int64 multiply by 2**binpnt wraps silently rather than raising.
+    return new FiValue(_storeIntegerCand(cand, fmt, ovf, intVal), fmt);
   }
 
-  // Binary/hex based-literal path. Reproduces fxpmath.utils.str2num:
-  //   - binpnt == 0 (integer literal): parse exactly, no float (lossless any width).
-  //   - binpnt  > 0 (fractional literal): parse the integer exactly then divide by
-  //     2**binpnt in float64 (strbin2float), then run the standard float pipeline
-  //     with the supplied rounding/overflow. This is float64-lossy above 2**53,
-  //     reproducing fxpmath exactly.
+  // Binary/hex based-literal path. Reproduces fxpmath.utils.str2num exactly via
+  // the strbin2int / strbin2float / strhex2int / strhex2float rules (see
+  // _basedToValue): short signed literals are SIGN-extended (hex is zero-padded
+  // then interpreted in two's complement), over-wide literals are REJECTED, and a
+  // binary point is honored.
+  //   - integer literal (binpnt == 0, no '.'): exact, no float (lossless any width).
+  //   - fractional literal (binpnt > 0 or '.'): parse the integer exactly then
+  //     divide by 2**binpnt in float64, then run the standard float pipeline. This
+  //     is float64-lossy above 2**53, reproducing fxpmath exactly.
   static _fromBased(litStr, fmt, method, ovf) {
-    let s = litStr.trim();
-    let neg = false;
-    if (s[0] === "+" || s[0] === "-") {
-      neg = s[0] === "-";
-      s = s.slice(1);
+    const parsed = _basedToValue(litStr, fmt);
+    if (parsed.isFloat) {
+      return FiValue._fromFloat(parsed.value, fmt, method, ovf);
     }
-    const low = s.toLowerCase();
-    let signedRaw; // exact BigInt value as interpreted by fxpmath
-    if (low.startsWith("0b")) {
-      const body = s.slice(2);
-      const u = BigInt("0b" + body);
-      // Signed two's-complement interpretation only when the literal width
-      // matches the format width (the from_bits/from_raw case). fxpmath's
-      // strbin2int sign-extends/interprets using n_word.
-      signedRaw = _interpretSigned(u, body.length, fmt);
-    } else if (low.startsWith("0x")) {
-      const body = s.slice(2);
-      const u = BigInt("0x" + body);
-      signedRaw = _interpretSigned(u, body.length * 4, fmt);
-    } else {
-      throw new Error(`unsupported based literal: ${litStr}`);
-    }
-    if (neg) signedRaw = -signedRaw;
-
-    if (fmt.binpnt === 0) {
-      // Integer literal: exact, no float step.
-      const cand = signedRaw; // floor of an integer is itself
-      return new FiValue(_overflowStore(cand, fmt.width, fmt.signed, ovf), fmt);
-    }
-    // Fractional literal: float64 round-trip (lossy above 2**53), matching fxpmath.
-    const f = Number(signedRaw) / 2 ** fmt.binpnt; // strbin2float: val /= 2**n_frac
-    return FiValue._fromFloat(f, fmt, method, ovf);
+    // Exact integer literal. The integer-path domain check applies (it matches
+    // fxpmath, though a width-bounded literal can never exceed it).
+    return FiValue._fromInteger(parsed.value, fmt, fmt.binpnt, ovf);
   }
 
   // ---- accessors ----------------------------------------------------------
@@ -375,17 +357,19 @@ export class FiValue {
     const method = _mapRounding(rounding);
     const ovf = _mapOverflow(overflow);
     const delta = fmt.binpnt - this.fmt.binpnt;
-    let cand;
     if (delta >= 0) {
       // Growing or keeping fractional bits: exact BigInt shift, no rounding
-      // (fxpmath passes the resulting integer straight through _round).
-      cand = this._raw << BigInt(delta);
-    } else {
-      // Reducing fractional bits: fxpmath computes float(raw) * 2**delta in
-      // float64 then applies the rounding mode (lossy above 2**53).
-      const scaled = Number(this._raw) * 2 ** delta;
-      cand = _floatToBigInt(_applyRound(scaled, method));
+      // (fxpmath passes the resulting integer straight through _round). This is
+      // the integer path, so the out-of-domain guard applies (e.g. narrowing a
+      // >64-bit product into a sub-64-bit format raises, matching fxpmath).
+      const cand = this._raw << BigInt(delta);
+      return new FiValue(_storeIntegerCand(cand, fmt, ovf), fmt);
     }
+    // Reducing fractional bits: fxpmath computes float(raw) * 2**delta in float64
+    // then applies the rounding mode (lossy above 2**53). The float path never
+    // raises OverflowError in fxpmath, so it uses the plain store.
+    const scaled = Number(this._raw) * 2 ** delta;
+    const cand = _floatToBigInt(_applyRound(scaled, method));
     return new FiValue(_overflowStore(cand, fmt.width, fmt.signed, ovf), fmt);
   }
 
@@ -436,18 +420,127 @@ function _nint(fmt) {
   return fmt.width - fmt.binpnt - (fmt.signed ? 1 : 0);
 }
 
-// Interpret an unsigned BigInt of `nbits` bits as the value fxpmath's strbin2int
-// would produce for the given format: signed two's-complement when the format is
-// signed (using the format width when the literal is at least that wide).
-function _interpretSigned(u, nbits, fmt) {
-  if (!fmt.signed) return u;
-  const w = fmt.width;
-  // fxpmath sign-extends a shorter literal with the sign bit, or interprets a
-  // width-matched literal in two's complement over n_word bits.
-  const bits = Math.max(nbits, w);
-  const mod = 1n << BigInt(bits);
-  if (u >= mod >> 1n) return u - mod;
-  return u;
+// fxpmath.utils.strbin2int: parse a binary literal to an exact integer (BigInt).
+// Mirrors the length/sign rules precisely:
+//   - strip "0b"/"b", spaces and "+"; a leading "-" sets an explicit sign;
+//   - shorter than n_word: SIGN-extend (signed) or zero-extend (unsigned);
+//   - longer than n_word: REJECT;
+//   - signed values are interpreted in two's complement over n_word bits.
+function _strbin2int(litStr, signed, nWord) {
+  let x = litStr.replace(/0b/g, "b").replace(/b/g, "");
+  x = x.replace(/ /g, "").replace(/\+/g, "");
+  let sign = 1n;
+  if (x[0] === "-") {
+    sign = -1n;
+    x = x.replace(/-/g, "");
+  }
+  if (x.length === 0 || !/^[01]+$/.test(x)) {
+    throw new Error(`invalid binary literal: ${litStr}`);
+  }
+  if (x.length < nWord) {
+    x = (signed ? x[0] : "0").repeat(nWord - x.length) + x;
+  } else if (x.length > nWord) {
+    throw new Error(`binary val has more bits (${x.length}) than word (${nWord})!`);
+  }
+  let val;
+  if (signed) {
+    if (x.length < 2) {
+      throw new Error("signed binary with not enough bits!");
+    }
+    val = BigInt("0b" + x.slice(1));
+    if (x[0] === "1") {
+      val = -((1n << BigInt(nWord - 1)) - val);
+    }
+  } else {
+    val = BigInt("0b" + x);
+  }
+  return sign * val;
+}
+
+// fxpmath.utils.strbin2float: integer part via strbin2int over n_word bits (after
+// padding the fractional part with trailing zeros up to n_frac), divided by
+// 2**n_frac in float64 (lossy above 2**53). Returns a Number.
+function _strbin2float(litStr, signed, nWord, nFrac) {
+  let x = litStr;
+  const dot = x.indexOf(".");
+  if (dot !== -1) {
+    const fracLen = x.length - dot - 1;
+    const pad = nFrac - fracLen;
+    if (pad > 0) x = x + "0".repeat(pad);
+    x = x.replace(".", "");
+  }
+  const intVal = _strbin2int(x, signed, nWord);
+  return Number(intVal) / 2 ** nFrac;
+}
+
+// fxpmath.utils.strhex2int: strip "0x", convert to binary, ZERO-pad to n_word,
+// then interpret in two's complement via strbin2int (so a short hex literal is
+// zero-extended, NOT sign-extended). Over-wide literals are rejected by strbin2int.
+function _strhex2int(litStr, signed, nWord) {
+  const body = litStr.replace(/0x/g, "");
+  if (body.length === 0 || !/^[0-9a-fA-F]+$/.test(body)) {
+    throw new Error(`invalid hex literal: ${litStr}`);
+  }
+  let xbin = BigInt("0x" + body).toString(2);
+  if (xbin.length < nWord) {
+    xbin = "0".repeat(nWord - xbin.length) + xbin;
+  }
+  return _strbin2int("0b" + xbin, signed, nWord);
+}
+
+// fxpmath.utils.strhex2float: as strhex2int but divided by 2**n_frac in float64.
+function _strhex2float(litStr, signed, nWord, nFrac) {
+  const intVal = _strhex2int(litStr, signed, nWord);
+  return Number(intVal) / 2 ** nFrac;
+}
+
+// Classify and parse a based literal (binary or hex) per fxpmath.utils.str2num.
+// Returns { isFloat, value } where value is a BigInt (integer literal) or a Number
+// (fractional literal). Throws (matching fxpmath) on over-wide or invalid input.
+function _basedToValue(litStr, fmt) {
+  const x = String(litStr).replace(/h/g, "x");
+  const head = x.slice(0, 2);
+  const binpnt = fmt.binpnt;
+  if (head.includes("b")) {
+    if (x.includes(".") || binpnt > 0) {
+      return { isFloat: true, value: _strbin2float(x, fmt.signed, fmt.width, binpnt) };
+    }
+    return { isFloat: false, value: _strbin2int(x, fmt.signed, fmt.width) };
+  }
+  if (head.includes("x")) {
+    if (binpnt > 0) {
+      return { isFloat: true, value: _strhex2float(x, fmt.signed, fmt.width, binpnt) };
+    }
+    return { isFloat: false, value: _strhex2int(x, fmt.signed, fmt.width) };
+  }
+  throw new Error(`unsupported based literal: ${litStr}`);
+}
+
+// fxpmath raises OverflowError (overflow='wrap', target width < 64) when the value
+// it stores as numpy int64/uint64 leaves the range numpy can cast: a value above
+// uint64 max (> 2**64 - 1) or below int64 min (< -2**63). The check is on the value
+// set_val sees BEFORE applying conv_factor:
+//   - direct integer input: conv_factor = 2**binpnt, so the decision is on the raw
+//     integer (the subsequent int64 multiply by 2**binpnt overflows SILENTLY,
+//     wrapping mod 2**64 -- no error -- so e.g. fi((2**60)+1, (32,4)) returns 16);
+//   - quantize of a fixed-point value: conv_factor = 1, so the decision is on the
+//     already-scaled candidate (raw << delta).
+// For width >= 64 fxpmath uses an object dtype (no overflow); saturate clips; and
+// float-path values never reach this (they wrap/sentinel without raising). The
+// stored value, when it does not raise, is always (candidate mod 2**width) because
+// the int64/uint64 reinterpretation preserves the low `width` bits.
+const _INT64_MIN = -(1n << 63n);
+const _UINT64_MAX = (1n << 64n) - 1n;
+
+function _storeIntegerCand(cand, fmt, ovf, checkValue = cand) {
+  if (ovf === "wrap" && fmt.width < 64 && (checkValue > _UINT64_MAX || checkValue < _INT64_MIN)) {
+    throw new RangeError(
+      `out of fxpmath domain: storing an integer of ${checkValue < 0n ? "" : "+"}${checkValue} into a ` +
+        `${fmt.width}-bit format exceeds the 64-bit integer range fxpmath casts through ` +
+        `(fxpmath raises OverflowError here)`
+    );
+  }
+  return _overflowStore(cand, fmt.width, fmt.signed, ovf);
 }
 
 // Build an intermediate (un-quantized) FiValue in fxpmath's grown result format
