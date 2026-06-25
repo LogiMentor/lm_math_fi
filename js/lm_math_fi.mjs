@@ -77,10 +77,32 @@ const ROUNDING_MAP = {
 
 const OVERFLOW_SET = new Set(["wrap", "saturate"]);
 
+/**
+ * Error thrown by this library, carrying a stable, machine-readable `category`
+ * (also mirrored on `code`) so callers and the golden-vector harness can match it
+ * against the category fxpmath's exception was mapped to. Categories:
+ *   - "parse_error"  : a literal/format/digit string was rejected (mirrors the
+ *                      Python ValueError fxpmath raises while parsing input).
+ *   - "domain_error" : a value left the representable/64-bit range during a store
+ *                      or requantize (mirrors the Python OverflowError fxpmath
+ *                      raises in numpy's integer cast).
+ *   - "config_error" : invalid API usage (unknown rounding/overflow mode, bad
+ *                      format, unsupported input type) — not produced by fxpmath
+ *                      input data, so it is not exercised by golden vectors.
+ */
+export class FiError extends Error {
+  constructor(message, category) {
+    super(message);
+    this.name = "FiError";
+    this.category = category;
+    this.code = category;
+  }
+}
+
 function _mapRounding(rounding) {
   if (!Object.prototype.hasOwnProperty.call(ROUNDING_MAP, rounding)) {
     const allowed = Object.keys(ROUNDING_MAP).sort().join(", ");
-    throw new Error(`unsupported rounding mode '${rounding}'; expected one of: ${allowed}`);
+    throw new FiError(`unsupported rounding mode '${rounding}'; expected one of: ${allowed}`, "config_error");
   }
   return ROUNDING_MAP[rounding];
 }
@@ -88,7 +110,7 @@ function _mapRounding(rounding) {
 function _mapOverflow(overflow) {
   if (!OVERFLOW_SET.has(overflow)) {
     const allowed = Array.from(OVERFLOW_SET).sort().join(", ");
-    throw new Error(`unsupported overflow mode '${overflow}'; expected one of: ${allowed}`);
+    throw new FiError(`unsupported overflow mode '${overflow}'; expected one of: ${allowed}`, "config_error");
   }
   return overflow;
 }
@@ -136,7 +158,7 @@ function _applyRound(val, method) {
       return inc ? f + 1 : f;
     }
     default:
-      throw new Error(`<${method}> rounding method not valid!`);
+      throw new FiError(`<${method}> rounding method not valid!`, "config_error");
   }
 }
 
@@ -146,7 +168,7 @@ function _applyRound(val, method) {
 function _floatToBigInt(r) {
   // Guard against -0 and ensure exact integral input.
   if (!Number.isFinite(r)) {
-    throw new Error(`non-finite intermediate value: ${r}`);
+    throw new FiError(`non-finite intermediate value: ${r}`, "domain_error");
   }
   return BigInt(r === 0 ? 0 : r);
 }
@@ -185,10 +207,10 @@ function _overflowStore(cand, width, signed, overflow) {
 
 function _checkFmt(width, binpnt) {
   if (!Number.isInteger(width) || width <= 0) {
-    throw new Error("width must be a positive integer");
+    throw new FiError("width must be a positive integer", "config_error");
   }
   if (!Number.isInteger(binpnt) || binpnt < 0) {
-    throw new Error("binpnt must be a non-negative integer");
+    throw new FiError("binpnt must be a non-negative integer", "config_error");
   }
 }
 
@@ -209,7 +231,7 @@ function _asFmt(fmt) {
   if (fmt && typeof fmt === "object" && "width" in fmt && "binpnt" in fmt) {
     return new FiFormat(fmt.width, fmt.binpnt, "signed" in fmt ? fmt.signed : true);
   }
-  throw new Error("format must be a FiFormat or {width, binpnt, signed}");
+  throw new FiError("format must be a FiFormat or {width, binpnt, signed}", "config_error");
 }
 
 export class FiValue {
@@ -266,17 +288,17 @@ export class FiValue {
       return FiValue._fromFloat(value, fmt, method, ovf);
     }
 
-    throw new Error(`unsupported input type: ${typeof value}`);
+    throw new FiError(`unsupported input type: ${typeof value}`, "config_error");
   }
 
   static fromBits(bitsStr, fmt) {
     fmt = _asFmt(fmt);
     const clean = String(bitsStr).replace(/_/g, "");
     if (clean.length !== fmt.width) {
-      throw new Error("bit string length does not match format width");
+      throw new FiError("bit string length does not match format width", "parse_error");
     }
     if (!/^[01]+$/.test(clean)) {
-      throw new Error("bit string must contain only 0 or 1");
+      throw new FiError("bit string must contain only 0 or 1", "parse_error");
     }
     // Mirror the Python model: from_bits -> from_value("0b" + bits) with default
     // rounding=trunc_bits, overflow=wrap.
@@ -431,7 +453,7 @@ function _nint(fmt) {
 function _intFromDigits(digits, base) {
   const re = base === 2 ? /^[01](?:_?[01])*$/ : /^[0-9a-fA-F](?:_?[0-9a-fA-F])*$/;
   if (!re.test(digits)) {
-    throw new Error(`invalid base-${base} digit string: ${digits}`);
+    throw new FiError(`invalid base-${base} digit string: ${digits}`, "parse_error");
   }
   return BigInt((base === 2 ? "0b" : "0x") + digits.replace(/_/g, ""));
 }
@@ -449,7 +471,7 @@ const _DEC_FLOAT_RE = new RegExp(
 function _decToBigInt(s) {
   const t = s.trim();
   if (!_DEC_INT_RE.test(t)) {
-    throw new Error(`invalid decimal integer literal: ${s}`);
+    throw new FiError(`invalid decimal integer literal: ${s}`, "parse_error");
   }
   let clean = t.replace(/_/g, "");
   if (clean[0] === "+") clean = clean.slice(1); // BigInt() rejects a leading '+'
@@ -459,7 +481,7 @@ function _decToBigInt(s) {
 function _decToNumber(s) {
   const t = s.trim();
   if (!_DEC_FLOAT_RE.test(t)) {
-    throw new Error(`invalid decimal literal: ${s}`);
+    throw new FiError(`invalid decimal literal: ${s}`, "parse_error");
   }
   return Number(t.replace(/_/g, ""));
 }
@@ -479,7 +501,7 @@ function _strbin2int(litStr, signed, nWord) {
     x = x.replace(/-/g, "");
   }
   if (x.length === 0) {
-    throw new Error(`invalid binary literal: ${litStr}`);
+    throw new FiError(`invalid binary literal: ${litStr}`, "parse_error");
   }
   // Underscores are kept here: fxpmath does not strip them before the length and
   // sign-extension logic (they count as characters, like Python's int(x, 2)), so
@@ -488,12 +510,12 @@ function _strbin2int(litStr, signed, nWord) {
   if (x.length < nWord) {
     x = (signed ? x[0] : "0").repeat(nWord - x.length) + x;
   } else if (x.length > nWord) {
-    throw new Error(`binary val has more bits (${x.length}) than word (${nWord})!`);
+    throw new FiError(`binary val has more bits (${x.length}) than word (${nWord})!`, "parse_error");
   }
   let val;
   if (signed) {
     if (x.length < 2) {
-      throw new Error("signed binary with not enough bits!");
+      throw new FiError("signed binary with not enough bits!", "parse_error");
     }
     val = _intFromDigits(x.slice(1), 2); // Python int(x[1:], 2)
     if (x[0] === "1") {
@@ -560,7 +582,7 @@ function _basedToValue(litStr, fmt) {
     }
     return { isFloat: false, value: _strhex2int(x, fmt.signed, fmt.width) };
   }
-  throw new Error(`unsupported based literal: ${litStr}`);
+  throw new FiError(`unsupported based literal: ${litStr}`, "parse_error");
 }
 
 // fxpmath raises OverflowError (overflow='wrap', target width < 64) when the value
@@ -581,10 +603,11 @@ const _UINT64_MAX = (1n << 64n) - 1n;
 
 function _storeIntegerCand(cand, fmt, ovf, checkValue = cand) {
   if (ovf === "wrap" && fmt.width < 64 && (checkValue > _UINT64_MAX || checkValue < _INT64_MIN)) {
-    throw new RangeError(
+    throw new FiError(
       `out of fxpmath domain: storing an integer of ${checkValue < 0n ? "" : "+"}${checkValue} into a ` +
         `${fmt.width}-bit format exceeds the 64-bit integer range fxpmath casts through ` +
-        `(fxpmath raises OverflowError here)`
+        `(fxpmath raises OverflowError here)`,
+      "domain_error"
     );
   }
   return _overflowStore(cand, fmt.width, fmt.signed, ovf);

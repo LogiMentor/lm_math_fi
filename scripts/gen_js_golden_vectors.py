@@ -13,8 +13,12 @@ Each vector records a replayable operation plus the model's exact outputs
 (bits, raw_signed, raw_unsigned, hex, float). raw_signed / raw_unsigned are
 emitted as decimal strings so values wider than 53 bits survive JSON.
 
-Provenance (fxpmath version and the repository git commit) is embedded in the
-output for downstream auditing.
+The output is a pure function of this generator and the installed fxpmath version:
+it embeds no git commit, timestamp, or other volatile field, so it is byte-for-byte
+reproducible (and safe to sha256-pin downstream). The only provenance recorded is
+the deterministic top-level `fxpmath_version` (asserted to equal 0.4.10) alongside
+`count` and the vector array. The file is written and `--check`ed as raw UTF-8
+bytes with LF line endings so no platform newline translation can occur.
 """
 
 from __future__ import annotations
@@ -22,7 +26,6 @@ from __future__ import annotations
 import json
 import math
 import pathlib
-import subprocess
 import sys
 from importlib import metadata
 
@@ -166,6 +169,26 @@ def run_op(entry):
 
 # --- vector construction -----------------------------------------------------
 
+def _error_category(exc):
+    """Map a Python/fxpmath exception to a stable, language-neutral category.
+
+    Derived from the exception TYPE actually raised (never assigned per case), so
+    the labelling stays "match-fxpmath": every category comes from running fxpmath.
+    Across the full vector set only two types occur:
+      - OverflowError -> "domain_error": a value left the representable / 64-bit
+        range during quantize/store (numpy's integer cast overflows).
+      - ValueError    -> "parse_error": fxpmath rejected the literal/format while
+        parsing the input string or value.
+    Any other type maps to "error" (none occur today); the JS library produces the
+    same two categories for the same inputs, so the harness can match on category.
+    """
+    if isinstance(exc, OverflowError):
+        return "domain_error"
+    if isinstance(exc, ValueError):
+        return "parse_error"
+    return "error"
+
+
 class Builder:
     def __init__(self):
         self.entries = []
@@ -204,7 +227,10 @@ class Builder:
             "op": op,
             "note": note,
             "spec": spec,
-            "expect": {"error": type(exc).__name__},
+            "expect": {"error": {
+                "category": _error_category(exc),
+                "py_type": type(exc).__name__,
+            }},
         })
 
     def add_auto(self, op, spec, note=""):
@@ -600,15 +626,6 @@ def rtl_overlap_checks():
 
 # --- main --------------------------------------------------------------------
 
-def git_commit():
-    try:
-        return subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
-        ).strip()
-    except Exception:
-        return "unknown"
-
-
 def main() -> int:
     import argparse
 
@@ -616,8 +633,8 @@ def main() -> int:
     parser.add_argument(
         "--check",
         action="store_true",
-        help="Regenerate in memory and verify the committed file matches (ignoring "
-        "the volatile provenance git commit). Exit non-zero on any vector drift.",
+        help="Regenerate in memory and verify the committed file matches BYTE-FOR-BYTE "
+        "(no field excluded). Exit non-zero on any drift.",
     )
     args = parser.parse_args()
 
@@ -636,15 +653,14 @@ def main() -> int:
     builder = build_vectors()
     entries = builder.entries
 
+    # The document is a pure function of this generator + the installed fxpmath
+    # version. It deliberately contains NO volatile fields (no git SHA, timestamp,
+    # or RNG), so it is byte-reproducible and safe to sha256-pin downstream.
     doc = {
         "schema": "lm_math_fi.golden.v1",
-        "provenance": {
-            "fxpmath_version": fxp_version,
-            "model": "lm_math_fi_model",
-            "source_git_commit": git_commit(),
-            "rounding_keys": ALL_ROUNDINGS,
-            "overflow_keys": OVERFLOWS,
-        },
+        "fxpmath_version": fxp_version,
+        "rounding_keys": ALL_ROUNDINGS,
+        "overflow_keys": OVERFLOWS,
         "rtl_overlap_checked": True,
         "count": len(entries),
         "vectors": entries,
@@ -657,31 +673,38 @@ def main() -> int:
             print(f"  - {op} [{note}]: {exc}: {msg}")
 
     serialized = json.dumps(doc, indent=1, ensure_ascii=False) + "\n"
+    serialized_bytes = serialized.encode("utf-8")
 
     if args.check:
         if not OUT_PATH.exists():
             print(f"error: {OUT_PATH.relative_to(ROOT)} is missing; run the generator", file=sys.stderr)
             return 1
-        committed = json.loads(OUT_PATH.read_text(encoding="utf-8"))
-        fresh = json.loads(serialized)
-        # Ignore the volatile provenance commit (it tracks generation-time HEAD).
-        committed["provenance"]["source_git_commit"] = ""
-        fresh["provenance"]["source_git_commit"] = ""
-        if committed != fresh:
+        # Compare RAW BYTES, not text: text mode would normalize CRLF/CR to LF and
+        # could pass a line-ending-mutated file. Downstream pins a sha256 of the raw
+        # bytes (which does not normalize newlines), so EOL drift must fail here.
+        on_disk = OUT_PATH.read_bytes()
+        if on_disk != serialized_bytes:
             print(
-                "error: committed js/golden_vectors.json does not match the current model; "
-                "regenerate with 'python scripts/gen_js_golden_vectors.py'",
+                "error: committed js/golden_vectors.json does not match the current generator "
+                "byte-for-byte; regenerate with 'python scripts/gen_js_golden_vectors.py'",
+                file=sys.stderr,
+            )
+            print(
+                f"  on-disk {len(on_disk)} bytes vs generated {len(serialized_bytes)} bytes"
+                f" (CR on disk: {on_disk.count(chr(13).encode())}, generated: 0)",
                 file=sys.stderr,
             )
             return 1
-        print(f"golden vectors up to date ({len(entries)} vectors, fxpmath=={fxp_version})")
+        print(f"golden vectors up to date, byte-identical ({len(entries)} vectors, fxpmath=={fxp_version})")
         return 0
 
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OUT_PATH.write_text(serialized, encoding="utf-8", newline="\n")
+    # Write RAW BYTES so there is no platform newline translation; the file is pure
+    # UTF-8 with LF line endings and a single trailing newline on every platform.
+    OUT_PATH.write_bytes(serialized_bytes)
 
     print(f"wrote {len(entries)} vectors to {OUT_PATH.relative_to(ROOT)}")
-    print(f"fxpmath=={fxp_version} commit={doc['provenance']['source_git_commit'][:12]}")
+    print(f"fxpmath=={fxp_version}")
     return 0
 
 
