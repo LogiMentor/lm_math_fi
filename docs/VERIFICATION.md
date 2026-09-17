@@ -11,11 +11,13 @@ The public-release gate is:
 python scripts/check_repo_hygiene.py --no-history
 python scripts/run_python_model_tests.py
 python scripts/run_ghdl_tests.py
+python scripts/run_ghdl_negative_tests.py
 python scripts/check_repo_hygiene.py --no-history
 ```
 
 CI runs repository hygiene as a separate job with full ref inspection and runs
-the GHDL regression with a post-regression hygiene check.
+the GHDL regression, then the GHDL negative regression, with a post-regression
+hygiene check.
 
 ## Scope
 
@@ -30,6 +32,17 @@ The regression checks:
 | Pipeline behavior | declared latencies and clock-enable hold/resume |
 | Delay line behavior | zero, one-cycle, and multi-cycle delays |
 | Python model | vectors aligned with RTL expectations |
+| Generic-domain rejection | out-of-domain signedness, rounding, overflow, direction and add/subtract selectors are rejected with a diagnostic naming the generic |
+
+Generic-domain rejection is covered by the separate negative regression,
+`scripts/run_ghdl_negative_tests.py`, which drives the units under
+`sim/negative/`. Each of those units is expected to fail; the runner passes only
+when the failure carries the diagnostic it expects for that case, so a case
+cannot pass because the design broke for an unrelated reason.
+
+VHDL assertions are a simulation and elaboration diagnostic. Most synthesis
+tools ignore them, so these checks constrain what reaches simulation, not what
+reaches a bitstream.
 
 ## Known Limits
 

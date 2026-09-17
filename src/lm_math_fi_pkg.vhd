@@ -35,6 +35,18 @@ package lm_math_fi_pkg is
   constant C_LM_SUB           : integer := 1;
   constant C_LM_ADDSUB        : integer := 2;
 
+  -- Generic-domain predicates and the matching human-readable value lists.
+  -- Entities use these to reject an out-of-domain generic with a message that
+  -- names the generic and every value it accepts. The value lists are built
+  -- from the constants above so they cannot drift from them.
+  function f_lm_valid_representation(value : integer) return boolean;
+  function f_lm_valid_round_mode(value : integer) return boolean;
+  function f_lm_valid_overflow(value : integer) return boolean;
+
+  function f_lm_representation_values return string;
+  function f_lm_round_mode_values return string;
+  function f_lm_overflow_values return string;
+
   function f_lm_max(l, r : integer) return integer;
 
   function f_lm_slv_to_uns(inp : std_logic_vector) return unsigned;
@@ -322,6 +334,57 @@ package body lm_math_fi_pkg is
     return v_base;
   end function;
 
+  function f_lm_valid_representation(value : integer) return boolean is
+  begin
+    return value = C_LM_UNSIGNED or value = C_LM_SIGNED;
+  end function;
+
+  function f_lm_valid_round_mode(value : integer) return boolean is
+  begin
+    -- C_LM_TRUNC, C_LM_ROUND, C_LM_ROUND_NEAREST and C_LM_ROUND_INF are aliases
+    -- that share a value with one of the nine below, so they are accepted here
+    -- without needing their own test.
+    return value = C_LM_TRUNC_BITS
+        or value = C_LM_ROUND_EVEN
+        or value = C_LM_CEIL
+        or value = C_LM_TRUNC_ZERO
+        or value = C_LM_FLOOR
+        or value = C_LM_ROUND_POS_INF
+        or value = C_LM_ROUND_NEG_INF
+        or value = C_LM_ROUND_ZERO
+        or value = C_LM_ROUND_AWAY;
+  end function;
+
+  function f_lm_valid_overflow(value : integer) return boolean is
+  begin
+    return value = C_LM_SATURATE or value = C_LM_WRAP;
+  end function;
+
+  function f_lm_representation_values return string is
+  begin
+    return "C_LM_UNSIGNED (" & integer'image(C_LM_UNSIGNED) & ")"
+         & " or C_LM_SIGNED (" & integer'image(C_LM_SIGNED) & ")";
+  end function;
+
+  function f_lm_round_mode_values return string is
+  begin
+    return "C_LM_TRUNC_BITS (" & integer'image(C_LM_TRUNC_BITS) & "), "
+         & "C_LM_ROUND_EVEN (" & integer'image(C_LM_ROUND_EVEN) & "), "
+         & "C_LM_CEIL (" & integer'image(C_LM_CEIL) & "), "
+         & "C_LM_TRUNC_ZERO (" & integer'image(C_LM_TRUNC_ZERO) & "), "
+         & "C_LM_FLOOR (" & integer'image(C_LM_FLOOR) & "), "
+         & "C_LM_ROUND_POS_INF (" & integer'image(C_LM_ROUND_POS_INF) & "), "
+         & "C_LM_ROUND_NEG_INF (" & integer'image(C_LM_ROUND_NEG_INF) & "), "
+         & "C_LM_ROUND_ZERO (" & integer'image(C_LM_ROUND_ZERO) & ")"
+         & " or C_LM_ROUND_AWAY (" & integer'image(C_LM_ROUND_AWAY) & ")";
+  end function;
+
+  function f_lm_overflow_values return string is
+  begin
+    return "C_LM_SATURATE (" & integer'image(C_LM_SATURATE) & ")"
+         & " or C_LM_WRAP (" & integer'image(C_LM_WRAP) & ")";
+  end function;
+
   function f_lm_max(l, r : integer) return integer is
   begin
     if l > r then
@@ -543,6 +606,9 @@ package body lm_math_fi_pkg is
     v_word := inp;
 
     case quantization is
+      when C_LM_TRUNC_BITS =>
+        v_quantized := f_lm_trunc_bits(v_word, old_width, old_bin_pt, old_arith,
+                                       C_WORK_WIDTH, new_bin_pt, old_arith);
       when C_LM_CEIL =>
         v_quantized := f_lm_round_ceil(v_word, old_width, old_bin_pt, old_arith,
                                        C_WORK_WIDTH, new_bin_pt, old_arith);
@@ -568,17 +634,38 @@ package body lm_math_fi_pkg is
         v_quantized := f_lm_round_tie_away(v_word, old_width, old_bin_pt, old_arith,
                                            C_WORK_WIDTH, new_bin_pt, old_arith);
       when others =>
-        v_quantized := f_lm_trunc_bits(v_word, old_width, old_bin_pt, old_arith,
-                                       C_WORK_WIDTH, new_bin_pt, old_arith);
+        -- Not a fallback: every supported rounding mode has an explicit branch
+        -- above, so reaching here means the caller passed a value that is not a
+        -- rounding mode at all. Stop rather than silently truncating.
+        assert false
+          report "lm_math_fi_pkg.f_lm_quantize: rounding mode " & integer'image(quantization)
+               & " is not a supported value."
+               & " Accepted values are " & f_lm_round_mode_values & "."
+               & " This argument is normally driven by a g_round_mode generic;"
+               & " check the generic map of the instance that reported this."
+          severity failure;
+        v_quantized := (others => 'U');
     end case;
 
     if overflow = C_LM_SATURATE then
       return f_lm_saturate(v_quantized, new_width, new_bin_pt, new_arith,
                             C_WORK_WIDTH, new_bin_pt, old_arith);
+    elsif overflow = C_LM_WRAP then
+      return f_lm_wrap(v_quantized, new_width, new_bin_pt, new_arith,
+                        C_WORK_WIDTH, new_bin_pt, old_arith);
     end if;
 
-    return f_lm_wrap(v_quantized, new_width, new_bin_pt, new_arith,
-                      C_WORK_WIDTH, new_bin_pt, old_arith);
+    -- Same reasoning as the rounding case above: wrap is no longer the silent
+    -- destination for an unrecognised value.
+    assert false
+      report "lm_math_fi_pkg.f_lm_quantize: overflow mode " & integer'image(overflow)
+           & " is not a supported value."
+           & " Accepted values are " & f_lm_overflow_values & "."
+           & " This argument is normally driven by a g_overflow generic;"
+           & " check the generic map of the instance that reported this."
+      severity failure;
+
+    return (new_width - 1 downto 0 => 'U');
   end function;
 
   function f_lm_sign_ext(inp : std_logic_vector; new_width : integer) return std_logic_vector is

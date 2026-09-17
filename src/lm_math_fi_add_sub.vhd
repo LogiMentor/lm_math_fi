@@ -13,7 +13,7 @@ use lm_math_fi_lib.lm_math_fi_pkg.all;
 entity lm_math_fi_add_sub is
   generic(
     -- C_LM_ADD, C_LM_SUB, or C_LM_ADDSUB with sel_add_i
-    g_direction       : integer   := C_LM_ADD;
+    g_direction       : natural   := C_LM_ADD;
     -- Numeric representation
     g_representation  : natural   := C_LM_SIGNED;
     -- Optional input register stage
@@ -69,6 +69,36 @@ architecture a_rtl of lm_math_fi_add_sub is
   signal s_result_tmp   : std_logic_vector(C_RES_W - 1 downto 0);
 
 begin
+
+  -----------------------------------------------------------------------------
+  -- Generic-domain checks
+  --
+  -- Every condition below depends on generics only, so each is decided once
+  -- when the instance starts and never re-evaluated on a clock edge. A failure
+  -- here means the generic map is wrong, not that the data was wrong.
+  --
+  -- g_pipeline_input is deliberately not checked: any value greater than zero
+  -- is legal and selects exactly one input register stage.
+  -----------------------------------------------------------------------------
+  assert g_direction = C_LM_ADD or g_direction = C_LM_SUB or g_direction = C_LM_ADDSUB
+    report "lm_math_fi_add_sub: generic g_direction = " & integer'image(g_direction)
+         & " is not a supported value."
+         & " Set g_direction to C_LM_ADD (" & integer'image(C_LM_ADD) & ") for a fixed add,"
+         & " C_LM_SUB (" & integer'image(C_LM_SUB) & ") for a fixed subtract, or"
+         & " C_LM_ADDSUB (" & integer'image(C_LM_ADDSUB) & ") to select at run time with sel_add_i."
+    severity failure;
+
+  assert f_lm_valid_representation(g_representation)
+    report "lm_math_fi_add_sub: generic g_representation = " & integer'image(g_representation)
+         & " is not a supported value."
+         & " Set g_representation to " & f_lm_representation_values & "."
+    severity failure;
+
+  assert f_lm_valid_round_mode(g_round_mode)
+    report "lm_math_fi_add_sub: generic g_round_mode = " & integer'image(g_round_mode)
+         & " is not a supported value."
+         & " Set g_round_mode to one of " & f_lm_round_mode_values & "."
+    severity failure;
 
   s_in_add <= '1' when g_direction = C_LM_ADD or (g_direction = C_LM_ADDSUB and sel_add_i = '1') else '0';
 

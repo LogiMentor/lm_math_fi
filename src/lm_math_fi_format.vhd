@@ -48,6 +48,31 @@ architecture a_rtl of lm_math_fi_format is
 
 begin
 
+  -----------------------------------------------------------------------------
+  -- Generic-domain checks
+  --
+  -- Every condition below depends on generics only, so each is decided once
+  -- when the instance starts and never re-evaluated on a clock edge. A failure
+  -- here means the generic map is wrong, not that the data was wrong.
+  -----------------------------------------------------------------------------
+  assert f_lm_valid_representation(g_representation)
+    report "lm_math_fi_format: generic g_representation = " & integer'image(g_representation)
+         & " is not a supported value."
+         & " Set g_representation to " & f_lm_representation_values & "."
+    severity failure;
+
+  assert f_lm_valid_round_mode(g_round_mode)
+    report "lm_math_fi_format: generic g_round_mode = " & integer'image(g_round_mode)
+         & " is not a supported value."
+         & " Set g_round_mode to one of " & f_lm_round_mode_values & "."
+    severity failure;
+
+  assert f_lm_valid_overflow(g_overflow)
+    report "lm_math_fi_format: generic g_overflow = " & integer'image(g_overflow)
+         & " is not a supported value."
+         & " Set g_overflow to " & f_lm_overflow_values & "."
+    severity failure;
+
   s_dout <= f_lm_quantize(din_i,
                            g_dout_w, g_dout_binpnt, g_representation,
                            g_din_w, g_din_binpnt, g_representation,

@@ -22,8 +22,8 @@ entity lm_math_fi_mult_add is
     g_dout_w           : natural   := 46;   -- Output width
     g_dout_binpnt      : natural   := 27;   -- Output binary point
     g_add_sub          : natural   := C_LM_ADD;    -- C_LM_ADD or C_LM_SUB
-    g_round_mode       : integer   := C_LM_ROUND_EVEN;   -- Output rounding mode
-    g_representation   : integer   := C_LM_SIGNED;  -- Numeric representation
+    g_round_mode       : natural   := C_LM_ROUND_EVEN;   -- Output rounding mode
+    g_representation   : natural   := C_LM_SIGNED;  -- Numeric representation
     g_overflow         : natural   := C_LM_WRAP;    -- Overflow style: C_LM_SATURATE or C_LM_WRAP
     -- Extra stages after the product/addend register; total latency is g_pipe_stages + 1 clocks
     g_pipe_stages      : natural   := 3
@@ -55,6 +55,42 @@ architecture a_rtl of lm_math_fi_mult_add is
   signal s_sum            : std_logic_vector(C_SUM_W - 1 downto 0);
   signal s_pipe_reg       : t_pipe;
 begin
+
+  -----------------------------------------------------------------------------
+  -- Generic-domain checks
+  --
+  -- Every condition below depends on generics only, so each is decided once
+  -- when the instance starts and never re-evaluated on a clock edge. A failure
+  -- here means the generic map is wrong, not that the data was wrong.
+  -----------------------------------------------------------------------------
+  assert g_add_sub = C_LM_ADD or g_add_sub = C_LM_SUB
+    report "lm_math_fi_mult_add: generic g_add_sub = " & integer'image(g_add_sub)
+         & " is not a supported value."
+         & " This entity implements a fixed add or a fixed subtract only:"
+         & " set g_add_sub to C_LM_ADD (" & integer'image(C_LM_ADD) & ")"
+         & " or C_LM_SUB (" & integer'image(C_LM_SUB) & ")."
+         & " C_LM_ADDSUB (" & integer'image(C_LM_ADDSUB) & ") is not accepted here because"
+         & " lm_math_fi_mult_add has no run-time select port; use lm_math_fi_add_sub with"
+         & " g_direction = C_LM_ADDSUB and its sel_add_i port if you need one."
+    severity failure;
+
+  assert f_lm_valid_representation(g_representation)
+    report "lm_math_fi_mult_add: generic g_representation = " & integer'image(g_representation)
+         & " is not a supported value."
+         & " Set g_representation to " & f_lm_representation_values & "."
+    severity failure;
+
+  assert f_lm_valid_round_mode(g_round_mode)
+    report "lm_math_fi_mult_add: generic g_round_mode = " & integer'image(g_round_mode)
+         & " is not a supported value."
+         & " Set g_round_mode to one of " & f_lm_round_mode_values & "."
+    severity failure;
+
+  assert f_lm_valid_overflow(g_overflow)
+    report "lm_math_fi_mult_add: generic g_overflow = " & integer'image(g_overflow)
+         & " is not a supported value."
+         & " Set g_overflow to " & f_lm_overflow_values & "."
+    severity failure;
 
   proc_mult : process(clk_i)
   begin
