@@ -12,12 +12,17 @@ output under `build/`.
 ## Regression Commands
 
 ```bash
-python scripts/check_repo_hygiene.py --no-history
+python scripts/check_repo_hygiene.py --all-refs
 python scripts/run_python_model_tests.py
+python scripts/gen_js_golden_vectors.py --check
 python scripts/run_ghdl_tests.py
 python scripts/run_ghdl_generic_domain_tests.py
 python scripts/check_repo_hygiene.py --no-history
+node --test js/test/golden.test.mjs
 ```
+
+That is every check CI runs on a push, in the order CI runs it, across all three
+of its jobs. Running the list locally and running CI test the same things.
 
 ## VHDL Testbenches
 

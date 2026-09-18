@@ -54,10 +54,20 @@ architecture a_rtl of lm_math_fi_mult_add is
   constant C_ADDEND_INT_W : integer := g_din_c_w - g_din_c_binpnt;
 
   -- Wide enough for both operands aligned to C_SUM_BINPNT, plus one guard bit
-  -- for the sum. Always at least f_lm_max(C_MULT_WIDTH, g_din_c_w) + 1, because
+  -- for the sum. Over ordinary integers this is at least
+  -- f_lm_max(C_MULT_WIDTH, g_din_c_w) + 1, because
   -- f_lm_max(C_MULT_INT_W, C_ADDEND_INT_W) + C_SUM_BINPNT is at least
   -- C_MULT_WIDTH (taking the product term, since C_SUM_BINPNT >= C_MULT_BINPNT)
   -- and at least g_din_c_w (taking the addend term), so it is always positive.
+  --
+  -- That argument is about arithmetic, not about VHDL's integer type, which is
+  -- finite. C_MULT_BINPNT is g_din_a_binpnt + g_din_b_binpnt, so a binary point
+  -- near integer'high overflows before the argument can apply. In practice the
+  -- binding limit is much lower: C_SUM_W bits are actually allocated, so a
+  -- binary point large enough to threaten integer'high describes a signal no
+  -- tool can realize. No constraint is imposed here for a configuration nobody
+  -- writes; the limit is simply recorded. Binary points in the thousands are
+  -- fine and are exercised by the gate.
   constant C_SUM_W        : natural := f_lm_max(C_MULT_INT_W, C_ADDEND_INT_W) + C_SUM_BINPNT + 1;
 
   type t_pipe is array (0 to g_pipe_stages) of std_logic_vector(C_SUM_W - 1 downto 0);

@@ -46,13 +46,22 @@ the word, so the represented magnitude is below `2**(-(B - *_w))`. This is the
 ordinary way to carry a normalized coefficient or a residual error term, and all
 modules support it.
 
-The binary-point generics are `natural`. Their domain is therefore zero upwards,
-with no upper bound and no relationship to the width:
+The binary-point generics are `natural`. Their domain is zero upwards and bears
+no relationship to the width:
 
 | Generic | Type | Domain |
 |---|---|---|
 | every `*_binpnt` on every entity | `natural` | `0` upwards; may equal or exceed the matching `*_w` |
 | every `*_w` on every entity | `positive` | `1` upwards |
+
+No upper bound is imposed on a binary point, but one exists in practice. The
+modules size their internal signals from the widths and binary points, so a
+binary point of `B` makes them allocate on the order of `B` bits; and the
+intermediate sizes are computed in VHDL's `integer`, which is finite, so sums
+such as `g_din_a_binpnt + g_din_b_binpnt` overflow once they approach
+`integer'high`. Binary points in the thousands work and are exercised by the
+regression; binary points near `integer'high` describe a signal no tool can
+realize. Nothing rejects one: the limit is recorded, not enforced.
 
 The conversion helpers in `lm_math_fi_pkg` take their binary points as `integer`
 rather than `natural`, so the package accepts a wider domain than any entity can

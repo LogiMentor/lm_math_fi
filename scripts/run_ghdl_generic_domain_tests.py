@@ -4,6 +4,12 @@
 
 """Gate the generic domains of the public entities, in both directions.
 
+Provenance - the committed expectations must come from the committed generator:
+  * scripts/gen_format_vectors.py is re-run and its output compared with the
+    committed vector file and entity testbench, so neither can drift from the
+    generator, and neither can quietly acquire a value the generator would not
+    produce. That generator imports nothing from src/, model/ or js/.
+
 Positive half - a legal value must never be rejected:
   * every entity is instantiated across the full legal cross-product of its
     discrete-domain generics and run past time 0, and no assertion may fire;
@@ -49,6 +55,9 @@ ROOT = Path(__file__).resolve().parents[1]
 BUILD = ROOT / "build" / "ghdl_generic_domain"
 GATE_DIR = ROOT / "sim" / "generic_domain"
 VECTOR_FILE = "f_lm_quantize_vectors.txt"
+# Regenerates the committed expectations and fails if they have drifted from the
+# generator that is supposed to produce them.
+EXPECTATION_GENERATOR = "scripts/gen_format_vectors.py"
 
 SRC_FILES = [
     "src/lm_math_fi_pkg.vhd",
@@ -66,6 +75,15 @@ SUPPORT_FILES = [
 
 # Units elaborated once and then run many times with different -g overrides.
 POSITIVE_UNITS = ["tb_legal_sweep", "tb_quantize_vectors", "tb_degenerate_formats"]
+
+# Per-unit simulation window, for the units that need more than the default.
+# tb_degenerate_formats walks 192 checks two clock edges apart and finishes at
+# 3836 ns; everything else finishes well inside the default. Five of the six
+# negative benches run a free-running clock that is never stopped, so the window
+# is what ends those runs - another reason to keep it tight for them.
+UNIT_STOP_TIME = {
+    "tb_degenerate_formats": "10us",
+}
 NEGATIVE_UNITS = [
     "tb_neg_delay",
     "tb_neg_format",
@@ -77,11 +95,39 @@ NEGATIVE_UNITS = [
 
 # Emitted by every negative testbench if it runs to completion.
 COMPLETION_MARKER = "GENERIC DOMAIN TB COMPLETED"
+# Emitted by every negative testbench at the first simulation delta. Its absence
+# is what proves a case was rejected before simulation started.
+STARTED_MARKER = "GENERIC DOMAIN TB STARTED"
 # Emitted by both positive testbenches on success.
 PASS_MARKER = "TEST PASSED"
 
 KIND_ASSERTION = "assertion"
 KIND_SUBTYPE = "subtype"
+
+# The phase in which a case must fail. Checked, not assumed.
+#   elaboration - the design never elaborates, so simulation never starts. The
+#                 testbench's STARTED marker must be absent and the simulator
+#                 must have reported nothing against a source line.
+#   time_zero   - the design elaborates and a concurrent assertion whose
+#                 condition is made of generics alone fires during
+#                 initialisation, at time zero, carrying our message.
+PHASE_ELABORATION = "elaboration"
+PHASE_TIME_ZERO = "time_zero"
+
+# A source-located simulator diagnostic:
+#   <file>:<line>:<col>:@<time><unit>:(assertion|report <severity>): <message>
+# Parsed structurally so that a message can be matched WITHOUT matching an
+# instance path, and so that the time of the failure is available.
+DIAGNOSTIC_RE = re.compile(
+    r"^(?P<file>.+?):(?P<line>\d+):(?P<col>\d+):"
+    r"@(?P<time>\d+)(?P<unit>fs|ps|ns|us|ms|sec|min|hr):"
+    r"\((?P<kind>assertion|report) (?P<severity>note|warning|error|failure)\):"
+    r"\s*(?P<message>.*)$"
+)
+# Lines naming the instance a diagnostic came from. A generic's name can appear
+# here purely because it is part of a process or instance label, so these lines
+# are removed before any name match.
+INSTANCE_RE = re.compile(r"^\s*instance:")
 
 
 # ---------------------------------------------------------------------------
@@ -122,6 +168,7 @@ class Case:
     generic: str
     value: str
     kind: str
+    phase: str
     why: str
     expect: list[str] = field(default_factory=list)
 
@@ -131,12 +178,20 @@ class Case:
 
 
 def assertion_case(unit, generic, value, why, expect):
-    return Case(unit, generic, value, KIND_ASSERTION, why, expect)
+    """Rejected by an assertion this repository wrote, at time zero."""
+    return Case(unit, generic, value, KIND_ASSERTION, PHASE_TIME_ZERO, why, expect)
 
 
 def subtype_case(unit, generic, value, why):
-    # Matched on the generic name only, never on GHDL's wording.
-    return Case(unit, generic, value, KIND_SUBTYPE, why, [generic])
+    """Rejected by the generic's own subtype, before simulation starts.
+
+    The expected text is the generic's name and nothing else, because the rest
+    of the wording is the simulator's and changes across versions. The name on
+    its own is far too weak a signal, so check_case pairs it with the phase
+    check: the testbench must never have started, and the simulator must not
+    have reported anything against a source line.
+    """
+    return Case(unit, generic, value, KIND_SUBTYPE, PHASE_ELABORATION, why, [generic])
 
 
 REPRESENTATION_VALUES = "C_LM_UNSIGNED (1) or C_LM_SIGNED (2)"
@@ -367,7 +422,8 @@ def simulate(ghdl: str, unit: str, stop_time: str, overrides: list[str] | None =
     cmd = ghdl_common(ghdl, "-r") + [unit]
     if overrides:
         cmd += overrides
-    cmd += ["--assert-level=error", f"--stop-time={stop_time}"]
+    window = UNIT_STOP_TIME.get(unit, stop_time)
+    cmd += ["--assert-level=error", f"--stop-time={window}"]
     return run(cmd, echo=False)
 
 
@@ -405,32 +461,105 @@ def check_defaults_legal(ghdl: str, unit: str, stop_time: str) -> tuple[bool, st
     return True, "all defaults legal"
 
 
+def diagnostics(output: str) -> list[dict]:
+    """Every source-located diagnostic the simulator printed."""
+    out = []
+    for line in output.splitlines():
+        m = DIAGNOSTIC_RE.match(line.rstrip())
+        if m:
+            d = m.groupdict()
+            d["at_time_zero"] = int(d["time"]) == 0
+            out.append(d)
+    return out
+
+
+def without_instance_lines(output: str) -> str:
+    """Drop the lines that name the instance a diagnostic came from.
+
+    A generic's name can appear in one of these purely because it is part of a
+    process or instance label, which says nothing about why the run failed.
+    """
+    return "\n".join(l for l in output.splitlines() if not INSTANCE_RE.match(l))
+
+
+def plain_diagnostic_text(output: str) -> str:
+    """What the simulator said, minus instance paths and minus anything it
+    attributed to a source line. What is left is the simulator speaking about
+    the design as a whole, which is where an out-of-subtype generic is named."""
+    keep = []
+    for line in output.splitlines():
+        if INSTANCE_RE.match(line):
+            continue
+        if DIAGNOSTIC_RE.match(line.rstrip()):
+            continue
+        keep.append(line)
+    return "\n".join(keep)
+
+
 def check_case(ghdl: str, case: Case, stop_time: str) -> tuple[bool, str]:
     result = simulate(ghdl, case.unit, stop_time, [f"-g{case.generic}={case.value}"])
     output = result.stdout or ""
+    tail = "\n--- output ---\n" + output.rstrip()
+
+    def wrong(reason):
+        return False, reason + tail
 
     if COMPLETION_MARKER in output:
-        return False, (
-            "the design ran to completion instead of being rejected"
-            "\n--- output ---\n" + output.rstrip()
-        )
+        return wrong("the design ran to completion instead of being rejected")
     if result.returncode == 0:
-        return False, (
-            "simulation succeeded but the case must fail"
-            "\n--- output ---\n" + output.rstrip()
-        )
+        return wrong("simulation succeeded but the case must fail")
 
-    haystack = squash(output)
-    absent = [text for text in case.expect if squash(text) not in haystack]
-    if absent:
-        return False, (
-            "failed for the wrong reason; expected text not found: "
-            + "; ".join(repr(text) for text in absent)
-            + "\n--- output ---\n" + output.rstrip()
+    diags = diagnostics(output)
+
+    if case.phase == PHASE_ELABORATION:
+        # The phase check. All three must hold, and the mutation that widens a
+        # testbench boundary and then fails at 1 ns for an unrelated reason
+        # breaks the first two.
+        if STARTED_MARKER in output:
+            return wrong(
+                "wrong phase: this case must be rejected before simulation starts, "
+                "but the testbench reported that it started"
+            )
+        if diags:
+            first = diags[0]
+            return wrong(
+                "wrong phase: this case must be rejected before simulation starts, "
+                f"but the simulator reported a {first['kind']} {first['severity']} "
+                f"at {first['time']}{first['unit']} from {first['file']}:{first['line']}"
+            )
+        # Only now is the name meaningful, and only outside instance paths.
+        haystack = squash(plain_diagnostic_text(output))
+        absent = [x for x in case.expect if squash(x) not in haystack]
+        if absent:
+            return wrong(
+                "failed before simulation started, but the diagnostic does not name "
+                + "; ".join(repr(x) for x in absent)
+            )
+        return True, "rejected before simulation started, diagnostic names the generic"
+
+    # PHASE_TIME_ZERO: our own assertion, at time zero, carrying our message.
+    failures = [d for d in diags if d["severity"] in ("error", "failure")]
+    if not failures:
+        return wrong(
+            "wrong phase: this case must be rejected by an assertion during "
+            "initialisation, but the simulator reported no assertion at all"
         )
-    if case.kind == KIND_SUBTYPE:
-        return True, "rejected by the generic's subtype, diagnostic names the generic"
-    return True, "rejected by an assertion carrying the expected diagnostic"
+    at_zero = [d for d in failures if d["at_time_zero"]]
+    if not at_zero:
+        first = failures[0]
+        return wrong(
+            "wrong phase: this case must be rejected at time zero, but the first "
+            f"failure was at {first['time']}{first['unit']}"
+        )
+    # Match only inside the message, never inside an instance path.
+    messages = squash(" ".join(d["message"] for d in at_zero))
+    absent = [x for x in case.expect if squash(x) not in messages]
+    if absent:
+        return wrong(
+            "failed for the wrong reason; the time-zero assertion message does not "
+            "contain: " + "; ".join(repr(x) for x in absent)
+        )
+    return True, "rejected at time zero by an assertion carrying the expected diagnostic"
 
 
 def main() -> int:
@@ -438,11 +567,13 @@ def main() -> int:
     parser.add_argument("--ghdl", default="ghdl", help="GHDL executable")
     parser.add_argument(
         "--stop-time",
-        default="100us",
+        default="1us",
         help=(
-            "Simulation stop time. Every gate testbench stops its own clock when "
-            "it finishes, so a generous limit costs nothing and leaves headroom "
-            "for tb_degenerate_formats, the longest of them."
+            "Default simulation window. tb_legal_sweep and tb_degenerate_formats "
+            "stop their own clocks when they finish; the six negative benches do "
+            "not, and five of them run a free-running clock, so this window is "
+            "what ends those runs. Units needing more are listed in "
+            "UNIT_STOP_TIME rather than raising this for everything."
         ),
     )
     parser.add_argument(
@@ -461,6 +592,20 @@ def main() -> int:
     BUILD.mkdir(parents=True, exist_ok=True)
 
     failures: list[tuple[str, str]] = []
+
+    print("=" * 72)
+    print("Expectation provenance")
+    print("=" * 72)
+    gen = subprocess.run(
+        [sys.executable, str(ROOT / EXPECTATION_GENERATOR), "--check"],
+        cwd=ROOT, text=True, capture_output=True,
+    )
+    gen_out = ((gen.stdout or "") + (gen.returncode and (gen.stderr or "") or "")).strip()
+    if gen.returncode != 0:
+        failures.append((EXPECTATION_GENERATOR, gen_out or "generator check failed"))
+        print(f"  FAIL {gen_out}")
+    else:
+        print(f"  ok: {gen_out}")
 
     print("=" * 72)
     print("Interface declarations")

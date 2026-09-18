@@ -8,16 +8,23 @@
 The public-release gate is:
 
 ```bash
-python scripts/check_repo_hygiene.py --no-history
+python scripts/check_repo_hygiene.py --all-refs
 python scripts/run_python_model_tests.py
+python scripts/gen_js_golden_vectors.py --check
 python scripts/run_ghdl_tests.py
 python scripts/run_ghdl_generic_domain_tests.py
 python scripts/check_repo_hygiene.py --no-history
+node --test js/test/golden.test.mjs
 ```
 
-CI runs repository hygiene as a separate job with full ref inspection and runs
-the GHDL regression, then the generic-domain gate, with a post-regression
-hygiene check.
+That is every check CI runs on a push, in the order CI runs it, across all three
+of its jobs. Running the list locally and running CI test the same things.
+
+CI splits them across three jobs: repository hygiene with full ref inspection;
+the Python model tests, the JavaScript golden-vector check, the GHDL regression,
+the generic-domain gate and a post-regression hygiene check; and the Node golden
+test. `scripts/check_gate_mutations.py` is deliberately not in CI, because it
+edits tracked files while it runs; run it by hand when changing a gate.
 
 ## Scope
 

@@ -61,6 +61,17 @@ begin
     port map(clk_i => clk_tb, ce_i => '1', sel_add_i => '1',
              din1_i => s_din1, din2_i => s_din2, dout_o => s_dout);
 
+  -- Emitted at the first simulation delta. A case that is supposed to be
+  -- rejected by a generic's subtype must never reach this: the design does
+  -- not elaborate, so simulation never starts. The runner uses the absence
+  -- of this marker as its phase check, independently of anything the
+  -- simulator chooses to print.
+  proc_started : process
+  begin
+    report "GENERIC DOMAIN TB STARTED: tb_neg_add_sub" severity note;
+    wait;
+  end process proc_started;
+
   proc_guard : process
   begin
     wait for 50 ns;

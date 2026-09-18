@@ -44,6 +44,17 @@ begin
                             6, 2, C_LM_UNSIGNED,
                             g_round_mode, g_overflow);
 
+  -- Emitted at the first simulation delta. A case that is supposed to be
+  -- rejected by a generic's subtype must never reach this: the design does
+  -- not elaborate, so simulation never starts. The runner uses the absence
+  -- of this marker as its phase check, independently of anything the
+  -- simulator chooses to print.
+  proc_started : process
+  begin
+    report "GENERIC DOMAIN TB STARTED: tb_neg_pkg" severity note;
+    wait;
+  end process proc_started;
+
   proc_guard : process
   begin
     wait for 50 ns;

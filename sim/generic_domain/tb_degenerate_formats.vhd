@@ -1,6 +1,10 @@
 -- SPDX-License-Identifier: Apache-2.0
 -- Copyright 2026 LogiMentor
 --
+-- GENERATED FILE - do not edit by hand.
+-- Produced by scripts/gen_format_vectors.py; the generic-domain gate runs that
+-- script with --check on every invocation, so an edit here fails the gate.
+--
 -- Value checks for every quantizing entity at degenerate binary points.
 --
 -- A binary point equal to or greater than its width is a legal fixed-point
@@ -17,11 +21,10 @@
 --   width 1, unsigned and signed
 --
 -- HOW THE EXPECTED VALUES WERE PRODUCED
---   By an exact-integer reference implementation written from the documented
---   semantics using arbitrary-precision integers only - no floating point, and
---   no code from the module under test. A stored word R with binary point B
---   denotes the exact rational R / 2**B, with R read as two's complement when
---   the format is signed.
+--   By scripts/gen_format_vectors.py, which computes the arithmetic from the
+--   documented semantics using arbitrary-precision integers and fractions,
+--   twice in two different styles, and refuses to emit anything unless the two
+--   agree. It imports nothing from src/, model/ or js/.
 --
 --   For the three arithmetic modules the reference also models each module's
 --   own internal intermediate format, because that is part of the library's
@@ -30,7 +33,7 @@
 --   goes negative wrap rather than clamp, which sim/tb/tb_lm_math_fi_add_sub.vhd
 --   already relies on.
 --
--- 192 named checks.
+-- 208 named checks.
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -78,6 +81,9 @@ architecture a_tb of tb_degenerate_formats is
   signal s_m_bpgt_s_a    : std_logic_vector(3 downto 0) := (others => '0');
   signal s_m_bpgt_s_b    : std_logic_vector(3 downto 0) := (others => '0');
   signal s_m_bpgt_s_dout : std_logic_vector(3 downto 0);
+  signal s_m_w1_u_a    : std_logic_vector(0 downto 0) := (others => '0');
+  signal s_m_w1_u_b    : std_logic_vector(0 downto 0) := (others => '0');
+  signal s_m_w1_u_dout : std_logic_vector(0 downto 0);
   signal s_m_w1_s_a    : std_logic_vector(0 downto 0) := (others => '0');
   signal s_m_w1_s_b    : std_logic_vector(0 downto 0) := (others => '0');
   signal s_m_w1_s_dout : std_logic_vector(0 downto 0);
@@ -87,6 +93,9 @@ architecture a_tb of tb_degenerate_formats is
   signal s_a_bpgt_s_a    : std_logic_vector(3 downto 0) := (others => '0');
   signal s_a_bpgt_s_b    : std_logic_vector(3 downto 0) := (others => '0');
   signal s_a_bpgt_s_dout : std_logic_vector(3 downto 0);
+  signal s_a_w1_u_a    : std_logic_vector(0 downto 0) := (others => '0');
+  signal s_a_w1_u_b    : std_logic_vector(0 downto 0) := (others => '0');
+  signal s_a_w1_u_dout : std_logic_vector(0 downto 0);
   signal s_a_w1_s_a    : std_logic_vector(0 downto 0) := (others => '0');
   signal s_a_w1_s_b    : std_logic_vector(0 downto 0) := (others => '0');
   signal s_a_w1_s_dout : std_logic_vector(0 downto 0);
@@ -110,6 +119,10 @@ architecture a_tb of tb_degenerate_formats is
   signal s_ma_bpgt_out_s_b    : std_logic_vector(3 downto 0) := (others => '0');
   signal s_ma_bpgt_out_s_c    : std_logic_vector(7 downto 0) := (others => '0');
   signal s_ma_bpgt_out_s_dout : std_logic_vector(3 downto 0);
+  signal s_ma_w1_u_a    : std_logic_vector(0 downto 0) := (others => '0');
+  signal s_ma_w1_u_b    : std_logic_vector(0 downto 0) := (others => '0');
+  signal s_ma_w1_u_c    : std_logic_vector(0 downto 0) := (others => '0');
+  signal s_ma_w1_u_dout : std_logic_vector(0 downto 0);
   signal s_ma_w1_s_a    : std_logic_vector(0 downto 0) := (others => '0');
   signal s_ma_w1_s_b    : std_logic_vector(0 downto 0) := (others => '0');
   signal s_ma_w1_s_c    : std_logic_vector(0 downto 0) := (others => '0');
@@ -142,91 +155,104 @@ begin
     generic map(g_din_w => 4, g_din_binpnt => 4,
                 g_dout_w => 4, g_dout_binpnt => 4,
                 g_pipe_stages => 0, g_round_mode => C_LM_ROUND_EVEN,
-                g_overflow => C_LM_SATURATE, g_representation => C_LM_UNSIGNED)
+                g_overflow => C_LM_SATURATE,
+                g_representation => C_LM_UNSIGNED)
     port map(clk_i => clk_tb, ce_i => '1', din_i => s_f_bpeq_u_din, dout_o => s_f_bpeq_u_dout);
 
   inst_f_bpeq_s : entity lm_math_fi_lib.lm_math_fi_format
     generic map(g_din_w => 4, g_din_binpnt => 4,
                 g_dout_w => 4, g_dout_binpnt => 4,
                 g_pipe_stages => 0, g_round_mode => C_LM_ROUND_EVEN,
-                g_overflow => C_LM_SATURATE, g_representation => C_LM_SIGNED)
+                g_overflow => C_LM_SATURATE,
+                g_representation => C_LM_SIGNED)
     port map(clk_i => clk_tb, ce_i => '1', din_i => s_f_bpeq_s_din, dout_o => s_f_bpeq_s_dout);
 
   inst_f_bpgt_src_u : entity lm_math_fi_lib.lm_math_fi_format
     generic map(g_din_w => 4, g_din_binpnt => 8,
                 g_dout_w => 4, g_dout_binpnt => 2,
                 g_pipe_stages => 0, g_round_mode => C_LM_TRUNC_BITS,
-                g_overflow => C_LM_WRAP, g_representation => C_LM_UNSIGNED)
+                g_overflow => C_LM_WRAP,
+                g_representation => C_LM_UNSIGNED)
     port map(clk_i => clk_tb, ce_i => '1', din_i => s_f_bpgt_src_u_din, dout_o => s_f_bpgt_src_u_dout);
 
   inst_f_bpgt_src_s : entity lm_math_fi_lib.lm_math_fi_format
     generic map(g_din_w => 4, g_din_binpnt => 8,
                 g_dout_w => 4, g_dout_binpnt => 2,
                 g_pipe_stages => 0, g_round_mode => C_LM_TRUNC_BITS,
-                g_overflow => C_LM_WRAP, g_representation => C_LM_SIGNED)
+                g_overflow => C_LM_WRAP,
+                g_representation => C_LM_SIGNED)
     port map(clk_i => clk_tb, ce_i => '1', din_i => s_f_bpgt_src_s_din, dout_o => s_f_bpgt_src_s_dout);
 
   inst_f_bpgt_dst_u : entity lm_math_fi_lib.lm_math_fi_format
     generic map(g_din_w => 4, g_din_binpnt => 2,
                 g_dout_w => 4, g_dout_binpnt => 8,
                 g_pipe_stages => 0, g_round_mode => C_LM_ROUND_AWAY,
-                g_overflow => C_LM_SATURATE, g_representation => C_LM_UNSIGNED)
+                g_overflow => C_LM_SATURATE,
+                g_representation => C_LM_UNSIGNED)
     port map(clk_i => clk_tb, ce_i => '1', din_i => s_f_bpgt_dst_u_din, dout_o => s_f_bpgt_dst_u_dout);
 
   inst_f_bpgt_both_s : entity lm_math_fi_lib.lm_math_fi_format
     generic map(g_din_w => 4, g_din_binpnt => 8,
                 g_dout_w => 4, g_dout_binpnt => 6,
                 g_pipe_stages => 0, g_round_mode => C_LM_ROUND_EVEN,
-                g_overflow => C_LM_SATURATE, g_representation => C_LM_SIGNED)
+                g_overflow => C_LM_SATURATE,
+                g_representation => C_LM_SIGNED)
     port map(clk_i => clk_tb, ce_i => '1', din_i => s_f_bpgt_both_s_din, dout_o => s_f_bpgt_both_s_dout);
 
   inst_f_disj_above_s : entity lm_math_fi_lib.lm_math_fi_format
     generic map(g_din_w => 4, g_din_binpnt => 8,
                 g_dout_w => 4, g_dout_binpnt => 0,
                 g_pipe_stages => 0, g_round_mode => C_LM_ROUND_AWAY,
-                g_overflow => C_LM_SATURATE, g_representation => C_LM_SIGNED)
+                g_overflow => C_LM_SATURATE,
+                g_representation => C_LM_SIGNED)
     port map(clk_i => clk_tb, ce_i => '1', din_i => s_f_disj_above_s_din, dout_o => s_f_disj_above_s_dout);
 
   inst_f_disj_below_u : entity lm_math_fi_lib.lm_math_fi_format
     generic map(g_din_w => 4, g_din_binpnt => 0,
                 g_dout_w => 4, g_dout_binpnt => 8,
                 g_pipe_stages => 0, g_round_mode => C_LM_TRUNC_BITS,
-                g_overflow => C_LM_SATURATE, g_representation => C_LM_UNSIGNED)
+                g_overflow => C_LM_SATURATE,
+                g_representation => C_LM_UNSIGNED)
     port map(clk_i => clk_tb, ce_i => '1', din_i => s_f_disj_below_u_din, dout_o => s_f_disj_below_u_dout);
 
   inst_f_overlap1_u : entity lm_math_fi_lib.lm_math_fi_format
     generic map(g_din_w => 4, g_din_binpnt => 4,
                 g_dout_w => 4, g_dout_binpnt => 1,
                 g_pipe_stages => 0, g_round_mode => C_LM_ROUND_EVEN,
-                g_overflow => C_LM_WRAP, g_representation => C_LM_UNSIGNED)
+                g_overflow => C_LM_WRAP,
+                g_representation => C_LM_UNSIGNED)
     port map(clk_i => clk_tb, ce_i => '1', din_i => s_f_overlap1_u_din, dout_o => s_f_overlap1_u_dout);
 
   inst_f_w1_u : entity lm_math_fi_lib.lm_math_fi_format
     generic map(g_din_w => 1, g_din_binpnt => 1,
                 g_dout_w => 1, g_dout_binpnt => 1,
                 g_pipe_stages => 0, g_round_mode => C_LM_ROUND_EVEN,
-                g_overflow => C_LM_SATURATE, g_representation => C_LM_UNSIGNED)
+                g_overflow => C_LM_SATURATE,
+                g_representation => C_LM_UNSIGNED)
     port map(clk_i => clk_tb, ce_i => '1', din_i => s_f_w1_u_din, dout_o => s_f_w1_u_dout);
 
   inst_f_w1_s : entity lm_math_fi_lib.lm_math_fi_format
     generic map(g_din_w => 1, g_din_binpnt => 1,
                 g_dout_w => 1, g_dout_binpnt => 1,
                 g_pipe_stages => 0, g_round_mode => C_LM_ROUND_EVEN,
-                g_overflow => C_LM_SATURATE, g_representation => C_LM_SIGNED)
+                g_overflow => C_LM_SATURATE,
+                g_representation => C_LM_SIGNED)
     port map(clk_i => clk_tb, ce_i => '1', din_i => s_f_w1_s_din, dout_o => s_f_w1_s_dout);
 
   inst_f_w1_from_wide_s : entity lm_math_fi_lib.lm_math_fi_format
     generic map(g_din_w => 4, g_din_binpnt => 3,
                 g_dout_w => 1, g_dout_binpnt => 1,
                 g_pipe_stages => 0, g_round_mode => C_LM_ROUND_EVEN,
-                g_overflow => C_LM_SATURATE, g_representation => C_LM_SIGNED)
+                g_overflow => C_LM_SATURATE,
+                g_representation => C_LM_SIGNED)
     port map(clk_i => clk_tb, ce_i => '1', din_i => s_f_w1_from_wide_s_din, dout_o => s_f_w1_from_wide_s_dout);
 
   inst_f_w1_to_wide_s : entity lm_math_fi_lib.lm_math_fi_format
     generic map(g_din_w => 1, g_din_binpnt => 3,
                 g_dout_w => 4, g_dout_binpnt => 1,
                 g_pipe_stages => 0, g_round_mode => C_LM_ROUND_EVEN,
-                g_overflow => C_LM_SATURATE, g_representation => C_LM_SIGNED)
+                g_overflow => C_LM_SATURATE,
+                g_representation => C_LM_SIGNED)
     port map(clk_i => clk_tb, ce_i => '1', din_i => s_f_w1_to_wide_s_din, dout_o => s_f_w1_to_wide_s_dout);
 
   inst_m_bpeq_u : entity lm_math_fi_lib.lm_math_fi_mult
@@ -234,7 +260,8 @@ begin
                 g_din_b_w => 4, g_din_b_binpnt => 4,
                 g_dout_w => 4, g_dout_binpnt => 4,
                 g_round_mode => C_LM_ROUND_EVEN,
-                g_din_a_type => C_LM_UNSIGNED, g_din_b_type => C_LM_UNSIGNED,
+                g_din_a_type => C_LM_UNSIGNED,
+                g_din_b_type => C_LM_UNSIGNED,
                 g_dout_type => C_LM_UNSIGNED,
                 g_overflow => C_LM_SATURATE, g_pipe_stages => 0)
     port map(clk_i => clk_tb, ce_i => '1', din1_i => s_m_bpeq_u_a, din2_i => s_m_bpeq_u_b,
@@ -245,25 +272,40 @@ begin
                 g_din_b_w => 4, g_din_b_binpnt => 6,
                 g_dout_w => 4, g_dout_binpnt => 8,
                 g_round_mode => C_LM_TRUNC_BITS,
-                g_din_a_type => C_LM_SIGNED, g_din_b_type => C_LM_SIGNED,
+                g_din_a_type => C_LM_SIGNED,
+                g_din_b_type => C_LM_SIGNED,
                 g_dout_type => C_LM_SIGNED,
                 g_overflow => C_LM_WRAP, g_pipe_stages => 0)
     port map(clk_i => clk_tb, ce_i => '1', din1_i => s_m_bpgt_s_a, din2_i => s_m_bpgt_s_b,
              dout_o => s_m_bpgt_s_dout);
+
+  inst_m_w1_u : entity lm_math_fi_lib.lm_math_fi_mult
+    generic map(g_din_a_w => 1, g_din_a_binpnt => 1,
+                g_din_b_w => 1, g_din_b_binpnt => 1,
+                g_dout_w => 1, g_dout_binpnt => 1,
+                g_round_mode => C_LM_ROUND_EVEN,
+                g_din_a_type => C_LM_UNSIGNED,
+                g_din_b_type => C_LM_UNSIGNED,
+                g_dout_type => C_LM_UNSIGNED,
+                g_overflow => C_LM_SATURATE, g_pipe_stages => 0)
+    port map(clk_i => clk_tb, ce_i => '1', din1_i => s_m_w1_u_a, din2_i => s_m_w1_u_b,
+             dout_o => s_m_w1_u_dout);
 
   inst_m_w1_s : entity lm_math_fi_lib.lm_math_fi_mult
     generic map(g_din_a_w => 1, g_din_a_binpnt => 1,
                 g_din_b_w => 1, g_din_b_binpnt => 1,
                 g_dout_w => 1, g_dout_binpnt => 1,
                 g_round_mode => C_LM_ROUND_EVEN,
-                g_din_a_type => C_LM_SIGNED, g_din_b_type => C_LM_SIGNED,
+                g_din_a_type => C_LM_SIGNED,
+                g_din_b_type => C_LM_SIGNED,
                 g_dout_type => C_LM_SIGNED,
                 g_overflow => C_LM_SATURATE, g_pipe_stages => 0)
     port map(clk_i => clk_tb, ce_i => '1', din1_i => s_m_w1_s_a, din2_i => s_m_w1_s_b,
              dout_o => s_m_w1_s_dout);
 
   inst_a_bpeq_u : entity lm_math_fi_lib.lm_math_fi_add_sub
-    generic map(g_direction => C_LM_ADD, g_representation => C_LM_UNSIGNED,
+    generic map(g_direction => C_LM_ADD,
+                g_representation => C_LM_UNSIGNED,
                 g_pipeline_input => 0, g_pipeline_output => 0,
                 g_din1_w => 4, g_din1_binpnt => 4,
                 g_din2_w => 4, g_din2_binpnt => 4,
@@ -273,7 +315,8 @@ begin
              din1_i => s_a_bpeq_u_a, din2_i => s_a_bpeq_u_b, dout_o => s_a_bpeq_u_dout);
 
   inst_a_bpgt_s : entity lm_math_fi_lib.lm_math_fi_add_sub
-    generic map(g_direction => C_LM_SUB, g_representation => C_LM_SIGNED,
+    generic map(g_direction => C_LM_SUB,
+                g_representation => C_LM_SIGNED,
                 g_pipeline_input => 0, g_pipeline_output => 0,
                 g_din1_w => 4, g_din1_binpnt => 8,
                 g_din2_w => 4, g_din2_binpnt => 6,
@@ -282,8 +325,20 @@ begin
     port map(clk_i => clk_tb, ce_i => '1', sel_add_i => '1',
              din1_i => s_a_bpgt_s_a, din2_i => s_a_bpgt_s_b, dout_o => s_a_bpgt_s_dout);
 
+  inst_a_w1_u : entity lm_math_fi_lib.lm_math_fi_add_sub
+    generic map(g_direction => C_LM_ADD,
+                g_representation => C_LM_UNSIGNED,
+                g_pipeline_input => 0, g_pipeline_output => 0,
+                g_din1_w => 1, g_din1_binpnt => 1,
+                g_din2_w => 1, g_din2_binpnt => 1,
+                g_dout_w => 1, g_dout_binpnt => 1,
+                g_round_mode => C_LM_ROUND_EVEN)
+    port map(clk_i => clk_tb, ce_i => '1', sel_add_i => '1',
+             din1_i => s_a_w1_u_a, din2_i => s_a_w1_u_b, dout_o => s_a_w1_u_dout);
+
   inst_a_w1_s : entity lm_math_fi_lib.lm_math_fi_add_sub
-    generic map(g_direction => C_LM_ADD, g_representation => C_LM_SIGNED,
+    generic map(g_direction => C_LM_ADD,
+                g_representation => C_LM_SIGNED,
                 g_pipeline_input => 0, g_pipeline_output => 0,
                 g_din1_w => 1, g_din1_binpnt => 1,
                 g_din2_w => 1, g_din2_binpnt => 1,
@@ -297,9 +352,10 @@ begin
                 g_din_b_w => 4, g_din_b_binpnt => 4,
                 g_din_c_w => 8, g_din_c_binpnt => 8,
                 g_dout_w => 8, g_dout_binpnt => 8,
-                g_add_sub => C_LM_ADD, g_round_mode => C_LM_ROUND_EVEN,
-                g_representation => C_LM_UNSIGNED, g_overflow => C_LM_SATURATE,
-                g_pipe_stages => 0)
+                g_add_sub => C_LM_ADD,
+                g_round_mode => C_LM_ROUND_EVEN,
+                g_representation => C_LM_UNSIGNED,
+                g_overflow => C_LM_SATURATE, g_pipe_stages => 0)
     port map(clk_i => clk_tb, ce_i => '1', din1_i => s_ma_bpeq_u_a, din2_i => s_ma_bpeq_u_b,
              din3_i => s_ma_bpeq_u_c, dout_o => s_ma_bpeq_u_dout);
 
@@ -308,9 +364,10 @@ begin
                 g_din_b_w => 4, g_din_b_binpnt => 6,
                 g_din_c_w => 8, g_din_c_binpnt => 2,
                 g_dout_w => 8, g_dout_binpnt => 4,
-                g_add_sub => C_LM_ADD, g_round_mode => C_LM_ROUND_EVEN,
-                g_representation => C_LM_SIGNED, g_overflow => C_LM_SATURATE,
-                g_pipe_stages => 0)
+                g_add_sub => C_LM_ADD,
+                g_round_mode => C_LM_ROUND_EVEN,
+                g_representation => C_LM_SIGNED,
+                g_overflow => C_LM_SATURATE, g_pipe_stages => 0)
     port map(clk_i => clk_tb, ce_i => '1', din1_i => s_ma_bpgt_ops_s_a, din2_i => s_ma_bpgt_ops_s_b,
              din3_i => s_ma_bpgt_ops_s_c, dout_o => s_ma_bpgt_ops_s_dout);
 
@@ -319,9 +376,10 @@ begin
                 g_din_b_w => 4, g_din_b_binpnt => 1,
                 g_din_c_w => 8, g_din_c_binpnt => 12,
                 g_dout_w => 8, g_dout_binpnt => 4,
-                g_add_sub => C_LM_SUB, g_round_mode => C_LM_ROUND_EVEN,
-                g_representation => C_LM_SIGNED, g_overflow => C_LM_SATURATE,
-                g_pipe_stages => 0)
+                g_add_sub => C_LM_SUB,
+                g_round_mode => C_LM_ROUND_EVEN,
+                g_representation => C_LM_SIGNED,
+                g_overflow => C_LM_SATURATE, g_pipe_stages => 0)
     port map(clk_i => clk_tb, ce_i => '1', din1_i => s_ma_bpgt_addend_s_a, din2_i => s_ma_bpgt_addend_s_b,
              din3_i => s_ma_bpgt_addend_s_c, dout_o => s_ma_bpgt_addend_s_dout);
 
@@ -330,9 +388,10 @@ begin
                 g_din_b_w => 4, g_din_b_binpnt => 6,
                 g_din_c_w => 8, g_din_c_binpnt => 12,
                 g_dout_w => 8, g_dout_binpnt => 14,
-                g_add_sub => C_LM_ADD, g_round_mode => C_LM_ROUND_AWAY,
-                g_representation => C_LM_UNSIGNED, g_overflow => C_LM_WRAP,
-                g_pipe_stages => 0)
+                g_add_sub => C_LM_ADD,
+                g_round_mode => C_LM_ROUND_AWAY,
+                g_representation => C_LM_UNSIGNED,
+                g_overflow => C_LM_WRAP, g_pipe_stages => 0)
     port map(clk_i => clk_tb, ce_i => '1', din1_i => s_ma_bpgt_all_u_a, din2_i => s_ma_bpgt_all_u_b,
              din3_i => s_ma_bpgt_all_u_c, dout_o => s_ma_bpgt_all_u_dout);
 
@@ -341,20 +400,34 @@ begin
                 g_din_b_w => 4, g_din_b_binpnt => 1,
                 g_din_c_w => 8, g_din_c_binpnt => 1,
                 g_dout_w => 4, g_dout_binpnt => 9,
-                g_add_sub => C_LM_ADD, g_round_mode => C_LM_ROUND_EVEN,
-                g_representation => C_LM_SIGNED, g_overflow => C_LM_SATURATE,
-                g_pipe_stages => 0)
+                g_add_sub => C_LM_ADD,
+                g_round_mode => C_LM_ROUND_EVEN,
+                g_representation => C_LM_SIGNED,
+                g_overflow => C_LM_SATURATE, g_pipe_stages => 0)
     port map(clk_i => clk_tb, ce_i => '1', din1_i => s_ma_bpgt_out_s_a, din2_i => s_ma_bpgt_out_s_b,
              din3_i => s_ma_bpgt_out_s_c, dout_o => s_ma_bpgt_out_s_dout);
+
+  inst_ma_w1_u : entity lm_math_fi_lib.lm_math_fi_mult_add
+    generic map(g_din_a_w => 1, g_din_a_binpnt => 1,
+                g_din_b_w => 1, g_din_b_binpnt => 1,
+                g_din_c_w => 1, g_din_c_binpnt => 1,
+                g_dout_w => 1, g_dout_binpnt => 1,
+                g_add_sub => C_LM_ADD,
+                g_round_mode => C_LM_ROUND_EVEN,
+                g_representation => C_LM_UNSIGNED,
+                g_overflow => C_LM_SATURATE, g_pipe_stages => 0)
+    port map(clk_i => clk_tb, ce_i => '1', din1_i => s_ma_w1_u_a, din2_i => s_ma_w1_u_b,
+             din3_i => s_ma_w1_u_c, dout_o => s_ma_w1_u_dout);
 
   inst_ma_w1_s : entity lm_math_fi_lib.lm_math_fi_mult_add
     generic map(g_din_a_w => 1, g_din_a_binpnt => 1,
                 g_din_b_w => 1, g_din_b_binpnt => 1,
                 g_din_c_w => 1, g_din_c_binpnt => 1,
                 g_dout_w => 1, g_dout_binpnt => 1,
-                g_add_sub => C_LM_ADD, g_round_mode => C_LM_ROUND_EVEN,
-                g_representation => C_LM_SIGNED, g_overflow => C_LM_SATURATE,
-                g_pipe_stages => 0)
+                g_add_sub => C_LM_ADD,
+                g_round_mode => C_LM_ROUND_EVEN,
+                g_representation => C_LM_SIGNED,
+                g_overflow => C_LM_SATURATE, g_pipe_stages => 0)
     port map(clk_i => clk_tb, ce_i => '1', din1_i => s_ma_w1_s_a, din2_i => s_ma_w1_s_b,
              din3_i => s_ma_w1_s_c, dout_o => s_ma_w1_s_dout);
 
@@ -540,13 +613,13 @@ begin
     p_settle(clk_tb);
     p_check_slv(s_f_overlap1_u_dout, "0010", "exactly one bit of weight overlap U(4,4) -> (4,1) in=15");
 
-    -- width 1, binary point equal to the width: U(1,1) -> (1,1)
+    -- width 1 unsigned, binary point equal to the width: U(1,1) -> (1,1)
     s_f_w1_u_din <= "0";
     p_settle(clk_tb);
-    p_check_slv(s_f_w1_u_dout, "0", "width 1, binary point equal to the width U(1,1) -> (1,1) in=0");
+    p_check_slv(s_f_w1_u_dout, "0", "width 1 unsigned, binary point equal to the width U(1,1) -> (1,1) in=0");
     s_f_w1_u_din <= "1";
     p_settle(clk_tb);
-    p_check_slv(s_f_w1_u_dout, "1", "width 1, binary point equal to the width U(1,1) -> (1,1) in=1");
+    p_check_slv(s_f_w1_u_dout, "1", "width 1 unsigned, binary point equal to the width U(1,1) -> (1,1) in=1");
 
     -- width 1 signed, binary point equal to the width: S(1,1) -> (1,1)
     s_f_w1_s_din <= "0";
@@ -639,6 +712,20 @@ begin
     p_settle(clk_tb);
     p_check_slv(s_m_bpgt_s_dout, "0000", "binary point above the width S(4,6)x(4,6) -> (4,8) in=8/15");
 
+    -- width 1 unsigned: U(1,1)x(1,1) -> (1,1)
+    s_m_w1_u_a <= "0"; s_m_w1_u_b <= "0";
+    p_settle(clk_tb);
+    p_check_slv(s_m_w1_u_dout, "0", "width 1 unsigned U(1,1)x(1,1) -> (1,1) in=0/0");
+    s_m_w1_u_a <= "0"; s_m_w1_u_b <= "1";
+    p_settle(clk_tb);
+    p_check_slv(s_m_w1_u_dout, "0", "width 1 unsigned U(1,1)x(1,1) -> (1,1) in=0/1");
+    s_m_w1_u_a <= "1"; s_m_w1_u_b <= "0";
+    p_settle(clk_tb);
+    p_check_slv(s_m_w1_u_dout, "0", "width 1 unsigned U(1,1)x(1,1) -> (1,1) in=1/0");
+    s_m_w1_u_a <= "1"; s_m_w1_u_b <= "1";
+    p_settle(clk_tb);
+    p_check_slv(s_m_w1_u_dout, "0", "width 1 unsigned U(1,1)x(1,1) -> (1,1) in=1/1");
+
     -- width 1 signed: S(1,1)x(1,1) -> (1,1)
     s_m_w1_s_a <= "0"; s_m_w1_s_b <= "0";
     p_settle(clk_tb);
@@ -682,31 +769,45 @@ begin
     p_settle(clk_tb);
     p_check_slv(s_a_bpeq_u_dout, "1110", "binary point equal to the width U(4,4)+(4,4) -> (4,4) in=15/15");
 
-    -- binary point above the width: S(4,8)+(4,6) -> (4,9)
+    -- binary point above the width: S(4,8)-(4,6) -> (4,9)
     s_a_bpgt_s_a <= "0000"; s_a_bpgt_s_b <= "0001";
     p_settle(clk_tb);
-    p_check_slv(s_a_bpgt_s_dout, "1000", "binary point above the width S(4,8)+(4,6) -> (4,9) in=0/1");
+    p_check_slv(s_a_bpgt_s_dout, "1000", "binary point above the width S(4,8)-(4,6) -> (4,9) in=0/1");
     s_a_bpgt_s_a <= "0000"; s_a_bpgt_s_b <= "1111";
     p_settle(clk_tb);
-    p_check_slv(s_a_bpgt_s_dout, "1000", "binary point above the width S(4,8)+(4,6) -> (4,9) in=0/15");
+    p_check_slv(s_a_bpgt_s_dout, "1000", "binary point above the width S(4,8)-(4,6) -> (4,9) in=0/15");
     s_a_bpgt_s_a <= "0001"; s_a_bpgt_s_b <= "0001";
     p_settle(clk_tb);
-    p_check_slv(s_a_bpgt_s_dout, "1010", "binary point above the width S(4,8)+(4,6) -> (4,9) in=1/1");
+    p_check_slv(s_a_bpgt_s_dout, "1010", "binary point above the width S(4,8)-(4,6) -> (4,9) in=1/1");
     s_a_bpgt_s_a <= "0001"; s_a_bpgt_s_b <= "1111";
     p_settle(clk_tb);
-    p_check_slv(s_a_bpgt_s_dout, "1010", "binary point above the width S(4,8)+(4,6) -> (4,9) in=1/15");
+    p_check_slv(s_a_bpgt_s_dout, "1010", "binary point above the width S(4,8)-(4,6) -> (4,9) in=1/15");
     s_a_bpgt_s_a <= "1000"; s_a_bpgt_s_b <= "0001";
     p_settle(clk_tb);
-    p_check_slv(s_a_bpgt_s_dout, "1000", "binary point above the width S(4,8)+(4,6) -> (4,9) in=8/1");
+    p_check_slv(s_a_bpgt_s_dout, "1000", "binary point above the width S(4,8)-(4,6) -> (4,9) in=8/1");
     s_a_bpgt_s_a <= "1000"; s_a_bpgt_s_b <= "1111";
     p_settle(clk_tb);
-    p_check_slv(s_a_bpgt_s_dout, "1000", "binary point above the width S(4,8)+(4,6) -> (4,9) in=8/15");
+    p_check_slv(s_a_bpgt_s_dout, "1000", "binary point above the width S(4,8)-(4,6) -> (4,9) in=8/15");
     s_a_bpgt_s_a <= "1111"; s_a_bpgt_s_b <= "0001";
     p_settle(clk_tb);
-    p_check_slv(s_a_bpgt_s_dout, "0110", "binary point above the width S(4,8)+(4,6) -> (4,9) in=15/1");
+    p_check_slv(s_a_bpgt_s_dout, "0110", "binary point above the width S(4,8)-(4,6) -> (4,9) in=15/1");
     s_a_bpgt_s_a <= "1111"; s_a_bpgt_s_b <= "1111";
     p_settle(clk_tb);
-    p_check_slv(s_a_bpgt_s_dout, "0110", "binary point above the width S(4,8)+(4,6) -> (4,9) in=15/15");
+    p_check_slv(s_a_bpgt_s_dout, "0110", "binary point above the width S(4,8)-(4,6) -> (4,9) in=15/15");
+
+    -- width 1 unsigned: U(1,1)+(1,1) -> (1,1)
+    s_a_w1_u_a <= "0"; s_a_w1_u_b <= "0";
+    p_settle(clk_tb);
+    p_check_slv(s_a_w1_u_dout, "0", "width 1 unsigned U(1,1)+(1,1) -> (1,1) in=0/0");
+    s_a_w1_u_a <= "0"; s_a_w1_u_b <= "1";
+    p_settle(clk_tb);
+    p_check_slv(s_a_w1_u_dout, "1", "width 1 unsigned U(1,1)+(1,1) -> (1,1) in=0/1");
+    s_a_w1_u_a <= "1"; s_a_w1_u_b <= "0";
+    p_settle(clk_tb);
+    p_check_slv(s_a_w1_u_dout, "1", "width 1 unsigned U(1,1)+(1,1) -> (1,1) in=1/0");
+    s_a_w1_u_a <= "1"; s_a_w1_u_b <= "1";
+    p_settle(clk_tb);
+    p_check_slv(s_a_w1_u_dout, "0", "width 1 unsigned U(1,1)+(1,1) -> (1,1) in=1/1");
 
     -- width 1 signed: S(1,1)+(1,1) -> (1,1)
     s_a_w1_s_a <= "0"; s_a_w1_s_b <= "0";
@@ -960,6 +1061,32 @@ begin
     p_settle(clk_tb);
     p_check_slv(s_ma_bpgt_out_s_dout, "1000", "binary point above the width on the output only S(4,1)x(4,1)+(8,1) -> (4,9) in=8/15/200");
 
+    -- width 1 unsigned everywhere: U(1,1)x(1,1)+(1,1) -> (1,1)
+    s_ma_w1_u_a <= "0"; s_ma_w1_u_b <= "0"; s_ma_w1_u_c <= "0";
+    p_settle(clk_tb);
+    p_check_slv(s_ma_w1_u_dout, "0", "width 1 unsigned everywhere U(1,1)x(1,1)+(1,1) -> (1,1) in=0/0/0");
+    s_ma_w1_u_a <= "0"; s_ma_w1_u_b <= "0"; s_ma_w1_u_c <= "1";
+    p_settle(clk_tb);
+    p_check_slv(s_ma_w1_u_dout, "1", "width 1 unsigned everywhere U(1,1)x(1,1)+(1,1) -> (1,1) in=0/0/1");
+    s_ma_w1_u_a <= "0"; s_ma_w1_u_b <= "1"; s_ma_w1_u_c <= "0";
+    p_settle(clk_tb);
+    p_check_slv(s_ma_w1_u_dout, "0", "width 1 unsigned everywhere U(1,1)x(1,1)+(1,1) -> (1,1) in=0/1/0");
+    s_ma_w1_u_a <= "0"; s_ma_w1_u_b <= "1"; s_ma_w1_u_c <= "1";
+    p_settle(clk_tb);
+    p_check_slv(s_ma_w1_u_dout, "1", "width 1 unsigned everywhere U(1,1)x(1,1)+(1,1) -> (1,1) in=0/1/1");
+    s_ma_w1_u_a <= "1"; s_ma_w1_u_b <= "0"; s_ma_w1_u_c <= "0";
+    p_settle(clk_tb);
+    p_check_slv(s_ma_w1_u_dout, "0", "width 1 unsigned everywhere U(1,1)x(1,1)+(1,1) -> (1,1) in=1/0/0");
+    s_ma_w1_u_a <= "1"; s_ma_w1_u_b <= "0"; s_ma_w1_u_c <= "1";
+    p_settle(clk_tb);
+    p_check_slv(s_ma_w1_u_dout, "1", "width 1 unsigned everywhere U(1,1)x(1,1)+(1,1) -> (1,1) in=1/0/1");
+    s_ma_w1_u_a <= "1"; s_ma_w1_u_b <= "1"; s_ma_w1_u_c <= "0";
+    p_settle(clk_tb);
+    p_check_slv(s_ma_w1_u_dout, "0", "width 1 unsigned everywhere U(1,1)x(1,1)+(1,1) -> (1,1) in=1/1/0");
+    s_ma_w1_u_a <= "1"; s_ma_w1_u_b <= "1"; s_ma_w1_u_c <= "1";
+    p_settle(clk_tb);
+    p_check_slv(s_ma_w1_u_dout, "1", "width 1 unsigned everywhere U(1,1)x(1,1)+(1,1) -> (1,1) in=1/1/1");
+
     -- width 1 signed everywhere: S(1,1)x(1,1)+(1,1) -> (1,1)
     s_ma_w1_s_a <= "0"; s_ma_w1_s_b <= "0"; s_ma_w1_s_c <= "0";
     p_settle(clk_tb);
@@ -986,7 +1113,7 @@ begin
     p_settle(clk_tb);
     p_check_slv(s_ma_w1_s_dout, "0", "width 1 signed everywhere S(1,1)x(1,1)+(1,1) -> (1,1) in=1/1/1");
 
-    report "TEST PASSED: tb_degenerate_formats (192 checks)" severity note;
+    report "TEST PASSED: tb_degenerate_formats (208 checks)" severity note;
     s_done <= true;
     wait;
   end process proc_main;
