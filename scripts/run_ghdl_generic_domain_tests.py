@@ -129,12 +129,21 @@ DIAGNOSTIC_RE = re.compile(
 # are removed before any name match.
 INSTANCE_RE = re.compile(r"^\s*instance:")
 
-# GHDL names an out-of-subtype top-level generic in quotes. Only the SHAPE is
-# matched - a diagnostic line carrying a quoted identifier - together with the
-# identifier itself. The surrounding wording is the simulator's and is not
-# matched, but the shape is: THIS MATCHER DEPENDS ON THE SIMULATOR. On a tool
-# that words it differently the subtype cases would need its shape added.
-QUOTED_GENERIC_RE = re.compile(r":error:[^\n]*?'(?P<generic>[A-Za-z_][A-Za-z_0-9]*)'")
+# The simulator names an out-of-subtype top-level generic by quoting it. Only
+# the SHAPE is matched - an error diagnostic carrying a quoted identifier -
+# together with the identifier itself. The surrounding wording is the
+# simulator's and is not matched.
+#
+# THIS MATCHER DEPENDS ON THE SIMULATOR, and the two GHDL versions this
+# repository is tested against already differ:
+#   GHDL 6.0.0 (llvm)   value not in range for generic 'g_data_w'
+#   GHDL 4.1.0 (mcode)  override for generic "g_data_w" is out of bounds
+# Both quoting styles are accepted, because the quote character is part of the
+# shape rather than of the wording. A tool that names the generic some other way
+# would need its shape adding here.
+QUOTED_GENERIC_RE = re.compile(
+    r":error:[^\n]*?[\x22\x27](?P<generic>[A-Za-z_][A-Za-z_0-9]*)[\x22\x27]"
+)
 
 # Which source file holds the assertions each negative testbench can trip.
 UNIT_SOURCE = {
