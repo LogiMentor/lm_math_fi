@@ -191,9 +191,14 @@ GATE_MUTATIONS = [
     ("M3", "an entity generic is widened back to natural",
      m3_widened_entity_generic,
      "src/lm_math_fi_delay.vhd", "is declared 'natural', expected 'positive'"),
+    # The reason a mutation must report has to be text this repository owns.
+    # M4's was the simulator's phrase for a failed bound check, which GHDL 4.1.0
+    # words differently from 6.0.0, so it is matched on the source file the
+    # failure is attributed to instead - ours, whatever the simulator calls the
+    # failure.
     ("M4", "the two mult_add bit-count constants go back to natural",
      m4_mult_add_constants,
-     "tb_legal_sweep", "bound check failure"),
+     "tb_legal_sweep", "lm_math_fi_mult_add.vhd"),
     ("M5", "review round 1: boundary widened, unrelated failure at 1 ns",
      m5_unrelated_failure_named_after_the_generic,
      "tb_neg_delay[g_data_w=0]", "wrong phase"),
