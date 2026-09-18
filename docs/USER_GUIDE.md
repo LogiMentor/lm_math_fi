@@ -54,14 +54,25 @@ no relationship to the width:
 | every `*_binpnt` on every entity | `natural` | `0` upwards; may equal or exceed the matching `*_w` |
 | every `*_w` on every entity | `positive` | `1` upwards |
 
-No upper bound is imposed on a binary point, but one exists in practice. The
-modules size their internal signals from the widths and binary points, so a
-binary point of `B` makes them allocate on the order of `B` bits; and the
-intermediate sizes are computed in VHDL's `integer`, which is finite, so sums
-such as `g_din_a_binpnt + g_din_b_binpnt` overflow once they approach
-`integer'high`. Binary points in the thousands work and are exercised by the
-regression; binary points near `integer'high` describe a signal no tool can
-realize. Nothing rejects one: the limit is recorded, not enforced.
+No upper bound is imposed on a binary point, and nothing rejects a large one.
+A limit exists in practice, but it is a limit on the **distance between** binary
+points rather than on any one of them. The modules size their internal signals
+from the widths and from the difference between the binary points they must
+align, so:
+
+- binary points that are large but aligned with each other cost nothing. A
+  conversion from `(4, 1000000000)` to `(4, 1000000000)` elaborates and runs.
+- binary points far apart cost the difference. A conversion from `(4, 0)` to
+  `(4, 1000000000)` asks for an internal object of about a gigabyte and fails.
+
+So the practical bound is on `|source binpnt - destination binpnt|`, and on the
+corresponding differences inside the arithmetic modules, not on the absolute
+value of a binary point.
+
+What the committed regression actually exercises is much smaller than either:
+binary points from 0 to 14 and widths from 1 to 8, chosen so that every input
+value of every geometry can be enumerated exhaustively. Run
+`python scripts/gen_format_vectors.py --coverage` for the current figures.
 
 The conversion helpers in `lm_math_fi_pkg` take their binary points as `integer`
 rather than `natural`, so the package accepts a wider domain than any entity can

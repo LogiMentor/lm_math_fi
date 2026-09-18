@@ -64,6 +64,19 @@ generic override. A case passes only when the run fails, the testbench does not
 reach its completion marker, and the output carries what the runner expects for
 that case.
 
+### What these gates claim
+
+The gates in this repository catch accidental regression. They do not claim to
+resist deliberate tampering. A new gate is not merged until a committed mutation
+turns it red. A gate that passes because someone edited a testbench so that it
+lies is not considered a defect in the gate.
+
+`scripts/check_gate_mutations.py` is the committed record of that first
+requirement: it breaks the repository in known ways and requires the gate to
+notice each one, naming both the check that must fail and what it must say. It
+edits tracked files while it runs, so it is not part of the per-push CI; CI runs
+it on pull requests.
+
 Two mechanisms enforce the domains, and they have different reach.
 
 Width and pipeline-depth domains are contiguous numeric bounds, so they live in

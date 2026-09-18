@@ -129,6 +129,32 @@ DIAGNOSTIC_RE = re.compile(
 # are removed before any name match.
 INSTANCE_RE = re.compile(r"^\s*instance:")
 
+# GHDL names an out-of-subtype top-level generic in quotes. Only the SHAPE is
+# matched - a diagnostic line carrying a quoted identifier - together with the
+# identifier itself. The surrounding wording is the simulator's and is not
+# matched, but the shape is: THIS MATCHER DEPENDS ON THE SIMULATOR. On a tool
+# that words it differently the subtype cases would need its shape added.
+QUOTED_GENERIC_RE = re.compile(r":error:[^\n]*?'(?P<generic>[A-Za-z_][A-Za-z_0-9]*)'")
+
+# Which source file holds the assertions each negative testbench can trip.
+UNIT_SOURCE = {
+    "tb_neg_format": "src/lm_math_fi_format.vhd",
+    "tb_neg_add_sub": "src/lm_math_fi_add_sub.vhd",
+    "tb_neg_mult": "src/lm_math_fi_mult.vhd",
+    "tb_neg_mult_add": "src/lm_math_fi_mult_add.vhd",
+    "tb_neg_pkg": "src/lm_math_fi_pkg.vhd",
+}
+
+# The package's two assertions are not about a generic, so they are anchored on
+# what they are about instead.
+PACKAGE_ANCHOR = {"g_round_mode": "rounding mode", "g_overflow": "overflow mode"}
+
+# An assert statement and the report text that follows it, so each assertion can
+# be located in the source and keyed by what it checks.
+ASSERT_RE = re.compile(r"^\s*assert\b")
+SEVERITY_RE = re.compile(r"^\s*severity\b")
+ANCHOR_GENERIC_RE = re.compile(r"generic (?P<generic>g_[a-z_0-9]+)")
+
 
 # ---------------------------------------------------------------------------
 # Interface declarations: which generics carry their domain in their subtype.
@@ -354,6 +380,56 @@ def ghdl_common(ghdl: str, verb: str) -> list[str]:
     return [ghdl, verb, "--std=08", "--work=lm_math_fi_lib", f"--workdir={BUILD}", f"-P{BUILD}"]
 
 
+def locate_assertions(rel: str) -> dict[str, int]:
+    """Where each assertion in a source file is, keyed by what it checks.
+
+    Derived from the source on every run, never written down. Move an assertion
+    and the expected line moves with it; delete one, or change its message so it
+    can no longer be keyed, and the case that needs it fails with a message
+    saying the assertion could not be located - which is the right outcome,
+    because the gate can no longer prove which assertion fired.
+    """
+    text = (ROOT / rel).read_text(encoding="utf-8")
+    found: dict[str, int] = {}
+    lines = text.splitlines()
+    index = 0
+    while index < len(lines):
+        if ASSERT_RE.match(lines[index]):
+            start = index + 1                      # 1-based, as the simulator counts
+            body = []
+            scan = index
+            while scan < len(lines) and not SEVERITY_RE.match(lines[scan]):
+                body.append(lines[scan])
+                scan += 1
+            if scan < len(lines):
+                body.append(lines[scan])
+            joined = squash(" ".join(body))
+            match = ANCHOR_GENERIC_RE.search(joined)
+            if match:
+                found.setdefault(match.group("generic"), start)
+            else:
+                for anchor in PACKAGE_ANCHOR.values():
+                    if anchor in joined:
+                        found.setdefault(anchor, start)
+            index = scan + 1
+        else:
+            index += 1
+    return found
+
+
+def expected_assertion_site(case: "Case") -> tuple[str, int] | str:
+    """The (source file, line) the case's own assertion lives at, or why not."""
+    rel = UNIT_SOURCE.get(case.unit)
+    if rel is None:
+        return f"no source file is recorded for {case.unit}"
+    anchor = PACKAGE_ANCHOR[case.generic] if case.unit == "tb_neg_pkg" else case.generic
+    sites = locate_assertions(rel)
+    if anchor not in sites:
+        return (f"no assertion keyed on {anchor!r} could be located in {rel}; "
+                "it has been deleted or its message no longer names what it checks")
+    return rel, sites[anchor]
+
+
 def check_interface_declarations() -> list[str]:
     """Pin the subtype each entity declares for its range-constrained generics.
 
@@ -496,6 +572,16 @@ def plain_diagnostic_text(output: str) -> str:
     return "\n".join(keep)
 
 
+def same_source(reported: str, rel: str) -> bool:
+    """Is the file the simulator named the repository file `rel`?
+
+    The simulator prints whatever path it was handed, absolute or relative, with
+    either separator, so compare on the normalised tail rather than on the text.
+    """
+    normalised = reported.replace("\\", "/")
+    return normalised == rel or normalised.endswith("/" + rel)
+
+
 def check_case(ghdl: str, case: Case, stop_time: str) -> tuple[bool, str]:
     result = simulate(ghdl, case.unit, stop_time, [f"-g{case.generic}={case.value}"])
     output = result.stdout or ""
@@ -512,9 +598,8 @@ def check_case(ghdl: str, case: Case, stop_time: str) -> tuple[bool, str]:
     diags = diagnostics(output)
 
     if case.phase == PHASE_ELABORATION:
-        # The phase check. All three must hold, and the mutation that widens a
-        # testbench boundary and then fails at 1 ns for an unrelated reason
-        # breaks the first two.
+        # Phase, from the testbench's own marker and from the absence of
+        # anything the simulator attributed to a source line.
         if STARTED_MARKER in output:
             return wrong(
                 "wrong phase: this case must be rejected before simulation starts, "
@@ -527,17 +612,33 @@ def check_case(ghdl: str, case: Case, stop_time: str) -> tuple[bool, str]:
                 f"but the simulator reported a {first['kind']} {first['severity']} "
                 f"at {first['time']}{first['unit']} from {first['file']}:{first['line']}"
             )
-        # Only now is the name meaningful, and only outside instance paths.
-        haystack = squash(plain_diagnostic_text(output))
-        absent = [x for x in case.expect if squash(x) not in haystack]
-        if absent:
+        # Attribution. An elaboration failure is not evidence on its own - the
+        # review showed an unrelated one satisfying that. The simulator has to
+        # have named THIS generic, in a diagnostic shaped as one naming a
+        # generic, outside any instance path.
+        named = [
+            m.group("generic")
+            for m in QUOTED_GENERIC_RE.finditer(plain_diagnostic_text(output))
+        ]
+        if case.generic not in named:
             return wrong(
-                "failed before simulation started, but the diagnostic does not name "
-                + "; ".join(repr(x) for x in absent)
+                "failed before simulation started, but no diagnostic names the "
+                f"generic {case.generic!r}"
+                + (f"; the generics named were {sorted(set(named))}" if named
+                   else "; no diagnostic names any generic, so the failure cannot "
+                        "be attributed to a generic's subtype at all")
             )
-        return True, "rejected before simulation started, diagnostic names the generic"
+        return True, (
+            f"rejected before simulation started, diagnostic names {case.generic}"
+        )
 
-    # PHASE_TIME_ZERO: our own assertion, at time zero, carrying our message.
+    # PHASE_TIME_ZERO. The failure has to come from the one assertion this case
+    # exists to exercise, identified by where it is in the source.
+    site = expected_assertion_site(case)
+    if isinstance(site, str):
+        return wrong("cannot determine which assertion this case targets: " + site)
+    rel, line = site
+
     failures = [d for d in diags if d["severity"] in ("error", "failure")]
     if not failures:
         return wrong(
@@ -551,15 +652,35 @@ def check_case(ghdl: str, case: Case, stop_time: str) -> tuple[bool, str]:
             "wrong phase: this case must be rejected at time zero, but the first "
             f"failure was at {first['time']}{first['unit']}"
         )
-    # Match only inside the message, never inside an instance path.
-    messages = squash(" ".join(d["message"] for d in at_zero))
+    located = [
+        d for d in at_zero
+        if same_source(d["file"], rel) and int(d["line"]) == line
+    ]
+    if not located:
+        seen = ", ".join(
+            f"{d['file'].replace(chr(92), '/').rsplit('/', 1)[-1]}:{d['line']}"
+            for d in at_zero
+        )
+        return wrong(
+            f"failed at time zero, but not from the assertion this case targets "
+            f"({rel}:{line}, the one checking {case.generic}). The failure came "
+            f"from {seen}. Another assertion, a testbench report, or the package "
+            "does not satisfy this case however it is worded."
+        )
+    # Text, as an additional condition only. Location has already decided which
+    # assertion fired; this catches an assertion whose message stopped matching
+    # what it checks.
+    messages = squash(" ".join(d["message"] for d in located))
     absent = [x for x in case.expect if squash(x) not in messages]
     if absent:
         return wrong(
-            "failed for the wrong reason; the time-zero assertion message does not "
-            "contain: " + "; ".join(repr(x) for x in absent)
+            f"the assertion at {rel}:{line} fired, but its message no longer "
+            "contains: " + "; ".join(repr(x) for x in absent)
         )
-    return True, "rejected at time zero by an assertion carrying the expected diagnostic"
+    return True, (
+        f"rejected at time zero by the assertion at {rel}:{line}, "
+        "with the expected diagnostic"
+    )
 
 
 def main() -> int:

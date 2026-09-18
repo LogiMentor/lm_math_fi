@@ -61,13 +61,13 @@ architecture a_rtl of lm_math_fi_mult_add is
   -- and at least g_din_c_w (taking the addend term), so it is always positive.
   --
   -- That argument is about arithmetic, not about VHDL's integer type, which is
-  -- finite. C_MULT_BINPNT is g_din_a_binpnt + g_din_b_binpnt, so a binary point
-  -- near integer'high overflows before the argument can apply. In practice the
-  -- binding limit is much lower: C_SUM_W bits are actually allocated, so a
-  -- binary point large enough to threaten integer'high describes a signal no
-  -- tool can realize. No constraint is imposed here for a configuration nobody
-  -- writes; the limit is simply recorded. Binary points in the thousands are
-  -- fine and are exercised by the gate.
+  -- finite. What bounds a binary point in practice is not its own size but how
+  -- far it sits from the others: the internal widths grow with the DIFFERENCE
+  -- between binary points, and with the widths, not with the absolute value of
+  -- any one binary point. Binary points of 10**9 that are aligned with each
+  -- other elaborate and run; the same binary point against a binary point of 0
+  -- asks for an object of about a gigabyte and does not. No constraint is
+  -- imposed here for a configuration nobody writes; the limit is recorded.
   constant C_SUM_W        : natural := f_lm_max(C_MULT_INT_W, C_ADDEND_INT_W) + C_SUM_BINPNT + 1;
 
   type t_pipe is array (0 to g_pipe_stages) of std_logic_vector(C_SUM_W - 1 downto 0);

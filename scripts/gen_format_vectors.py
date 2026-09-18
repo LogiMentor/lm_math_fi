@@ -12,28 +12,38 @@ Produces two committed files:
 
 INDEPENDENCE IS THE POINT OF THIS FILE
   Nothing here imports, calls, or is transcribed from src/, model/ or js/. The
-  arithmetic is written from the documented semantics using Python's
-  arbitrary-precision integers and fractions: a stored word R with binary point
-  B denotes the exact rational R / 2**B, with R read as two's complement when
-  the format is signed. An expectation that came from the code under test would
-  certify nothing, so this file must never grow a dependency on it. The only
-  thing it reads from the repository is its own previous output, and only to
-  compare.
+  arithmetic is written from the documented semantics: a stored word R with
+  binary point B denotes the exact rational R / 2**B, with R read as two's
+  complement when the format is signed. An expectation taken from the code under
+  test would certify nothing, so this file must never grow a dependency on it.
 
-  The arithmetic is implemented TWICE, in two deliberately different styles:
+TWO COMPLETE REFERENCES, NOT TWO ROUNDING RULES
+  Every expectation is computed by two pipelines that share no arithmetic:
 
-    reference A  exact integers, floor division and remainder
-    reference B  exact rationals, comparison against the midpoint
+    reference A   stored value decoded with int(bits, 2) and a 2**n correction;
+                  rescaling by floor division and remainder; overflow by masking
+                  for wrap and min/max for saturate
+    reference B   stored value decoded as a weighted sum with a negative
+                  most-significant weight; rescaling through exact Fraction
+                  arithmetic against the midpoint; overflow by modular reduction
+                  onto the representable interval for wrap and an explicit
+                  comparison chain for saturate
 
-  Every value is computed both ways and the two must agree before anything is
-  written. A single implementation could be self-consistently wrong; two written
-  from the same prose in different styles are much less likely to be wrong the
-  same way.
+  Decoding, rescaling, rounding, overflow, and all four operations are
+  implemented separately in each. The comparison is on the final emitted bit
+  string, so corrupting any one step in either pipeline is caught.
+
+  WHAT THIS DOES NOT BUY. Both references necessarily encode the same model of
+  each module's internal structure - which intermediate format a module aligns
+  into, and that its accumulator wraps there. Two references cannot disagree
+  about a structure they were both told to model. The doubling catches an
+  arithmetic slip; it does not catch a shared misreading of what a module does.
+  That is what the gate's own comparison against the RTL is for.
 
 USAGE
-  python scripts/gen_format_vectors.py           regenerate both files
-  python scripts/gen_format_vectors.py --check   regenerate in memory and fail
-                                                 if either committed file differs
+  python scripts/gen_format_vectors.py             regenerate both files
+  python scripts/gen_format_vectors.py --check     fail if either has drifted
+  python scripts/gen_format_vectors.py --coverage  print the coverage matrix
 
   The --check form is a gate step, so the committed expectations cannot drift
   from the generator that is supposed to produce them.
@@ -56,7 +66,6 @@ GATE_DIR = ROOT / "sim" / "generic_domain"
 VECTOR_FILE = GATE_DIR / "f_lm_quantize_vectors.txt"
 ENTITY_TB_FILE = GATE_DIR / "tb_degenerate_formats.vhd"
 
-# The library's encodings, restated here rather than imported.
 TRUNC_BITS, ROUND_EVEN, CEIL, TRUNC_ZERO, FLOOR = 0, 1, 2, 3, 4
 ROUND_POS_INF, ROUND_NEG_INF, ROUND_ZERO, ROUND_AWAY = 5, 6, 7, 8
 SATURATE, WRAP = 1, 2
@@ -79,186 +88,248 @@ ALL_OVFS = [SATURATE, WRAP]
 ALL_ARITHS = [UNSIGNED, SIGNED]
 
 
-# ---------------------------------------------------------------------------
-# Shared, non-arithmetic helpers
-# ---------------------------------------------------------------------------
-
-def raw_of(bits: str, arith: int) -> int:
-    """Read a bit string as the stored integer of a format."""
-    value = int(bits, 2)
-    if arith == SIGNED and bits[0] == "1":
-        return value - (1 << len(bits))
-    return value
-
-
 def bits_of(raw: int, width: int) -> str:
-    """Render a stored integer as a two's-complement bit string."""
+    """Render a stored integer as a two's-complement bit string. Presentation,
+    not arithmetic: both references agree on what a bit string looks like."""
     return format(raw & ((1 << width) - 1), f"0{width}b")
 
 
-def bounds(width: int, arith: int) -> tuple[int, int]:
-    if arith == SIGNED:
-        return -(1 << (width - 1)), (1 << (width - 1)) - 1
-    return 0, (1 << width) - 1
+# ===========================================================================
+# Reference A
+# ===========================================================================
+
+class RefA:
+    name = "A"
+
+    @staticmethod
+    def decode(bits: str, arith: int) -> int:
+        value = int(bits, 2)
+        if arith == SIGNED and bits[0] == "1":
+            return value - (1 << len(bits))
+        return value
+
+    @staticmethod
+    def store(value: int, width: int, arith: int, ovf: int) -> int:
+        if arith == SIGNED:
+            low, high = -(1 << (width - 1)), (1 << (width - 1)) - 1
+        else:
+            low, high = 0, (1 << width) - 1
+        if ovf == SATURATE:
+            return max(low, min(high, value))
+        value &= (1 << width) - 1
+        if arith == SIGNED and value >= (1 << (width - 1)):
+            value -= 1 << width
+        return value
+
+    @staticmethod
+    def rescale(raw: int, src_bp: int, dst_bp: int, mode: int) -> int:
+        delta = dst_bp - src_bp
+        if delta >= 0:
+            return raw << delta
+        den = 1 << (-delta)
+        quotient, remainder = divmod(raw, den)
+        if remainder == 0:
+            return quotient
+        if mode in (TRUNC_BITS, FLOOR):
+            return quotient
+        if mode == CEIL:
+            return quotient + 1
+        if mode == TRUNC_ZERO:
+            return quotient + 1 if raw < 0 else quotient
+        doubled = 2 * remainder
+        if doubled > den:
+            return quotient + 1
+        if doubled < den:
+            return quotient
+        if mode == ROUND_EVEN:
+            return quotient if quotient % 2 == 0 else quotient + 1
+        if mode == ROUND_POS_INF:
+            return quotient + 1
+        if mode == ROUND_NEG_INF:
+            return quotient
+        if mode == ROUND_ZERO:
+            return quotient + 1 if raw < 0 else quotient
+        if mode == ROUND_AWAY:
+            return quotient if raw < 0 else quotient + 1
+        raise ValueError(f"unknown rounding mode {mode}")
 
 
-def store(value: int, width: int, arith: int, ovf: int) -> int:
-    """Place an integer into a format under the selected overflow mode."""
-    low, high = bounds(width, arith)
-    if ovf == SATURATE:
-        return max(low, min(high, value))
-    value &= (1 << width) - 1
-    if arith == SIGNED and value >= (1 << (width - 1)):
-        value -= 1 << width
-    return value
+# ===========================================================================
+# Reference B
+# ===========================================================================
+
+class RefB:
+    name = "B"
+
+    @staticmethod
+    def decode(bits: str, arith: int) -> int:
+        # Two's complement straight from its definition: every bit carries its
+        # own weight, and the most significant weight is negative when signed.
+        width = len(bits)
+        total = 0
+        for index, char in enumerate(reversed(bits)):
+            if char == "1":
+                weight = 1 << index
+                if arith == SIGNED and index == width - 1:
+                    total -= weight
+                else:
+                    total += weight
+        return total
+
+    @staticmethod
+    def store(value: int, width: int, arith: int, ovf: int) -> int:
+        span = 1 << width
+        low = -(span // 2) if arith == SIGNED else 0
+        high = low + span - 1
+        if ovf == SATURATE:
+            if value < low:
+                return low
+            if value > high:
+                return high
+            return value
+        # Modular reduction onto the representable interval.
+        return ((value - low) % span) + low
+
+    @staticmethod
+    def rescale(raw: int, src_bp: int, dst_bp: int, mode: int) -> int:
+        # The exact represented value, then the destination's integer scale.
+        exact = Fraction(raw) / (Fraction(2) ** src_bp) * (Fraction(2) ** dst_bp)
+        below = exact.numerator // exact.denominator
+        if Fraction(below) == exact:
+            return below
+        above = below + 1
+        if mode in (TRUNC_BITS, FLOOR):
+            return below
+        if mode == CEIL:
+            return above
+        if mode == TRUNC_ZERO:
+            return above if exact < 0 else below
+        midpoint = Fraction(2 * below + 1, 2)
+        if exact > midpoint:
+            return above
+        if exact < midpoint:
+            return below
+        if mode == ROUND_EVEN:
+            return below if below % 2 == 0 else above
+        if mode == ROUND_POS_INF:
+            return above
+        if mode == ROUND_NEG_INF:
+            return below
+        if mode == ROUND_ZERO:
+            return above if exact < 0 else below
+        if mode == ROUND_AWAY:
+            return below if exact < 0 else above
+        raise ValueError(f"unknown rounding mode {mode}")
 
 
-# ---------------------------------------------------------------------------
-# Reference A: exact integers, floor division and remainder
-# ---------------------------------------------------------------------------
+# ===========================================================================
+# The operations, once per reference. Each composes only its own helpers.
+# ===========================================================================
 
-def _round_a(num: int, den: int, mode: int) -> int:
-    quotient, remainder = divmod(num, den)      # floor division, 0 <= remainder < den
-    if remainder == 0:
-        return quotient
-    if mode in (TRUNC_BITS, FLOOR):
-        return quotient
-    if mode == CEIL:
-        return quotient + 1
-    if mode == TRUNC_ZERO:
-        return quotient + 1 if num < 0 else quotient
-    doubled = 2 * remainder
-    if doubled > den:
-        return quotient + 1
-    if doubled < den:
-        return quotient
-    if mode == ROUND_EVEN:
-        return quotient if quotient % 2 == 0 else quotient + 1
-    if mode == ROUND_POS_INF:
-        return quotient + 1
-    if mode == ROUND_NEG_INF:
-        return quotient
-    if mode == ROUND_ZERO:
-        return quotient + 1 if num < 0 else quotient
-    if mode == ROUND_AWAY:
-        return quotient if num < 0 else quotient + 1
-    raise ValueError(f"unknown rounding mode {mode}")
+def _quantize(R, inbits, ow, obp, oa, nw, nbp, na, rnd, ovf) -> str:
+    return bits_of(R.store(R.rescale(R.decode(inbits, oa), obp, nbp, rnd), nw, na, ovf), nw)
 
 
-def _rescale_a(raw: int, src_bp: int, dst_bp: int, mode: int) -> int:
-    delta = dst_bp - src_bp
-    if delta >= 0:
-        return raw << delta                     # nothing is discarded
-    return _round_a(raw, 1 << (-delta), mode)
-
-
-# ---------------------------------------------------------------------------
-# Reference B: exact rationals, comparison against the midpoint
-# ---------------------------------------------------------------------------
-
-def _round_b(exact: Fraction, mode: int) -> int:
-    below = exact.numerator // exact.denominator      # floor, for any sign
-    if Fraction(below) == exact:
-        return below
-    above = below + 1
-    if mode in (TRUNC_BITS, FLOOR):
-        return below
-    if mode == CEIL:
-        return above
-    if mode == TRUNC_ZERO:
-        return above if exact < 0 else below
-    midpoint = Fraction(2 * below + 1, 2)
-    if exact > midpoint:
-        return above
-    if exact < midpoint:
-        return below
-    if mode == ROUND_EVEN:
-        return below if below % 2 == 0 else above
-    if mode == ROUND_POS_INF:
-        return above
-    if mode == ROUND_NEG_INF:
-        return below
-    if mode == ROUND_ZERO:
-        return above if exact < 0 else below
-    if mode == ROUND_AWAY:
-        return below if exact < 0 else above
-    raise ValueError(f"unknown rounding mode {mode}")
-
-
-def _rescale_b(raw: int, src_bp: int, dst_bp: int, mode: int) -> int:
-    value = Fraction(raw) / (Fraction(2) ** src_bp)   # the exact represented value
-    scaled = value * (Fraction(2) ** dst_bp)          # the destination's integer scale
-    return _round_b(scaled, mode)
-
-
-# ---------------------------------------------------------------------------
-# Agreement gate: every value is computed both ways
-# ---------------------------------------------------------------------------
-
-_DISAGREEMENTS: list[str] = []
-
-
-def rescale(raw: int, src_bp: int, dst_bp: int, mode: int) -> int:
-    a = _rescale_a(raw, src_bp, dst_bp, mode)
-    b = _rescale_b(raw, src_bp, dst_bp, mode)
-    if a != b:
-        _DISAGREEMENTS.append(
-            f"raw={raw} {src_bp}->{dst_bp} mode={ROUND_NAME[mode]}: A={a} B={b}"
-        )
-    return a
-
-
-# ---------------------------------------------------------------------------
-# The operations, expressed on top of rescale/store
-# ---------------------------------------------------------------------------
-
-def quantize(inbits, ow, obp, oa, nw, nbp, na, rnd, ovf) -> str:
-    """Conversion. The reference for f_lm_quantize and lm_math_fi_format."""
-    return bits_of(store(rescale(raw_of(inbits, oa), obp, nbp, rnd), nw, na, ovf), nw)
-
-
-def mult(abits, bbits, aw, abp, aa, bw, bbp, ba, nw, nbp, na, rnd, ovf) -> str:
-    """lm_math_fi_mult. The product is held exactly in (aw+bw, abp+bbp); it is
-    unsigned only when both operands are unsigned."""
-    product = raw_of(abits, aa) * raw_of(bbits, ba)
+def _mult(R, abits, bbits, aw, abp, aa, bw, bbp, ba, nw, nbp, na, rnd, ovf) -> str:
+    product = R.decode(abits, aa) * R.decode(bbits, ba)
     product_arith = UNSIGNED if (aa == UNSIGNED and ba == UNSIGNED) else SIGNED
-    held = store(product, aw + bw, product_arith, WRAP)
-    return bits_of(store(rescale(held, abp + bbp, nbp, rnd), nw, na, ovf), nw)
+    held = R.store(product, aw + bw, product_arith, WRAP)
+    return bits_of(R.store(R.rescale(held, abp + bbp, nbp, rnd), nw, na, ovf), nw)
 
 
-def add_sub(abits, bbits, aw, abp, bw, bbp, arith, nw, nbp, na, rnd, direction) -> str:
-    """lm_math_fi_add_sub. Both operands are aligned into the module's internal
-    format and wrap there, the sum is formed and wraps, then it is quantized.
-    The module has no overflow generic and always wraps."""
+def _add_sub(R, abits, bbits, aw, abp, bw, bbp, arith, nw, nbp, na, rnd, direction) -> str:
     res_bp = max(abp, bbp)
     res_w = max(aw - abp, bw - bbp) + res_bp + 1
-    a = store(raw_of(abits, arith) << (res_bp - abp), res_w, arith, WRAP)
-    b = store(raw_of(bbits, arith) << (res_bp - bbp), res_w, arith, WRAP)
-    acc = store(a + b if direction == ADD else a - b, res_w, arith, WRAP)
-    return bits_of(store(rescale(acc, res_bp, nbp, rnd), nw, na, WRAP), nw)
+    a = R.store(R.rescale(R.decode(abits, arith), abp, res_bp, TRUNC_BITS), res_w, arith, WRAP)
+    b = R.store(R.rescale(R.decode(bbits, arith), bbp, res_bp, TRUNC_BITS), res_w, arith, WRAP)
+    acc = R.store(a + b if direction == ADD else a - b, res_w, arith, WRAP)
+    return bits_of(R.store(R.rescale(acc, res_bp, nbp, rnd), nw, na, WRAP), nw)
 
 
-def mult_add(abits, bbits, cbits, aw, abp, bw, bbp, cw, cbp, arith,
-             nw, nbp, na, rnd, ovf, direction) -> str:
-    """lm_math_fi_mult_add. The product and the addend are aligned into the
-    module's internal format and wrap there, the sum is formed and wraps, then
-    it is quantized."""
+def _mult_add(R, abits, bbits, cbits, aw, abp, bw, bbp, cw, cbp, arith,
+              nw, nbp, na, rnd, ovf, direction) -> str:
     mult_bp = abp + bbp
     sum_bp = max(mult_bp, cbp)
     sum_w = max((aw + bw) - mult_bp, cw - cbp) + sum_bp + 1
-    product = store((raw_of(abits, arith) * raw_of(bbits, arith)) << (sum_bp - mult_bp),
-                    sum_w, arith, WRAP)
-    addend = store(raw_of(cbits, arith) << (sum_bp - cbp), sum_w, arith, WRAP)
-    acc = store(product + addend if direction == ADD else product - addend,
-                sum_w, arith, WRAP)
-    return bits_of(store(rescale(acc, sum_bp, nbp, rnd), nw, na, ovf), nw)
+    raw_product = R.decode(abits, arith) * R.decode(bbits, arith)
+    product = R.store(R.rescale(raw_product, mult_bp, sum_bp, TRUNC_BITS), sum_w, arith, WRAP)
+    addend = R.store(R.rescale(R.decode(cbits, arith), cbp, sum_bp, TRUNC_BITS), sum_w, arith, WRAP)
+    acc = R.store(product + addend if direction == ADD else product - addend,
+                  sum_w, arith, WRAP)
+    return bits_of(R.store(R.rescale(acc, sum_bp, nbp, rnd), nw, na, ovf), nw)
 
 
-# ---------------------------------------------------------------------------
+_DISAGREEMENTS: list[str] = []
+_AGREED = 0
+
+
+def _both(fn, *args) -> str:
+    """Run the whole computation under both references and require agreement."""
+    global _AGREED
+    a = fn(RefA, *args)
+    b = fn(RefB, *args)
+    if a != b:
+        _DISAGREEMENTS.append(f"{fn.__name__}{args!r}: A={a} B={b}")
+    _AGREED += 1
+    return a
+
+
+def quantize(*args) -> str:
+    return _both(_quantize, *args)
+
+
+def mult(*args) -> str:
+    return _both(_mult, *args)
+
+
+def add_sub(*args) -> str:
+    return _both(_add_sub, *args)
+
+
+def mult_add(*args) -> str:
+    return _both(_mult_add, *args)
+
+
+# ===========================================================================
+# Geometry families. The bench states which must be present; this is only the
+# same classification, used to report coverage.
+# ===========================================================================
+
+def families(ow: int, obp: int, nw: int, nbp: int) -> list[str]:
+    """Classify a source -> destination geometry. A geometry may be in several."""
+    out = []
+    if obp < ow and nbp < nw:
+        out.append("ordinary")
+    if obp == ow or nbp == nw:
+        out.append("bp_equals_width")
+    if obp > ow:
+        out.append("bp_above_width_src")
+    if nbp > nw:
+        out.append("bp_above_width_dst")
+    # Bit weights: source spans 2**-obp .. 2**(ow-1-obp).
+    if -nbp > ow - 1 - obp:
+        out.append("disjoint_dst_above")
+    if -obp > nw - 1 - nbp:
+        out.append("disjoint_dst_below")
+    src = set(range(-obp, ow - obp))
+    dst = set(range(-nbp, nw - nbp))
+    if len(src & dst) == 1:
+        out.append("one_bit_overlap")
+    if ow == 1 or nw == 1:
+        out.append("width_1")
+    return out
+
+
+REQUIRED_FAMILIES = [
+    "ordinary", "bp_equals_width", "bp_above_width_src", "bp_above_width_dst",
+    "disjoint_dst_above", "disjoint_dst_below", "one_bit_overlap", "width_1",
+]
+
+
+# ===========================================================================
 # The vector file
-# ---------------------------------------------------------------------------
+# ===========================================================================
 
-# (label, old_width, old_binpnt, new_width, new_binpnt)
 VECTOR_GEOMETRIES = [
     ("ordinary narrowing, the original baseline geometry", 6, 2, 4, 1),
     ("binary point equal to the width, both sides",        4, 4, 4, 4),
@@ -279,7 +350,6 @@ VECTOR_GEOMETRIES = [
 
 
 def build_vectors():
-    """Return (rows, per_geometry_counts) for the vector file."""
     rows = []
     tally = []
     for _label, ow, obp, nw, nbp in VECTOR_GEOMETRIES:
@@ -306,48 +376,48 @@ def render_vector_file(rows, tally) -> str:
         "# Expected values for lm_math_fi_pkg.f_lm_quantize, replayed by",
         "# sim/generic_domain/tb_quantize_vectors.vhd.",
         "#",
-        "# PURPOSE",
-        "#   Pins the arithmetic of f_lm_quantize across the format domain, so that a",
-        "#   future edit to the function cannot change the result for a legal",
-        "#   configuration without failing the gate.",
+        "# GENERATED FILE - do not edit by hand.",
         "#",
         "# HOW THESE WERE PRODUCED",
-        "#   Every value in this file, without exception, is emitted by",
-        "#   scripts/gen_format_vectors.py. That script computes the arithmetic from",
-        "#   the documented semantics using Python's arbitrary-precision integers and",
-        "#   fractions, twice, in two different styles, and refuses to emit anything",
-        "#   unless the two agree. It imports nothing from src/, model/ or js/: an",
-        "#   expectation taken from the code under test would certify nothing.",
+        "#   Every value here is emitted by scripts/gen_format_vectors.py, which",
+        "#   computes the arithmetic from the documented semantics using Python's",
+        "#   arbitrary-precision integers and fractions. It implements the whole path",
+        "#   from input decoding to emitted expectation twice, in two pipelines that",
+        "#   share no arithmetic, and refuses to emit unless both agree. It imports",
+        "#   nothing from src/, model/ or js/.",
         "#",
-        "#   Do not edit this file by hand. Regenerate it:",
-        "#     python scripts/gen_format_vectors.py",
-        "#   and verify the committed copy matches the generator:",
-        "#     python scripts/gen_format_vectors.py --check",
-        "#   which the generic-domain gate runs on every invocation.",
+        "#   Regenerate:      python scripts/gen_format_vectors.py",
+        "#   Verify committed: python scripts/gen_format_vectors.py --check",
+        "#   The generic-domain gate runs the second on every invocation.",
         "#",
         "#   Regenerating is a deliberate act: it re-baselines the arithmetic. Do it",
         "#   only when a behaviour change is intended, and say so in the changelog.",
         "#",
         "# COVERAGE",
-        "#   Every input value of each geometry below, crossed with 2 source",
-        "#   signednesses (C_LM_UNSIGNED = 1, C_LM_SIGNED = 2), 2 destination",
-        "#   signednesses, 9 rounding modes (C_LM_TRUNC_BITS = 0 .. C_LM_ROUND_AWAY = 8)",
-        "#   and 2 overflow modes (C_LM_SATURATE = 1, C_LM_WRAP = 2). The four alias",
-        "#   constants share a value with one of the nine rounding modes, so they are",
-        "#   covered by the value they alias.",
+        "#   Every input value of each geometry, crossed with 2 source signednesses",
+        "#   (C_LM_UNSIGNED = 1, C_LM_SIGNED = 2), 2 destination signednesses, 9",
+        "#   rounding modes (C_LM_TRUNC_BITS = 0 .. C_LM_ROUND_AWAY = 8) and 2 overflow",
+        "#   modes (C_LM_SATURATE = 1, C_LM_WRAP = 2). The four alias constants share a",
+        "#   value with one of the nine rounding modes, so they are covered by the",
+        "#   value they alias.",
+        "#",
+        "#   The testbench does not take this on trust. It requires each geometry to",
+        "#   carry every one of its 2**old_width distinct input values, and requires",
+        "#   the declared geometries to cover a set of families it names itself. A",
+        "#   reduced vector set that is internally consistent still fails.",
         "#",
     ]
     for (label, ow, obp, nw, nbp), (_a, _b, _c, _d, count) in zip(VECTOR_GEOMETRIES, tally):
-        head.append(f"#     ({ow},{obp}) -> ({nw},{nbp})   {count:5d}   {label}")
+        fams = ",".join(families(ow, obp, nw, nbp))
+        head.append(f"#     ({ow},{obp}) -> ({nw},{nbp})  {count:5d} rows  {label}")
+        head.append(f"#         families: {fams}")
     head += [
         "#",
         "# FORMAT",
-        "#   Lines beginning with '#!' are manifest directives, read by the testbench",
-        "#   so that truncating or thinning this file fails the gate instead of",
-        "#   quietly shrinking its coverage:",
-        "#     #! 0 <total>                              expected number of vectors",
-        "#     #! 1 <old_w> <old_bp> <new_w> <new_bp> <n>  expected vectors per geometry",
-        "#   Other lines beginning with '#' are comments. Every remaining line is one",
+        "#   Lines beginning with '#!' are manifest directives:",
+        "#     #! 0 <total>                                expected number of vectors",
+        "#     #! 1 <old_w> <old_bp> <new_w> <new_bp> <n>  expected rows per geometry",
+        "#   Other lines beginning with '#' are prose. Every remaining line is one",
         "#   vector:",
         "#     old_width old_binpnt old_arith new_width new_binpnt new_arith",
         "#     rounding overflow value expected",
@@ -362,9 +432,9 @@ def render_vector_file(rows, tally) -> str:
     return "\n".join(head + body) + "\n"
 
 
-# ---------------------------------------------------------------------------
+# ===========================================================================
 # The entity testbench
-# ---------------------------------------------------------------------------
+# ===========================================================================
 
 W4 = [0, 1, 5, 7, 8, 15]
 W1 = [0, 1]
@@ -391,13 +461,24 @@ def _ma(tag, note, aw, abp, bw, bbp, cw, cbp, nw, nbp, arith, rnd, ovf, directio
                 direction=direction, values=values)
 
 
+def _pairs(xs, ys):
+    return [(a, b) for a in xs for b in ys]
+
+
+def _triples(xs, ys, zs):
+    return [(a, b, c) for a in xs for b in ys for c in zs]
+
+
 ENTITY_CASES = [
     # --- lm_math_fi_format ---------------------------------------------------
+    _fmt("f_ordinary_u", "ordinary narrowing", 6, 2, 4, 1, UNSIGNED, ROUND_EVEN, SATURATE, [0, 1, 22, 37, 63]),
+    _fmt("f_ordinary_s", "ordinary narrowing", 6, 2, 4, 1, SIGNED, ROUND_EVEN, SATURATE, [0, 1, 22, 37, 63]),
     _fmt("f_bpeq_u", "binary point equal to the width", 4, 4, 4, 4, UNSIGNED, ROUND_EVEN, SATURATE, W4),
     _fmt("f_bpeq_s", "binary point equal to the width", 4, 4, 4, 4, SIGNED, ROUND_EVEN, SATURATE, W4),
     _fmt("f_bpgt_src_u", "binary point above the width, source", 4, 8, 4, 2, UNSIGNED, TRUNC_BITS, WRAP, W4),
     _fmt("f_bpgt_src_s", "binary point above the width, source", 4, 8, 4, 2, SIGNED, TRUNC_BITS, WRAP, W4),
     _fmt("f_bpgt_dst_u", "binary point above the width, destination", 4, 2, 4, 8, UNSIGNED, ROUND_AWAY, SATURATE, W4),
+    _fmt("f_bpgt_dst_s", "binary point above the width, destination", 4, 2, 4, 8, SIGNED, ROUND_AWAY, SATURATE, W4),
     _fmt("f_bpgt_both_s", "binary point above the width, both sides", 4, 8, 4, 6, SIGNED, ROUND_EVEN, SATURATE, W4),
     _fmt("f_disj_above_s", "disjoint weights, destination above source", 4, 8, 4, 0, SIGNED, ROUND_AWAY, SATURATE, W4),
     _fmt("f_disj_below_u", "disjoint weights, destination below source", 4, 0, 4, 8, UNSIGNED, TRUNC_BITS, SATURATE, W4),
@@ -407,46 +488,87 @@ ENTITY_CASES = [
     _fmt("f_w1_from_wide_s", "width 1 signed destination from a wider source", 4, 3, 1, 1, SIGNED, ROUND_EVEN, SATURATE, W4),
     _fmt("f_w1_to_wide_s", "width 1 signed source into a wider destination", 1, 3, 4, 1, SIGNED, ROUND_EVEN, SATURATE, W1),
     # --- lm_math_fi_mult -----------------------------------------------------
+    _mul("m_ordinary_s", "ordinary narrowing", 4, 1, 4, 1, 6, 2, SIGNED, ROUND_EVEN, SATURATE,
+         _pairs((0, 1, 7, 8, 15), (1, 15))),
     _mul("m_bpeq_u", "binary point equal to the width", 4, 4, 4, 4, 4, 4, UNSIGNED, ROUND_EVEN, SATURATE,
-         [(a, b) for a in (0, 3, 15) for b in (0, 5, 15)]),
+         _pairs((0, 3, 15), (0, 5, 15))),
+    _mul("m_bpeq_s", "binary point equal to the width", 4, 4, 4, 4, 4, 4, SIGNED, ROUND_EVEN, SATURATE,
+         _pairs((0, 3, 15), (0, 5, 15))),
     _mul("m_bpgt_s", "binary point above the width", 4, 6, 4, 6, 4, 8, SIGNED, TRUNC_BITS, WRAP,
-         [(a, b) for a in (0, 1, 7, 8) for b in (1, 15)]),
-    _mul("m_w1_u", "width 1 unsigned", 1, 1, 1, 1, 1, 1, UNSIGNED, ROUND_EVEN, SATURATE,
-         [(a, b) for a in W1 for b in W1]),
-    _mul("m_w1_s", "width 1 signed", 1, 1, 1, 1, 1, 1, SIGNED, ROUND_EVEN, SATURATE,
-         [(a, b) for a in W1 for b in W1]),
+         _pairs((0, 1, 7, 8), (1, 15))),
+    _mul("m_bpgt_dst_u", "binary point above the width, destination", 4, 1, 4, 1, 4, 9, UNSIGNED, ROUND_EVEN, SATURATE,
+         _pairs((0, 1, 15), (1, 15))),
+    _mul("m_disj_below_u", "disjoint weights, destination below source", 4, 0, 4, 0, 4, 12, UNSIGNED, TRUNC_BITS, SATURATE,
+         _pairs((0, 1, 15), (1, 15))),
+    _mul("m_disj_above_s", "disjoint weights, destination above source", 4, 8, 4, 8, 4, 0, SIGNED, ROUND_AWAY, SATURATE,
+         _pairs((0, 1, 8, 15), (1, 15))),
+    _mul("m_overlap1_u", "exactly one bit of weight overlap", 4, 4, 4, 4, 4, 1, UNSIGNED, ROUND_EVEN, WRAP,
+         _pairs((0, 3, 15), (5, 15))),
+    _mul("m_w1_u", "width 1 unsigned", 1, 1, 1, 1, 1, 1, UNSIGNED, ROUND_EVEN, SATURATE, _pairs(W1, W1)),
+    _mul("m_w1_s", "width 1 signed", 1, 1, 1, 1, 1, 1, SIGNED, ROUND_EVEN, SATURATE, _pairs(W1, W1)),
     # --- lm_math_fi_add_sub --------------------------------------------------
+    _as("a_ordinary_s", "ordinary narrowing", 4, 1, 4, 1, 6, 2, SIGNED, ROUND_EVEN, ADD,
+        _pairs((0, 1, 8, 15), (1, 7, 15))),
     _as("a_bpeq_u", "binary point equal to the width", 4, 4, 4, 4, 4, 4, UNSIGNED, ROUND_EVEN, ADD,
-        [(a, b) for a in (0, 1, 15) for b in (0, 7, 15)]),
+        _pairs((0, 1, 15), (0, 7, 15))),
+    _as("a_bpeq_s", "binary point equal to the width", 4, 4, 4, 4, 4, 4, SIGNED, ROUND_EVEN, ADD,
+        _pairs((0, 1, 15), (0, 7, 15))),
     _as("a_bpgt_s", "binary point above the width", 4, 8, 4, 6, 4, 9, SIGNED, ROUND_EVEN, SUB,
-        [(a, b) for a in (0, 1, 8, 15) for b in (1, 15)]),
-    _as("a_w1_u", "width 1 unsigned", 1, 1, 1, 1, 1, 1, UNSIGNED, ROUND_EVEN, ADD,
-        [(a, b) for a in W1 for b in W1]),
-    _as("a_w1_s", "width 1 signed", 1, 1, 1, 1, 1, 1, SIGNED, ROUND_EVEN, ADD,
-        [(a, b) for a in W1 for b in W1]),
+        _pairs((0, 1, 8, 15), (1, 15))),
+    _as("a_bpgt_src_u", "binary point above the width, source", 4, 6, 4, 6, 4, 2, UNSIGNED, TRUNC_BITS, ADD,
+        _pairs((0, 1, 15), (1, 15))),
+    _as("a_disj_below_u", "disjoint weights, destination below source", 4, 0, 4, 0, 4, 10, UNSIGNED, TRUNC_BITS, ADD,
+        _pairs((0, 1, 15), (1, 15))),
+    _as("a_disj_above_s", "disjoint weights, destination above source", 4, 8, 4, 8, 4, 0, SIGNED, ROUND_AWAY, ADD,
+        _pairs((0, 1, 8, 15), (1, 15))),
+    _as("a_overlap1_u", "exactly one bit of weight overlap", 4, 4, 4, 4, 4, 1, UNSIGNED, ROUND_EVEN, ADD,
+        _pairs((0, 3, 15), (5, 15))),
+    _as("a_w1_u", "width 1 unsigned", 1, 1, 1, 1, 1, 1, UNSIGNED, ROUND_EVEN, ADD, _pairs(W1, W1)),
+    _as("a_w1_s", "width 1 signed", 1, 1, 1, 1, 1, 1, SIGNED, ROUND_EVEN, ADD, _pairs(W1, W1)),
     # --- lm_math_fi_mult_add -------------------------------------------------
     _ma("ma_bpeq_u", "binary point equal to the width everywhere",
         4, 4, 4, 4, 8, 8, 8, 8, UNSIGNED, ROUND_EVEN, SATURATE, ADD,
-        [(a, b, c) for a in (0, 3, 15) for b in (0, 15) for c in (0, 129, 255)]),
+        _triples((0, 3, 15), (0, 15), (0, 129, 255))),
+    _ma("ma_bpeq_s", "binary point equal to the width everywhere",
+        4, 4, 4, 4, 8, 8, 8, 8, SIGNED, ROUND_EVEN, SATURATE, ADD,
+        _triples((0, 3, 15), (0, 15), (0, 129, 255))),
     _ma("ma_bpgt_ops_s", "binary point above the width on the operands",
         4, 6, 4, 6, 8, 2, 8, 4, SIGNED, ROUND_EVEN, SATURATE, ADD,
-        [(a, b, c) for a in (0, 1, 8, 15) for b in (1, 15) for c in (0, 200)]),
+        _triples((0, 1, 8, 15), (1, 15), (0, 200))),
     _ma("ma_bpgt_addend_s", "binary point above the width on the addend, subtract",
         4, 1, 4, 1, 8, 12, 8, 4, SIGNED, ROUND_EVEN, SATURATE, SUB,
-        [(a, b, c) for a in (0, 1, 8) for b in (1, 15) for c in (0, 129, 255)]),
+        _triples((0, 1, 8), (1, 15), (0, 129, 255))),
     _ma("ma_bpgt_all_u", "binary point above the width everywhere",
         4, 6, 4, 6, 8, 12, 8, 14, UNSIGNED, ROUND_AWAY, WRAP, ADD,
-        [(a, b, c) for a in (0, 1, 15) for b in (1, 15) for c in (0, 255)]),
+        _triples((0, 1, 15), (1, 15), (0, 255))),
     _ma("ma_bpgt_out_s", "binary point above the width on the output only",
         4, 1, 4, 1, 8, 1, 4, 9, SIGNED, ROUND_EVEN, SATURATE, ADD,
-        [(a, b, c) for a in (0, 1, 8) for b in (1, 15) for c in (0, 200)]),
+        _triples((0, 1, 8), (1, 15), (0, 200))),
+    _ma("ma_disj_below_u", "disjoint weights, destination below source",
+        4, 0, 4, 0, 8, 0, 4, 14, UNSIGNED, TRUNC_BITS, SATURATE, ADD,
+        _triples((0, 1, 15), (1, 15), (0, 255))),
+    _ma("ma_disj_above_s", "disjoint weights, destination above source",
+        4, 8, 4, 8, 8, 10, 4, 0, SIGNED, ROUND_AWAY, SATURATE, ADD,
+        _triples((0, 1, 8), (1, 15), (0, 255))),
+    _ma("ma_overlap1_u", "exactly one bit of weight overlap",
+        4, 4, 4, 4, 8, 8, 4, 5, UNSIGNED, ROUND_EVEN, WRAP, ADD,
+        _triples((0, 3, 15), (5, 15), (0, 255))),
     _ma("ma_w1_u", "width 1 unsigned everywhere",
-        1, 1, 1, 1, 1, 1, 1, 1, UNSIGNED, ROUND_EVEN, SATURATE, ADD,
-        [(a, b, c) for a in W1 for b in W1 for c in W1]),
+        1, 1, 1, 1, 1, 1, 1, 1, UNSIGNED, ROUND_EVEN, SATURATE, ADD, _triples(W1, W1, W1)),
     _ma("ma_w1_s", "width 1 signed everywhere",
-        1, 1, 1, 1, 1, 1, 1, 1, SIGNED, ROUND_EVEN, SATURATE, ADD,
-        [(a, b, c) for a in W1 for b in W1 for c in W1]),
+        1, 1, 1, 1, 1, 1, 1, 1, SIGNED, ROUND_EVEN, SATURATE, ADD, _triples(W1, W1, W1)),
 ]
+
+ENTITY_OF = {"format": "lm_math_fi_format", "mult": "lm_math_fi_mult",
+             "add_sub": "lm_math_fi_add_sub", "mult_add": "lm_math_fi_mult_add"}
+
+
+def case_geometry(case):
+    """The (source, destination) geometry a case exercises, for classification.
+    For the arithmetic modules the source is the widest operand format."""
+    if case["kind"] == "format":
+        return case["ow"], case["obp"], case["nw"], case["nbp"]
+    return case["aw"], case["abp"], case["nw"], case["nbp"]
 
 
 def entity_expectation(case, vals) -> str:
@@ -478,12 +600,25 @@ def _geometry_text(case) -> str:
         return f'({case["ow"]},{case["obp"]}) -> {dst}'
     if case["kind"] == "mult":
         return f'({case["aw"]},{case["abp"]})x({case["bw"]},{case["bbp"]}) -> {dst}'
-    if case["kind"] == "add_sub":
-        sign = "+" if case["direction"] == ADD else "-"
-        return f'({case["aw"]},{case["abp"]}){sign}({case["bw"]},{case["bbp"]}) -> {dst}'
     sign = "+" if case["direction"] == ADD else "-"
+    if case["kind"] == "add_sub":
+        return f'({case["aw"]},{case["abp"]}){sign}({case["bw"]},{case["bbp"]}) -> {dst}'
     return (f'({case["aw"]},{case["abp"]})x({case["bw"]},{case["bbp"]})'
             f'{sign}({case["cw"]},{case["cbp"]}) -> {dst}')
+
+
+def coverage_matrix():
+    """Per-entity family coverage, derived from the committed cases."""
+    matrix = {e: set() for e in ENTITY_OF.values()}
+    for case in ENTITY_CASES:
+        ow, obp, nw, nbp = case_geometry(case)
+        matrix[ENTITY_OF[case["kind"]]].update(families(ow, obp, nw, nbp))
+    signedness = {e: set() for e in ENTITY_OF.values()}
+    for case in ENTITY_CASES:
+        ow, obp, nw, nbp = case_geometry(case)
+        if "width_1" in families(ow, obp, nw, nbp):
+            signedness[ENTITY_OF[case["kind"]]].add(ARITH_TAG[case["arith"]])
+    return matrix, signedness
 
 
 def render_entity_tb() -> str:
@@ -578,6 +713,18 @@ def render_entity_tb() -> str:
             n_checks += 1
         steps.append("")
 
+    matrix, w1_sign = coverage_matrix()
+    cov_lines = ["-- COVERAGE, derived from the cases below:"]
+    for entity in ENTITY_OF.values():
+        present = [f for f in REQUIRED_FAMILIES if f in matrix[entity]]
+        missing = [f for f in REQUIRED_FAMILIES if f not in matrix[entity]]
+        cov_lines.append(f"--   {entity}")
+        cov_lines.append(f"--     families: {', '.join(present) if present else 'none'}")
+        if missing:
+            cov_lines.append(f"--     NOT covered here: {', '.join(missing)}")
+        cov_lines.append(f"--     width-1 signedness: "
+                         f"{', '.join(sorted(w1_sign[entity])) if w1_sign[entity] else 'none'}")
+
     newline = "\n"
     return f"""-- SPDX-License-Identifier: Apache-2.0
 -- Copyright 2026 LogiMentor
@@ -594,27 +741,22 @@ def render_entity_tb() -> str:
 -- right answer for one, not merely elaborate. tb_legal_sweep covers elaboration;
 -- this testbench covers the results.
 --
--- Covered here, on each of the four entities that quantize a result:
---   binary point equal to the width
---   binary point above the width: source only, destination only, both
---   bit weights disjoint, destination entirely above and entirely below
---   exactly one bit of weight overlap
---   width 1, unsigned and signed
+{newline.join(cov_lines)}
 --
 -- HOW THE EXPECTED VALUES WERE PRODUCED
 --   By scripts/gen_format_vectors.py, which computes the arithmetic from the
---   documented semantics using arbitrary-precision integers and fractions,
---   twice in two different styles, and refuses to emit anything unless the two
+--   documented semantics using arbitrary-precision integers and fractions. It
+--   implements the whole path from input decoding to emitted expectation twice,
+--   in two pipelines that share no arithmetic, and refuses to emit unless both
 --   agree. It imports nothing from src/, model/ or js/.
 --
---   For the three arithmetic modules the reference also models each module's
---   own internal intermediate format, because that is part of the library's
---   defined behaviour: operands are aligned into the internal format and the
---   accumulator wraps there. That is what makes an unsigned subtraction that
---   goes negative wrap rather than clamp, which sim/tb/tb_lm_math_fi_add_sub.vhd
---   already relies on.
---
--- {n_checks} named checks.
+--   For the three arithmetic modules the reference also models each module's own
+--   internal intermediate format, because that is part of the library's defined
+--   behaviour: operands are aligned into the internal format and the accumulator
+--   wraps there. That is what makes an unsigned subtraction that goes negative
+--   wrap rather than clamp, which sim/tb/tb_lm_math_fi_add_sub.vhd already
+--   relies on. Both references necessarily model that structure the same way;
+--   the doubling catches an arithmetic slip, not a shared misreading.
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -668,15 +810,38 @@ end architecture a_tb;
 """
 
 
-# ---------------------------------------------------------------------------
+def print_coverage(rows, tally) -> None:
+    matrix, w1_sign = coverage_matrix()
+    print("Entity value-check coverage, derived from ENTITY_CASES:")
+    print(f"  {'entity':22s} {'families covered':60s} width-1 signedness")
+    for entity in ENTITY_OF.values():
+        present = [f for f in REQUIRED_FAMILIES if f in matrix[entity]]
+        signs = ", ".join(sorted(w1_sign[entity])) or "none"
+        print(f"  {entity:22s} {', '.join(present):60s} {signs}")
+        missing = [f for f in REQUIRED_FAMILIES if f not in matrix[entity]]
+        if missing:
+            print(f"  {'':22s} NOT covered: {', '.join(missing)}")
+    print()
+    print(f"Entity value checks: {sum(len(c['values']) for c in ENTITY_CASES)}")
+    print(f"Vector rows: {len(rows)} over {len(tally)} geometries")
+    print("Vector geometry families:")
+    for _label, ow, obp, nw, nbp in VECTOR_GEOMETRIES:
+        print(f"  ({ow},{obp}) -> ({nw},{nbp})  {', '.join(families(ow, obp, nw, nbp))}")
+    covered = set()
+    for _label, ow, obp, nw, nbp in VECTOR_GEOMETRIES:
+        covered.update(families(ow, obp, nw, nbp))
+    missing = [f for f in REQUIRED_FAMILIES if f not in covered]
+    print(f"Vector families missing: {', '.join(missing) if missing else 'none'}")
+    print(f"Binary points used by committed vectors: "
+          f"{sorted({g[2] for g in VECTOR_GEOMETRIES} | {g[4] for g in VECTOR_GEOMETRIES})}")
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--check",
-        action="store_true",
-        help="Regenerate in memory and fail if either committed file differs.",
-    )
+    parser.add_argument("--check", action="store_true",
+                        help="Regenerate in memory and fail if either committed file differs.")
+    parser.add_argument("--coverage", action="store_true",
+                        help="Print the derived coverage matrix and exit.")
     args = parser.parse_args()
 
     rows, tally = build_vectors()
@@ -690,6 +855,10 @@ def main() -> int:
             print(f"  {line}", file=sys.stderr)
         return 2
 
+    if args.coverage:
+        print_coverage(rows, tally)
+        return 0
+
     targets = [(VECTOR_FILE, vector_text), (ENTITY_TB_FILE, entity_text)]
 
     if args.check:
@@ -701,26 +870,25 @@ def main() -> int:
                       file=sys.stderr)
                 failed = True
                 continue
-            on_disk = path.read_bytes()
-            if on_disk != text.encode("utf-8"):
+            if path.read_bytes() != text.encode("utf-8"):
                 print(f"error: {rel} does not match the generator; regenerate it with "
                       "'python scripts/gen_format_vectors.py'", file=sys.stderr)
-                print(f"  on disk {len(on_disk)} bytes, generated "
-                      f"{len(text.encode('utf-8'))} bytes", file=sys.stderr)
                 failed = True
         if failed:
             return 1
         print(f"format expectations up to date: {len(rows)} vectors over "
-              f"{len(VECTOR_GEOMETRIES)} geometries, and the entity testbench, "
-              "both reproduced by two independent references")
+              f"{len(VECTOR_GEOMETRIES)} geometries and "
+              f"{sum(len(c['values']) for c in ENTITY_CASES)} entity checks, "
+              f"{_AGREED} expectations each computed twice with no disagreement")
         return 0
 
     for path, text in targets:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(text.encode("utf-8"))
         print(f"wrote {path.relative_to(ROOT).as_posix()}")
-    print(f"{len(rows)} vectors over {len(VECTOR_GEOMETRIES)} geometries; "
-          "two independent references agreed on every value")
+    print(f"{len(rows)} vectors over {len(VECTOR_GEOMETRIES)} geometries and "
+          f"{sum(len(c['values']) for c in ENTITY_CASES)} entity checks; "
+          f"{_AGREED} expectations each computed twice with no disagreement")
     return 0
 
 

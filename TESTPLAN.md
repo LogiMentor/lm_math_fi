@@ -46,10 +46,14 @@ Positive half:
 
 | Unit | Checks |
 |---|---|
-| `tb_legal_sweep` | 607 instances across the full legal cross-product of every discrete-domain generic, including all nine rounding modes, all four alias spellings, the minimum legal width, and degenerate binary points on all four quantizing entities; no assertion may fire |
-| `tb_quantize_vectors` | replays 16704 committed `f_lm_quantize` vectors across fifteen format geometries, covering every legal rounding and overflow mode and the degenerate binary-point region |
-| `tb_degenerate_formats` | 192 value checks driving all four quantizing entities at binary points equal to and above the width, disjoint bit weights in both directions, one bit of weight overlap, and width 1 in both signednesses |
+| `tb_legal_sweep` | every entity across the full legal cross-product of its discrete-domain generics, including all nine rounding modes, all four alias spellings, the minimum legal width, and degenerate binary points on all four quantizing entities; no assertion may fire |
+| `tb_quantize_vectors` | replays the committed `f_lm_quantize` vectors, and enforces its own coverage policy on them: every geometry must carry all `2**old_width` distinct input values, and the declared geometries must cover all eight geometry families the bench names |
+| `tb_degenerate_formats` | value checks driving all four quantizing entities across every geometry family, in both signednesses at width 1 |
 | `tb_neg_*` with no override | each negative testbench runs to completion, proving that all of its defaults are legal |
+
+Counts are deliberately absent here. Each testbench reports its own totals when
+it runs, and `python scripts/gen_format_vectors.py --coverage` prints the current
+coverage matrix. A number copied into a document is wrong within two commits.
 
 Negative half, one case per generic-domain check:
 
