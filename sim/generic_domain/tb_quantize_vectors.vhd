@@ -147,6 +147,13 @@ begin
         next;
       end if;
 
+      -- The manifest sits above the vectors, so by the first vector it has
+      -- either been read or it is not there at all.
+      assert v_declared >= 0 and v_geom_count > 0
+        report "tb_quantize_vectors: the vector file carries vectors but is "
+             & "missing its manifest, so its coverage cannot be trusted"
+        severity failure;
+
       read_field(v_line, v_old_w,     "old_width");
       read_field(v_line, v_old_bp,    "old_binpnt");
       read_field(v_line, v_old_arith, "old_arith");
@@ -231,7 +238,7 @@ begin
              & integer'image(v_geoms(g).new_bp) & ") declares "
              & integer'image(v_geoms(g).declared) & " vectors but "
              & integer'image(v_geoms(g).seen) & " were present"
-          severity error;
+          severity note;
       end if;
     end loop;
     assert v_short = 0
