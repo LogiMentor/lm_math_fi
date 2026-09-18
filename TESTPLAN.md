@@ -15,7 +15,7 @@ output under `build/`.
 python scripts/check_repo_hygiene.py --no-history
 python scripts/run_python_model_tests.py
 python scripts/run_ghdl_tests.py
-python scripts/run_ghdl_negative_tests.py
+python scripts/run_ghdl_generic_domain_tests.py
 python scripts/check_repo_hygiene.py --no-history
 ```
 
@@ -30,24 +30,37 @@ python scripts/check_repo_hygiene.py --no-history
 | `tb_lm_math_fi_mult` | 13 | unsigned max/wrap/saturation, signed minimum operand, mixed signedness, signed/unsigned fractional rounding, pipeline |
 | `tb_lm_math_fi_mult_add` | 11 | add, subtract, fractional multiply-add, wide addend alignment, saturation, pipeline |
 
-## VHDL Negative Tests
+## Generic-Domain Gate
 
-Every unit under `sim/negative/` is expected to fail. `scripts/run_ghdl_negative_tests.py`
-passes only when each one fails in the expected phase with the expected
-diagnostic text.
+`scripts/run_ghdl_generic_domain_tests.py` drives the units under
+`sim/generic_domain/`. There is one testbench per entity under test; its
+generics mirror the entity's own, with legal defaults, and a case is selected by
+a top-level generic override rather than by a dedicated file.
 
-| Unit | Must fail at | Case |
+Positive half:
+
+| Unit | Checks |
+|---|---|
+| `tb_legal_sweep` | 565 instances across the full legal cross-product of every discrete-domain generic, including all nine rounding modes, all four alias spellings and the minimum legal width; no assertion may fire |
+| `tb_quantize_vectors` | replays 4608 committed `f_lm_quantize` vectors covering every legal rounding and overflow mode |
+| `tb_neg_*` with no override | each negative testbench runs to completion, proving that all of its defaults are legal |
+
+Negative half, one case per generic-domain check:
+
+| Entity | Rejected by an assertion | Rejected by the generic's subtype |
 |---|---|---|
-| `tb_neg_pkg_round_mode` | run | `f_lm_quantize` given a rounding mode that is not one of the nine constants |
-| `tb_neg_pkg_overflow` | run | `f_lm_quantize` given an overflow mode that is neither saturate nor wrap |
-| `tb_neg_format_round_mode` | run | `lm_math_fi_format` with an out-of-domain `g_round_mode` |
-| `tb_neg_format_overflow` | run | `lm_math_fi_format` with an out-of-domain `g_overflow` |
-| `tb_neg_add_sub_representation` | run | `lm_math_fi_add_sub` with a `g_representation` that selects no arithmetic branch |
-| `tb_neg_add_sub_direction` | run | `lm_math_fi_add_sub` with an out-of-domain `g_direction` |
-| `tb_neg_mult_din_a_type` | run | `lm_math_fi_mult` with an operand type that is neither signed nor unsigned |
-| `tb_neg_mult_pipe_stages_negative` | analysis | `lm_math_fi_mult` with a negative `g_pipe_stages`, rejected by the `natural` subtype |
-| `tb_neg_mult_add_addsub` | run | `lm_math_fi_mult_add` asked for `C_LM_ADDSUB`, which it does not implement |
-| `tb_neg_mult_add_representation` | run | `lm_math_fi_mult_add` with an out-of-domain `g_representation` |
+| `lm_math_fi_pkg.f_lm_quantize` | rounding mode, overflow mode | — |
+| `lm_math_fi_delay` | — | `g_data_w`, `g_delay` |
+| `lm_math_fi_format` | `g_representation`, `g_round_mode`, `g_overflow` | `g_din_w`, `g_dout_w` |
+| `lm_math_fi_add_sub` | `g_direction`, `g_representation`, `g_round_mode` | `g_pipeline_input`, `g_din1_w`, `g_din2_w`, `g_dout_w` |
+| `lm_math_fi_mult` | `g_din_a_type`, `g_din_b_type`, `g_dout_type`, `g_round_mode`, `g_overflow` | `g_pipe_stages`, `g_din_a_w`, `g_din_b_w`, `g_dout_w` |
+| `lm_math_fi_mult_add` | `g_add_sub`, `g_representation`, `g_round_mode`, `g_overflow` | `g_pipe_stages`, `g_din_a_w`, `g_din_b_w`, `g_din_c_w`, `g_dout_w` |
+
+Assertion cases are matched on the diagnostic text, which this repository owns.
+Subtype cases are matched on the failing phase and the generic's name only,
+because GHDL's wording for an out-of-subtype value is tool output that changes
+across versions. The runner additionally pins the subtype each entity declares,
+so a subtype case cannot pass if an entity's own declaration were widened.
 
 ## Python Reference Tests
 

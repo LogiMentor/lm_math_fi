@@ -11,12 +11,12 @@ The public-release gate is:
 python scripts/check_repo_hygiene.py --no-history
 python scripts/run_python_model_tests.py
 python scripts/run_ghdl_tests.py
-python scripts/run_ghdl_negative_tests.py
+python scripts/run_ghdl_generic_domain_tests.py
 python scripts/check_repo_hygiene.py --no-history
 ```
 
 CI runs repository hygiene as a separate job with full ref inspection and runs
-the GHDL regression, then the GHDL negative regression, with a post-regression
+the GHDL regression, then the generic-domain gate, with a post-regression
 hygiene check.
 
 ## Scope
@@ -32,17 +32,43 @@ The regression checks:
 | Pipeline behavior | declared latencies and clock-enable hold/resume |
 | Delay line behavior | zero, one-cycle, and multi-cycle delays |
 | Python model | vectors aligned with RTL expectations |
-| Generic-domain rejection | out-of-domain signedness, rounding, overflow, direction and add/subtract selectors are rejected with a diagnostic naming the generic |
+| Generic domains | every legal value of every discrete-domain generic is accepted, and every out-of-domain value is rejected with a diagnostic naming the generic |
 
-Generic-domain rejection is covered by the separate negative regression,
-`scripts/run_ghdl_negative_tests.py`, which drives the units under
-`sim/negative/`. Each of those units is expected to fail; the runner passes only
-when the failure carries the diagnostic it expects for that case, so a case
-cannot pass because the design broke for an unrelated reason.
+## Generic Domains
 
-VHDL assertions are a simulation and elaboration diagnostic. Most synthesis
-tools ignore them, so these checks constrain what reaches simulation, not what
-reaches a bitstream.
+`scripts/run_ghdl_generic_domain_tests.py` gates the generic domains in both
+directions, using the units under `sim/generic_domain/`.
+
+Positive half: every entity is instantiated across the full legal cross-product
+of its discrete-domain generics and run past time 0, and no assertion may fire;
+`f_lm_quantize` is replayed against committed vectors that pin its arithmetic
+for every legal rounding and overflow mode; and every negative testbench is run
+once with no override, proving its defaults are all legal.
+
+Negative half: one case per generic-domain check, selected by a top-level
+generic override. A case passes only when the run fails, the testbench does not
+reach its completion marker, and the output carries what the runner expects for
+that case.
+
+Two mechanisms enforce the domains, and they have different reach.
+
+Width and pipeline-depth domains are contiguous numeric bounds, so they live in
+the generic's own subtype: widths are `positive`, pipeline depths are `natural`,
+and `lm_math_fi_add_sub.g_pipeline_input` is `natural range 0 to 1`. Every tool
+that reads the entity enforces those, synthesis included.
+
+Rounding modes, overflow modes, representations and the multiply-add selector
+are enumerations encoded as integers. Their admissible set can grow and is not
+contiguous in every case, and a range repeated on each entity would drift from
+the constants in `lm_math_fi_pkg`, so they are checked by concurrent assertions
+instead. A VHDL assertion is a simulation and elaboration diagnostic: an
+out-of-domain rounding, overflow or representation value is rejected when the
+design is simulated or elaborated, and is not rejected by synthesis tools that
+ignore assertions. Ports and generics deliberately use standard types only, so
+that an integrator never has to reference this library's package to instantiate
+a module and so that mixed-language instantiation keeps working; that choice is
+what rules out an enumerated generic type, which would have carried the domain
+into synthesis.
 
 ## Known Limits
 

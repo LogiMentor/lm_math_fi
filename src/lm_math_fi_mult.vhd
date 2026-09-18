@@ -13,11 +13,11 @@ use lm_math_fi_lib.lm_math_fi_pkg.all;
 
 entity lm_math_fi_mult is
   generic(
-    g_din_a_w      : natural   := 24;   -- Input A width
+    g_din_a_w      : positive   := 24;   -- Input A width
     g_din_a_binpnt : natural   := 0;    -- Input A binary point
-    g_din_b_w      : natural   := 24;   -- Input B width
+    g_din_b_w      : positive   := 24;   -- Input B width
     g_din_b_binpnt : natural   := 0;    -- Input B binary point
-    g_dout_w       : natural   := 48;   -- Output width
+    g_dout_w       : positive   := 48;   -- Output width
     g_dout_binpnt  : natural   := 0;    -- Output binary point
     g_round_mode   : natural   := C_LM_TRUNC_BITS;   -- Output rounding mode
     g_din_a_type   : natural   := C_LM_SIGNED;  -- Input A representation
@@ -56,8 +56,9 @@ begin
   -- when the instance starts and never re-evaluated on a clock edge. A failure
   -- here means the generic map is wrong, not that the data was wrong.
   --
-  -- A negative g_pipe_stages is rejected by the generic's natural subtype and
-  -- so never reaches this point.
+  -- g_pipe_stages and the width generics are not checked here: their domains are
+  -- contiguous numeric bounds carried by the generics' own subtypes, so an
+  -- out-of-domain value is rejected before this point.
   -----------------------------------------------------------------------------
   assert f_lm_valid_representation(g_din_a_type)
     report "lm_math_fi_mult: generic g_din_a_type = " & integer'image(g_din_a_type)

@@ -16,20 +16,20 @@ entity lm_math_fi_add_sub is
     g_direction       : natural   := C_LM_ADD;
     -- Numeric representation
     g_representation  : natural   := C_LM_SIGNED;
-    -- Optional input register stage
-    g_pipeline_input  : natural   := 0;
+    -- Optional input register stage: 0 for none, 1 for one stage
+    g_pipeline_input  : natural range 0 to 1 := 0;
     -- Number of output register stages
     g_pipeline_output : natural   := 1;
     -- Input 1 width
-    g_din1_w          : natural   := 8;
+    g_din1_w          : positive   := 8;
     -- Input 1 binary point
     g_din1_binpnt     : natural   := 2;
     -- Input 2 width
-    g_din2_w          : natural   := 8;
+    g_din2_w          : positive   := 8;
     -- Input 2 binary point
     g_din2_binpnt     : natural   := 2;
     -- Output width
-    g_dout_w          : natural   := 9;
+    g_dout_w          : positive   := 9;
     -- Output binary point
     g_dout_binpnt     : natural   := 2;
     -- Output rounding mode
@@ -77,8 +77,9 @@ begin
   -- when the instance starts and never re-evaluated on a clock edge. A failure
   -- here means the generic map is wrong, not that the data was wrong.
   --
-  -- g_pipeline_input is deliberately not checked: any value greater than zero
-  -- is legal and selects exactly one input register stage.
+  -- g_pipeline_input and the width generics are not checked here: their domains
+  -- are contiguous numeric bounds carried by the generics' own subtypes, so an
+  -- out-of-domain value is rejected before this point.
   -----------------------------------------------------------------------------
   assert g_direction = C_LM_ADD or g_direction = C_LM_SUB or g_direction = C_LM_ADDSUB
     report "lm_math_fi_add_sub: generic g_direction = " & integer'image(g_direction)

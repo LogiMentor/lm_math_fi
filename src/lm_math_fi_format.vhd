@@ -15,11 +15,11 @@ use lm_math_fi_lib.lm_math_fi_pkg.all;
 entity lm_math_fi_format is
   generic(
     -- Input width
-    g_din_w          : natural := 18;
+    g_din_w          : positive := 18;
     -- Input binary point
     g_din_binpnt     : natural := 17;
     -- Output width
-    g_dout_w         : natural := 18;
+    g_dout_w         : positive := 18;
     -- Output binary point
     g_dout_binpnt    : natural := 17;
     -- Number of output register stages

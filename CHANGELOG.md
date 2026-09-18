@@ -16,18 +16,33 @@
   `lm_math_fi_pkg.f_lm_quantize`. Every supported constant now has an explicit
   branch, so an unrecognised value stops instead of silently bit-truncating or
   wrapping.
-- Added `scripts/run_ghdl_negative_tests.py` and the deliberately illegal units
-  under `sim/negative/`. Each unit is expected to fail, and the runner passes
-  only when the failure carries the expected diagnostic. Added the runner to CI
-  and to the documented local gate.
+- Added `scripts/run_ghdl_generic_domain_tests.py` and the units under
+  `sim/generic_domain/`, which gate the generic domains in both directions: a
+  legal value must never be rejected, and an illegal one must be rejected with a
+  diagnostic that names the generic. Added the gate to CI and to the documented
+  local gate.
+- Added `sim/generic_domain/f_lm_quantize_vectors.txt`, 4608 committed vectors
+  pinning the arithmetic of `f_lm_quantize` for every legal combination of its
+  rounding and overflow arguments.
+- Documented in `docs/VERIFICATION.md` which generic domains are enforced by the
+  type system and which by assertions, and what that means for synthesis.
 
 ### Changed
 
+- **Interface change.** `g_pipeline_input` on `lm_math_fi_add_sub` is now
+  `natural range 0 to 1`. It previously accepted any natural and treated every
+  value above zero as one register stage; values above 1 are now rejected.
+  Instantiations that pass 0 or 1 are unaffected, and the documented latency
+  formula is unchanged over the remaining domain.
+- **Interface change.** Every width generic is now `positive` rather than
+  `natural`: `g_data_w`, `g_din_w`, `g_dout_w`, `g_din1_w`, `g_din2_w`,
+  `g_din_a_w`, `g_din_b_w` and `g_din_c_w`. A width of 0 previously analysed,
+  elaborated and ran, producing a degenerate null-vector instance.
 - Narrowed `g_pipe_stages`, `g_round_mode`, `g_din_a_type`, `g_din_b_type` and
   `g_dout_type` on `lm_math_fi_mult`, `g_round_mode` and `g_representation` on
   `lm_math_fi_mult_add`, and `g_direction` on `lm_math_fi_add_sub` from
-  `integer` to `natural`. Every generic in the library is now `natural`. A
-  negative `g_pipe_stages` is rejected at analysis instead of aborting later
+  `integer` to `natural`. No `integer` generic remains in the library. A
+  negative `g_pipe_stages` is rejected by its subtype instead of aborting later
   with an index error inside the library.
 
 ### Fixed

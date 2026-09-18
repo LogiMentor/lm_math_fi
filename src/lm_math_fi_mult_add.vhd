@@ -13,13 +13,13 @@ use lm_math_fi_lib.lm_math_fi_pkg.all;
 
 entity lm_math_fi_mult_add is
   generic(
-    g_din_a_w          : natural   := 24;   -- Input A width
+    g_din_a_w          : positive   := 24;   -- Input A width
     g_din_a_binpnt     : natural   := 15;   -- Input A binary point
-    g_din_b_w          : natural   := 18;   -- Input B width
+    g_din_b_w          : positive   := 18;   -- Input B width
     g_din_b_binpnt     : natural   := 12;   -- Input B binary point
-    g_din_c_w          : natural   := 46;   -- Input C width
+    g_din_c_w          : positive   := 46;   -- Input C width
     g_din_c_binpnt     : natural   := 27;   -- Input C binary point
-    g_dout_w           : natural   := 46;   -- Output width
+    g_dout_w           : positive   := 46;   -- Output width
     g_dout_binpnt      : natural   := 27;   -- Output binary point
     g_add_sub          : natural   := C_LM_ADD;    -- C_LM_ADD or C_LM_SUB
     g_round_mode       : natural   := C_LM_ROUND_EVEN;   -- Output rounding mode
