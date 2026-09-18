@@ -192,13 +192,14 @@ GATE_MUTATIONS = [
      m3_widened_entity_generic,
      "src/lm_math_fi_delay.vhd", "is declared 'natural', expected 'positive'"),
     # The reason a mutation must report has to be text this repository owns.
-    # M4's was the simulator's phrase for a failed bound check, which GHDL 4.1.0
-    # words differently from 6.0.0, so it is matched on the source file the
-    # failure is attributed to instead - ours, whatever the simulator calls the
-    # failure.
+    # M4's was the simulator's phrase for a failed bound check, and neither that
+    # phrase nor the file it names survives the move from GHDL 6.0.0 to 4.1.0.
+    # It is matched on the runner's own verdict for the testbench instead. The
+    # baseline run has to pass before any mutation is applied, so a testbench
+    # that fails to simulate at all is attributable to the mutation.
     ("M4", "the two mult_add bit-count constants go back to natural",
      m4_mult_add_constants,
-     "tb_legal_sweep", "lm_math_fi_mult_add.vhd"),
+     "tb_legal_sweep", "simulation failed"),
     ("M5", "review round 1: boundary widened, unrelated failure at 1 ns",
      m5_unrelated_failure_named_after_the_generic,
      "tb_neg_delay[g_data_w=0]", "wrong phase"),
@@ -368,8 +369,15 @@ def judge_gate(rc: int, out: str, expect_test: str, expect_reason: str):
         if expect_test in line and line.strip().startswith(("FAIL", "-")):
             return "WRONG", (f"{expect_test} failed, but not with "
                              f"{expect_reason!r}: {line.strip()[:160]}")
+    # Nothing matched. Show what the gate did say, so a mismatch is diagnosable
+    # from a CI log without another round-trip.
+    said = [l.strip() for l in out.splitlines()
+            if l.strip().startswith(("FAIL", "  - ")) or "error:" in l][:6]
     return "WRONG", (f"the gate failed, but {expect_test} did not fail with "
-                     f"{expect_reason!r}")
+                     f"{expect_reason!r}. The gate reported: "
+                     + " | ".join(said) if said else
+                     f"the gate failed, but {expect_test} did not fail with "
+                     f"{expect_reason!r}, and reported nothing recognisable")
 
 
 def judge_bench(rc: int, out: str, expect_reason: str):
