@@ -21,9 +21,20 @@
   legal value must never be rejected, and an illegal one must be rejected with a
   diagnostic that names the generic. Added the gate to CI and to the documented
   local gate.
-- Added `sim/generic_domain/f_lm_quantize_vectors.txt`, 4608 committed vectors
+- Added `sim/generic_domain/f_lm_quantize_vectors.txt`, 16704 committed vectors
   pinning the arithmetic of `f_lm_quantize` for every legal combination of its
-  rounding and overflow arguments.
+  rounding and overflow arguments, across fifteen format geometries including
+  binary points equal to and above the width, disjoint bit weights in both
+  directions, one bit of weight overlap, and width 1.
+- Added `sim/generic_domain/tb_degenerate_formats.vhd`, 192 value checks that
+  drive all four quantizing entities at degenerate binary points and check the
+  result rather than only that it elaborates. Expected values are computed by an
+  exact-integer reference, not by the modules under test.
+- Extended `sim/generic_domain/tb_legal_sweep.vhd` with degenerate binary-point
+  instances of all four quantizing entities.
+- Documented the binary-point domain in `docs/USER_GUIDE.md`: what a binary point
+  means, that it may equal or exceed the width, and that the package helpers
+  accept a wider domain than the entities can express.
 - Documented in `docs/VERIFICATION.md` which generic domains are enforced by the
   type system and which by assertions, and what that means for synthesis.
 
@@ -47,6 +58,12 @@
 
 ### Fixed
 
+- `lm_math_fi_mult_add` aborted elaboration with a bound check failure whenever a
+  binary point exceeded its width: `C_MULT_INT_W` and `C_ADDEND_INT_W` count bits
+  above the binary point and were declared `natural`, so they failed for a purely
+  fractional operand or addend. They are now `integer`. A binary point at or above
+  the width is a legal format, and the other three quantizing modules already
+  handled it. No result changes for any configuration that previously elaborated.
 - `lm_math_fi_mult_add` given `C_LM_ADDSUB` and `lm_math_fi_add_sub` given a
   representation other than `C_LM_SIGNED` or `C_LM_UNSIGNED` previously
   selected no generate branch, left the result undriven and simulated silently

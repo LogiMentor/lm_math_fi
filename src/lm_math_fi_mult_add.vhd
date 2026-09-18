@@ -44,8 +44,20 @@ architecture a_rtl of lm_math_fi_mult_add is
   constant C_MULT_BINPNT  : natural := g_din_a_binpnt + g_din_b_binpnt;
   constant C_MULT_WIDTH   : natural := g_din_a_w + g_din_b_w;
   constant C_SUM_BINPNT   : natural := f_lm_max(C_MULT_BINPNT, g_din_c_binpnt);
-  constant C_MULT_INT_W   : natural := C_MULT_WIDTH - C_MULT_BINPNT;
-  constant C_ADDEND_INT_W : natural := g_din_c_w - g_din_c_binpnt;
+
+  -- Bits above the binary point. These are integer, not natural, on purpose: a
+  -- binary point may legally equal or exceed its width, which makes the value
+  -- purely fractional and the integer-bit count zero or negative. C_SUM_W below
+  -- stays correct for a negative count, because the count is added back to
+  -- C_SUM_BINPNT, which is at least as large in magnitude.
+  constant C_MULT_INT_W   : integer := C_MULT_WIDTH - C_MULT_BINPNT;
+  constant C_ADDEND_INT_W : integer := g_din_c_w - g_din_c_binpnt;
+
+  -- Wide enough for both operands aligned to C_SUM_BINPNT, plus one guard bit
+  -- for the sum. Always at least f_lm_max(C_MULT_WIDTH, g_din_c_w) + 1, because
+  -- f_lm_max(C_MULT_INT_W, C_ADDEND_INT_W) + C_SUM_BINPNT is at least
+  -- C_MULT_WIDTH (taking the product term, since C_SUM_BINPNT >= C_MULT_BINPNT)
+  -- and at least g_din_c_w (taking the addend term), so it is always positive.
   constant C_SUM_W        : natural := f_lm_max(C_MULT_INT_W, C_ADDEND_INT_W) + C_SUM_BINPNT + 1;
 
   type t_pipe is array (0 to g_pipe_stages) of std_logic_vector(C_SUM_W - 1 downto 0);

@@ -7,6 +7,9 @@
 Positive half - a legal value must never be rejected:
   * every entity is instantiated across the full legal cross-product of its
     discrete-domain generics and run past time 0, and no assertion may fire;
+  * every entity is driven at degenerate binary points - equal to the width,
+    above the width, bit weights disjoint either way, one bit of overlap, and
+    width 1 - and the RESULT is checked, not only that it elaborates;
   * f_lm_quantize is replayed against committed vectors, so a domain check that
     wrongly narrowed the arithmetic fails here;
   * each negative testbench is run once with no override, proving that all of
@@ -56,8 +59,13 @@ SRC_FILES = [
     "src/lm_math_fi_mult_add.vhd",
 ]
 
+# Support packages the gate testbenches depend on, compiled before them.
+SUPPORT_FILES = [
+    "sim/tb/tb_lm_math_fi_test_pkg.vhd",
+]
+
 # Units elaborated once and then run many times with different -g overrides.
-POSITIVE_UNITS = ["tb_legal_sweep", "tb_quantize_vectors"]
+POSITIVE_UNITS = ["tb_legal_sweep", "tb_quantize_vectors", "tb_degenerate_formats"]
 NEGATIVE_UNITS = [
     "tb_neg_delay",
     "tb_neg_format",
@@ -329,6 +337,12 @@ def analyze(ghdl: str) -> tuple[bool, str]:
             sys.stdout.write(result.stdout or "")
             return False, f"source analysis failed: {src}"
 
+    for support in SUPPORT_FILES:
+        result = run(ghdl_common(ghdl, "-a") + [str(ROOT / support)])
+        if result.returncode != 0:
+            sys.stdout.write(result.stdout or "")
+            return False, f"support package analysis failed: {support}"
+
     for unit in POSITIVE_UNITS + NEGATIVE_UNITS:
         path = GATE_DIR / f"{unit}.vhd"
         if not path.is_file():
@@ -424,8 +438,12 @@ def main() -> int:
     parser.add_argument("--ghdl", default="ghdl", help="GHDL executable")
     parser.add_argument(
         "--stop-time",
-        default="1us",
-        help="Simulation stop time; testbenches end well before it",
+        default="100us",
+        help=(
+            "Simulation stop time. Every gate testbench stops its own clock when "
+            "it finishes, so a generous limit costs nothing and leaves headroom "
+            "for tb_degenerate_formats, the longest of them."
+        ),
     )
     parser.add_argument(
         "--keep-build",

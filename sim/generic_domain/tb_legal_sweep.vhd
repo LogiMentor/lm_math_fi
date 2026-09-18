@@ -258,6 +258,177 @@ begin
     end generate gen_min_ma_a;
   end generate gen_min_ma_s;
 
+  -----------------------------------------------------------------------------
+  -- Degenerate binary points
+  --
+  -- A binary point equal to or greater than its width is a legal fixed-point
+  -- format: every bit is fractional and the point sits outside the word, which
+  -- is the ordinary way to carry a normalized coefficient or a residual error
+  -- term. Nothing constrains a binary point against a width, so every module
+  -- must elaborate and run for these.
+  --
+  -- This block checks only that nothing aborts and no assertion fires. The
+  -- results themselves are checked by tb_degenerate_formats.
+  -----------------------------------------------------------------------------
+  gen_degen : for a in C_LM_UNSIGNED to C_LM_SIGNED generate
+
+    -- lm_math_fi_format -------------------------------------------------------
+    fmt_bp_eq_w : entity lm_math_fi_lib.lm_math_fi_format
+      generic map(g_din_w => 4, g_din_binpnt => 4, g_dout_w => 4, g_dout_binpnt => 4,
+                  g_pipe_stages => 0, g_round_mode => C_LM_ROUND_EVEN,
+                  g_overflow => C_LM_SATURATE, g_representation => a)
+      port map(clk_i => clk_tb, ce_i => s_ce, din_i => s_d4, dout_o => open);
+
+    fmt_bp_gt_src : entity lm_math_fi_lib.lm_math_fi_format
+      generic map(g_din_w => 4, g_din_binpnt => 8, g_dout_w => 4, g_dout_binpnt => 2,
+                  g_pipe_stages => 0, g_round_mode => C_LM_ROUND_EVEN,
+                  g_overflow => C_LM_SATURATE, g_representation => a)
+      port map(clk_i => clk_tb, ce_i => s_ce, din_i => s_d4, dout_o => open);
+
+    fmt_bp_gt_dst : entity lm_math_fi_lib.lm_math_fi_format
+      generic map(g_din_w => 4, g_din_binpnt => 2, g_dout_w => 4, g_dout_binpnt => 8,
+                  g_pipe_stages => 0, g_round_mode => C_LM_ROUND_EVEN,
+                  g_overflow => C_LM_SATURATE, g_representation => a)
+      port map(clk_i => clk_tb, ce_i => s_ce, din_i => s_d4, dout_o => open);
+
+    fmt_bp_gt_both : entity lm_math_fi_lib.lm_math_fi_format
+      generic map(g_din_w => 4, g_din_binpnt => 8, g_dout_w => 4, g_dout_binpnt => 6,
+                  g_pipe_stages => 0, g_round_mode => C_LM_ROUND_EVEN,
+                  g_overflow => C_LM_SATURATE, g_representation => a)
+      port map(clk_i => clk_tb, ce_i => s_ce, din_i => s_d4, dout_o => open);
+
+    -- disjoint bit weights, destination entirely above the source
+    fmt_disjoint_above : entity lm_math_fi_lib.lm_math_fi_format
+      generic map(g_din_w => 4, g_din_binpnt => 8, g_dout_w => 4, g_dout_binpnt => 0,
+                  g_pipe_stages => 0, g_round_mode => C_LM_ROUND_AWAY,
+                  g_overflow => C_LM_SATURATE, g_representation => a)
+      port map(clk_i => clk_tb, ce_i => s_ce, din_i => s_d4, dout_o => open);
+
+    -- disjoint bit weights, destination entirely below the source
+    fmt_disjoint_below : entity lm_math_fi_lib.lm_math_fi_format
+      generic map(g_din_w => 4, g_din_binpnt => 0, g_dout_w => 4, g_dout_binpnt => 8,
+                  g_pipe_stages => 0, g_round_mode => C_LM_ROUND_AWAY,
+                  g_overflow => C_LM_SATURATE, g_representation => a)
+      port map(clk_i => clk_tb, ce_i => s_ce, din_i => s_d4, dout_o => open);
+
+    fmt_one_bit_overlap : entity lm_math_fi_lib.lm_math_fi_format
+      generic map(g_din_w => 4, g_din_binpnt => 4, g_dout_w => 4, g_dout_binpnt => 1,
+                  g_pipe_stages => 0, g_round_mode => C_LM_ROUND_EVEN,
+                  g_overflow => C_LM_SATURATE, g_representation => a)
+      port map(clk_i => clk_tb, ce_i => s_ce, din_i => s_d4, dout_o => open);
+
+    fmt_w1_bp_eq : entity lm_math_fi_lib.lm_math_fi_format
+      generic map(g_din_w => 1, g_din_binpnt => 1, g_dout_w => 1, g_dout_binpnt => 1,
+                  g_pipe_stages => 0, g_round_mode => C_LM_ROUND_EVEN,
+                  g_overflow => C_LM_SATURATE, g_representation => a)
+      port map(clk_i => clk_tb, ce_i => s_ce, din_i => s_d1, dout_o => open);
+
+    fmt_w1_bp_gt : entity lm_math_fi_lib.lm_math_fi_format
+      generic map(g_din_w => 1, g_din_binpnt => 3, g_dout_w => 2, g_dout_binpnt => 1,
+                  g_pipe_stages => 0, g_round_mode => C_LM_ROUND_EVEN,
+                  g_overflow => C_LM_SATURATE, g_representation => a)
+      port map(clk_i => clk_tb, ce_i => s_ce, din_i => s_d1, dout_o => open);
+
+    -- lm_math_fi_mult ---------------------------------------------------------
+    mul_bp_eq_w : entity lm_math_fi_lib.lm_math_fi_mult
+      generic map(g_din_a_w => 4, g_din_a_binpnt => 4, g_din_b_w => 4, g_din_b_binpnt => 4,
+                  g_dout_w => 4, g_dout_binpnt => 4, g_round_mode => C_LM_ROUND_EVEN,
+                  g_din_a_type => a, g_din_b_type => a, g_dout_type => a,
+                  g_overflow => C_LM_SATURATE, g_pipe_stages => 0)
+      port map(clk_i => clk_tb, ce_i => s_ce, din1_i => s_d4, din2_i => s_d4, dout_o => open);
+
+    mul_bp_gt_w : entity lm_math_fi_lib.lm_math_fi_mult
+      generic map(g_din_a_w => 4, g_din_a_binpnt => 8, g_din_b_w => 4, g_din_b_binpnt => 8,
+                  g_dout_w => 4, g_dout_binpnt => 12, g_round_mode => C_LM_ROUND_EVEN,
+                  g_din_a_type => a, g_din_b_type => a, g_dout_type => a,
+                  g_overflow => C_LM_SATURATE, g_pipe_stages => 0)
+      port map(clk_i => clk_tb, ce_i => s_ce, din1_i => s_d4, din2_i => s_d4, dout_o => open);
+
+    mul_w1 : entity lm_math_fi_lib.lm_math_fi_mult
+      generic map(g_din_a_w => 1, g_din_a_binpnt => 1, g_din_b_w => 1, g_din_b_binpnt => 1,
+                  g_dout_w => 1, g_dout_binpnt => 1, g_round_mode => C_LM_ROUND_EVEN,
+                  g_din_a_type => a, g_din_b_type => a, g_dout_type => a,
+                  g_overflow => C_LM_SATURATE, g_pipe_stages => 0)
+      port map(clk_i => clk_tb, ce_i => s_ce, din1_i => s_d1, din2_i => s_d1, dout_o => open);
+
+    -- lm_math_fi_add_sub ------------------------------------------------------
+    as_bp_eq_w : entity lm_math_fi_lib.lm_math_fi_add_sub
+      generic map(g_direction => C_LM_ADD, g_representation => a,
+                  g_pipeline_input => 0, g_pipeline_output => 0,
+                  g_din1_w => 4, g_din1_binpnt => 4, g_din2_w => 4, g_din2_binpnt => 4,
+                  g_dout_w => 4, g_dout_binpnt => 4, g_round_mode => C_LM_ROUND_EVEN)
+      port map(clk_i => clk_tb, ce_i => s_ce, sel_add_i => '1',
+               din1_i => s_d4, din2_i => s_d4, dout_o => open);
+
+    as_bp_gt_w : entity lm_math_fi_lib.lm_math_fi_add_sub
+      generic map(g_direction => C_LM_SUB, g_representation => a,
+                  g_pipeline_input => 1, g_pipeline_output => 1,
+                  g_din1_w => 4, g_din1_binpnt => 8, g_din2_w => 4, g_din2_binpnt => 6,
+                  g_dout_w => 4, g_dout_binpnt => 9, g_round_mode => C_LM_ROUND_EVEN)
+      port map(clk_i => clk_tb, ce_i => s_ce, sel_add_i => '0',
+               din1_i => s_d4, din2_i => s_d4, dout_o => open);
+
+    as_w1 : entity lm_math_fi_lib.lm_math_fi_add_sub
+      generic map(g_direction => C_LM_ADD, g_representation => a,
+                  g_pipeline_input => 0, g_pipeline_output => 0,
+                  g_din1_w => 1, g_din1_binpnt => 1, g_din2_w => 1, g_din2_binpnt => 1,
+                  g_dout_w => 1, g_dout_binpnt => 1, g_round_mode => C_LM_ROUND_EVEN)
+      port map(clk_i => clk_tb, ce_i => s_ce, sel_add_i => '1',
+               din1_i => s_d1, din2_i => s_d1, dout_o => open);
+
+    -- lm_math_fi_mult_add -----------------------------------------------------
+    -- Each of these aborted elaboration before C_MULT_INT_W and C_ADDEND_INT_W
+    -- were allowed to go negative.
+    ma_bp_eq_w : entity lm_math_fi_lib.lm_math_fi_mult_add
+      generic map(g_din_a_w => 4, g_din_a_binpnt => 4, g_din_b_w => 4, g_din_b_binpnt => 4,
+                  g_din_c_w => 8, g_din_c_binpnt => 8, g_dout_w => 8, g_dout_binpnt => 8,
+                  g_add_sub => C_LM_ADD, g_round_mode => C_LM_ROUND_EVEN,
+                  g_representation => a, g_overflow => C_LM_SATURATE, g_pipe_stages => 0)
+      port map(clk_i => clk_tb, ce_i => s_ce,
+               din1_i => s_d4, din2_i => s_d4, din3_i => s_d8, dout_o => open);
+
+    ma_bp_gt_operands : entity lm_math_fi_lib.lm_math_fi_mult_add
+      generic map(g_din_a_w => 4, g_din_a_binpnt => 6, g_din_b_w => 4, g_din_b_binpnt => 6,
+                  g_din_c_w => 8, g_din_c_binpnt => 2, g_dout_w => 8, g_dout_binpnt => 4,
+                  g_add_sub => C_LM_ADD, g_round_mode => C_LM_ROUND_EVEN,
+                  g_representation => a, g_overflow => C_LM_SATURATE, g_pipe_stages => 0)
+      port map(clk_i => clk_tb, ce_i => s_ce,
+               din1_i => s_d4, din2_i => s_d4, din3_i => s_d8, dout_o => open);
+
+    ma_bp_gt_addend : entity lm_math_fi_lib.lm_math_fi_mult_add
+      generic map(g_din_a_w => 4, g_din_a_binpnt => 1, g_din_b_w => 4, g_din_b_binpnt => 1,
+                  g_din_c_w => 8, g_din_c_binpnt => 12, g_dout_w => 8, g_dout_binpnt => 4,
+                  g_add_sub => C_LM_SUB, g_round_mode => C_LM_ROUND_EVEN,
+                  g_representation => a, g_overflow => C_LM_SATURATE, g_pipe_stages => 0)
+      port map(clk_i => clk_tb, ce_i => s_ce,
+               din1_i => s_d4, din2_i => s_d4, din3_i => s_d8, dout_o => open);
+
+    ma_bp_gt_all : entity lm_math_fi_lib.lm_math_fi_mult_add
+      generic map(g_din_a_w => 4, g_din_a_binpnt => 6, g_din_b_w => 4, g_din_b_binpnt => 6,
+                  g_din_c_w => 8, g_din_c_binpnt => 12, g_dout_w => 8, g_dout_binpnt => 14,
+                  g_add_sub => C_LM_ADD, g_round_mode => C_LM_ROUND_AWAY,
+                  g_representation => a, g_overflow => C_LM_WRAP, g_pipe_stages => 1)
+      port map(clk_i => clk_tb, ce_i => s_ce,
+               din1_i => s_d4, din2_i => s_d4, din3_i => s_d8, dout_o => open);
+
+    ma_bp_gt_output : entity lm_math_fi_lib.lm_math_fi_mult_add
+      generic map(g_din_a_w => 4, g_din_a_binpnt => 1, g_din_b_w => 4, g_din_b_binpnt => 1,
+                  g_din_c_w => 8, g_din_c_binpnt => 1, g_dout_w => 4, g_dout_binpnt => 9,
+                  g_add_sub => C_LM_ADD, g_round_mode => C_LM_ROUND_EVEN,
+                  g_representation => a, g_overflow => C_LM_SATURATE, g_pipe_stages => 0)
+      port map(clk_i => clk_tb, ce_i => s_ce,
+               din1_i => s_d4, din2_i => s_d4, din3_i => s_d8, dout_o => open);
+
+    ma_w1 : entity lm_math_fi_lib.lm_math_fi_mult_add
+      generic map(g_din_a_w => 1, g_din_a_binpnt => 1, g_din_b_w => 1, g_din_b_binpnt => 1,
+                  g_din_c_w => 1, g_din_c_binpnt => 1, g_dout_w => 1, g_dout_binpnt => 1,
+                  g_add_sub => C_LM_ADD, g_round_mode => C_LM_ROUND_EVEN,
+                  g_representation => a, g_overflow => C_LM_SATURATE, g_pipe_stages => 0)
+      port map(clk_i => clk_tb, ce_i => s_ce,
+               din1_i => s_d1, din2_i => s_d1, din3_i => s_d1, dout_o => open);
+
+  end generate gen_degen;
+
   proc_main : process
   begin
     -- Exercise the clock-enable path too, so the pipelined instances toggle.

@@ -41,8 +41,9 @@ Positive half:
 
 | Unit | Checks |
 |---|---|
-| `tb_legal_sweep` | 565 instances across the full legal cross-product of every discrete-domain generic, including all nine rounding modes, all four alias spellings and the minimum legal width; no assertion may fire |
-| `tb_quantize_vectors` | replays 4608 committed `f_lm_quantize` vectors covering every legal rounding and overflow mode |
+| `tb_legal_sweep` | 607 instances across the full legal cross-product of every discrete-domain generic, including all nine rounding modes, all four alias spellings, the minimum legal width, and degenerate binary points on all four quantizing entities; no assertion may fire |
+| `tb_quantize_vectors` | replays 16704 committed `f_lm_quantize` vectors across fifteen format geometries, covering every legal rounding and overflow mode and the degenerate binary-point region |
+| `tb_degenerate_formats` | 192 value checks driving all four quantizing entities at binary points equal to and above the width, disjoint bit weights in both directions, one bit of weight overlap, and width 1 in both signednesses |
 | `tb_neg_*` with no override | each negative testbench runs to completion, proving that all of its defaults are legal |
 
 Negative half, one case per generic-domain check:

@@ -32,6 +32,34 @@ generics:
 For signed formats, the vector is two's-complement. For unsigned formats, the
 vector is an unsigned integer scaled by `2**(-binpnt)`.
 
+### The Binary Point
+
+`*_binpnt` is the number of fractional bits. A stored word `R` of `*_w` bits with
+binary point `B` denotes the exact value `R / 2**B`, where `R` is read as a
+two's-complement integer for a signed format and as an unsigned integer
+otherwise. Moving the binary point does not change the bits; it changes which
+power of two each bit carries.
+
+The binary point may equal or exceed the width. Such a format has no integer
+bits: every bit is fractional and the binary point sits at or beyond the top of
+the word, so the represented magnitude is below `2**(-(B - *_w))`. This is the
+ordinary way to carry a normalized coefficient or a residual error term, and all
+modules support it.
+
+The binary-point generics are `natural`. Their domain is therefore zero upwards,
+with no upper bound and no relationship to the width:
+
+| Generic | Type | Domain |
+|---|---|---|
+| every `*_binpnt` on every entity | `natural` | `0` upwards; may equal or exceed the matching `*_w` |
+| every `*_w` on every entity | `positive` | `1` upwards |
+
+The conversion helpers in `lm_math_fi_pkg` take their binary points as `integer`
+rather than `natural`, so the package accepts a wider domain than any entity can
+express: a negative binary point, meaning a word whose least significant bit
+carries a weight above `2**0`. Entities cannot be given one, because their
+generics are `natural`.
+
 ## Clocking, Clock Enable, And Reset
 
 All sequential modules use `clk_i`. No module currently has a reset port.
