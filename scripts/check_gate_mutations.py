@@ -195,13 +195,15 @@ GATE_MUTATIONS = [
     ("M3", "an entity generic is widened back to natural",
      m3_widened_entity_generic,
      [("src/lm_math_fi_delay.vhd", "is declared 'natural', expected 'positive'")]),
-    # A constant whose subtype its value violates is rejected at a different
-    # point by the two simulators this repository is tested against: GHDL 6.0.0
-    # analyses the file and fails when the design elaborates, GHDL 4.1.0 rejects
-    # it during analysis. Both checks below are the gate's own.
+    # A constant whose subtype its value violates is noticed at a different
+    # point by different simulators - while analysing the source, while
+    # elaborating a design that uses it, or once that design runs. All three
+    # checks below are the gate's own, worded by the runner; which one notices
+    # is the simulator's business and not something this repository can pin.
     ("M4", "the two mult_add bit-count constants go back to natural",
      m4_mult_add_constants,
      [("tb_legal_sweep", "simulation failed"),
+      ("tb_legal_sweep", "elaboration failed"),
       ("source analysis failed", "lm_math_fi_mult_add.vhd")]),
     ("M5", "review round 1: boundary widened, unrelated failure at 1 ns",
      m5_unrelated_failure_named_after_the_generic,
@@ -373,7 +375,7 @@ def judge_gate(rc: int, out: str, expectations: list[tuple[str, str]]):
         for line in out.splitlines():
             if expect_test in line and line.strip().startswith(("FAIL", "-")):
                 return "WRONG", (f"{expect_test} failed, but not with "
-                                 f"{expect_reason!r}: {line.strip()[:160]}")
+                                 f"{expect_reason!r}: {line.strip()[:300]}")
     # Nothing matched. Show what the gate did say, so a mismatch is diagnosable
     # from a CI log without another round trip.
     said = [l.strip() for l in out.splitlines()
@@ -444,7 +446,7 @@ def main() -> int:
             restore()
         verdict, detail = judge_gate(rc, out, expectations)
         results.append((tag, verdict, detail))
-        print(f"  {verdict:6s} {detail[:170]}")
+        print(f"  {verdict:6s} {detail[:600]}")
 
     BUILD.mkdir(parents=True, exist_ok=True)
     original = (ROOT / VECTORS).read_text(encoding="utf-8")
@@ -459,12 +461,12 @@ def main() -> int:
         mutated.unlink(missing_ok=True)
         verdict, detail = judge_bench(rc, out, expect_reason)
         results.append((tag, verdict, detail))
-        print(f"  {verdict:6s} {detail[:170]}")
+        print(f"  {verdict:6s} {detail[:600]}")
 
     elapsed = time.monotonic() - started
     print("=" * 78)
     for tag, verdict, detail in results:
-        print(f"  {verdict:6s} {tag}: {detail[:150]}")
+        print(f"  {verdict:6s} {tag}: {detail[:200]}")
     caught = [r for r in results if r[1] == "CAUGHT"]
     infra = [r for r in results if r[1] == "INFRA"]
     print()
