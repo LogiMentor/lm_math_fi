@@ -182,36 +182,39 @@ def m8_corrupt_one_reference() -> None:
 
 
 GATE_MUTATIONS = [
+    # Each entry lists the (check, reason) pairs that count as catching it. More
+    # than one is allowed only where the CHECK that notices legitimately differs
+    # between simulators; every pair names a check this gate runs and a reason
+    # this repository writes, never a phrase the simulator chose.
     ("M1", "runner expects assertion text the library never emits",
      m1_wrong_expected_text,
-     "tb_neg_mult_add[g_add_sub=2]", "message no longer contains"),
+     [("tb_neg_mult_add[g_add_sub=2]", "message no longer contains")]),
     ("M2", "a negative testbench default is itself illegal",
      m2_illegal_default,
-     "tb_neg_format defaults", "at least one default is illegal"),
+     [("tb_neg_format defaults", "at least one default is illegal")]),
     ("M3", "an entity generic is widened back to natural",
      m3_widened_entity_generic,
-     "src/lm_math_fi_delay.vhd", "is declared 'natural', expected 'positive'"),
-    # The reason a mutation must report has to be text this repository owns.
-    # M4's was the simulator's phrase for a failed bound check, and neither that
-    # phrase nor the file it names survives the move from GHDL 6.0.0 to 4.1.0.
-    # It is matched on the runner's own verdict for the testbench instead. The
-    # baseline run has to pass before any mutation is applied, so a testbench
-    # that fails to simulate at all is attributable to the mutation.
+     [("src/lm_math_fi_delay.vhd", "is declared 'natural', expected 'positive'")]),
+    # A constant whose subtype its value violates is rejected at a different
+    # point by the two simulators this repository is tested against: GHDL 6.0.0
+    # analyses the file and fails when the design elaborates, GHDL 4.1.0 rejects
+    # it during analysis. Both checks below are the gate's own.
     ("M4", "the two mult_add bit-count constants go back to natural",
      m4_mult_add_constants,
-     "tb_legal_sweep", "simulation failed"),
+     [("tb_legal_sweep", "simulation failed"),
+      ("source analysis failed", "lm_math_fi_mult_add.vhd")]),
     ("M5", "review round 1: boundary widened, unrelated failure at 1 ns",
      m5_unrelated_failure_named_after_the_generic,
-     "tb_neg_delay[g_data_w=0]", "wrong phase"),
+     [("tb_neg_delay[g_data_w=0]", "wrong phase")]),
     ("M6", "one committed expectation is edited by hand",
      m6_hand_edited_expectation,
-     GEN, "does not match the generator"),
+     [(GEN, "does not match the generator")]),
     ("M7", "an entity stops validating and its sub-entity's assertion fires instead",
      m7_assertion_moves_to_a_sub_entity,
-     "tb_neg_add_sub[g_round_mode=42]", "not from the assertion this case targets"),
+     [("tb_neg_add_sub[g_round_mode=42]", "not from the assertion this case targets")]),
     ("M8", "saturation corrupted in one reference only",
      m8_corrupt_one_reference,
-     GEN, "references disagree"),
+     [(GEN, "references disagree")]),
 ]
 
 
@@ -353,31 +356,34 @@ def infrastructure_problem(output: str) -> str | None:
     return None
 
 
-def judge_gate(rc: int, out: str, expect_test: str, expect_reason: str):
+def judge_gate(rc: int, out: str, expectations: list[tuple[str, str]]):
     """Caught, not caught, or the harness itself fell over."""
     sign = infrastructure_problem(out)
     if sign is not None:
         return "INFRA", f"the gate did not run cleanly ({sign!r})"
     if rc == 0:
         return "MISSED", "the gate passed; the mutation went undetected"
-    # The failing line has to be the check this mutation targets, and it has to
-    # say what the mutation declares.
-    for line in out.splitlines():
-        if expect_test in line and expect_reason in line:
-            return "CAUGHT", line.strip()
-    for line in out.splitlines():
-        if expect_test in line and line.strip().startswith(("FAIL", "-")):
-            return "WRONG", (f"{expect_test} failed, but not with "
-                             f"{expect_reason!r}: {line.strip()[:160]}")
+    # The failing line has to be one of the checks this mutation targets, and
+    # it has to say what the mutation declares for that check.
+    for expect_test, expect_reason in expectations:
+        for line in out.splitlines():
+            if expect_test in line and expect_reason in line:
+                return "CAUGHT", line.strip()
+    for expect_test, expect_reason in expectations:
+        for line in out.splitlines():
+            if expect_test in line and line.strip().startswith(("FAIL", "-")):
+                return "WRONG", (f"{expect_test} failed, but not with "
+                                 f"{expect_reason!r}: {line.strip()[:160]}")
     # Nothing matched. Show what the gate did say, so a mismatch is diagnosable
-    # from a CI log without another round-trip.
+    # from a CI log without another round trip.
     said = [l.strip() for l in out.splitlines()
-            if l.strip().startswith(("FAIL", "  - ")) or "error:" in l][:6]
-    return "WRONG", (f"the gate failed, but {expect_test} did not fail with "
-                     f"{expect_reason!r}. The gate reported: "
-                     + " | ".join(said) if said else
-                     f"the gate failed, but {expect_test} did not fail with "
-                     f"{expect_reason!r}, and reported nothing recognisable")
+            if l.strip().startswith(("FAIL", "- ")) or "error:" in l][:6]
+    wanted = " or ".join(f"{t} / {r!r}" for t, r in expectations)
+    if said:
+        return "WRONG", ("none of the expected checks failed: wanted " + wanted
+                         + ". The gate reported: " + " | ".join(said))
+    return "WRONG", ("none of the expected checks failed: wanted " + wanted
+                     + ", and the gate reported nothing recognisable")
 
 
 def judge_bench(rc: int, out: str, expect_reason: str):
@@ -399,8 +405,9 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.list:
-        for tag, note, _fn, test, reason in GATE_MUTATIONS:
-            print(f"  {tag}  {note}\n        {test} must report {reason!r}")
+        for tag, note, _fn, expectations in GATE_MUTATIONS:
+            pairs = "; or ".join(f"{t} must report {r!r}" for t, r in expectations)
+            print(f"  {tag}  {note}\n        {pairs}")
         for tag, note, _fn, reason in VECTOR_MUTATIONS:
             print(f"  {tag}  {note}\n        tb_quantize_vectors must report {reason!r}")
         return 0
@@ -426,7 +433,7 @@ def main() -> int:
     baseline = time.monotonic() - started
     print(f"  ok: gate passes ({baseline:.0f}s)")
 
-    for tag, note, mutate, expect_test, expect_reason in GATE_MUTATIONS:
+    for tag, note, mutate, expectations in GATE_MUTATIONS:
         print("=" * 78)
         print(f"{tag}: {note}")
         print("=" * 78)
@@ -435,7 +442,7 @@ def main() -> int:
             rc, out = run_gate()
         finally:
             restore()
-        verdict, detail = judge_gate(rc, out, expect_test, expect_reason)
+        verdict, detail = judge_gate(rc, out, expectations)
         results.append((tag, verdict, detail))
         print(f"  {verdict:6s} {detail[:170]}")
 
