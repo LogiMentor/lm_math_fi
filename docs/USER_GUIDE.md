@@ -32,6 +32,54 @@ generics:
 For signed formats, the vector is two's-complement. For unsigned formats, the
 vector is an unsigned integer scaled by `2**(-binpnt)`.
 
+### The Binary Point
+
+`*_binpnt` is the number of fractional bits. A stored word `R` of `*_w` bits with
+binary point `B` denotes the exact value `R / 2**B`, where `R` is read as a
+two's-complement integer for a signed format and as an unsigned integer
+otherwise. Moving the binary point does not change the bits; it changes which
+power of two each bit carries.
+
+The binary point may equal or exceed the width. Such a format has no integer
+bits: every bit is fractional and the binary point sits at or beyond the top of
+the word, so the represented magnitude is below `2**(-(B - *_w))`. This is the
+ordinary way to carry a normalized coefficient or a residual error term, and all
+modules support it.
+
+The binary-point generics are `natural`. Their domain is zero upwards and bears
+no relationship to the width:
+
+| Generic | Type | Domain |
+|---|---|---|
+| every `*_binpnt` on every entity | `natural` | `0` upwards; may equal or exceed the matching `*_w` |
+| every `*_w` on every entity | `positive` | `1` upwards |
+
+No upper bound is imposed on a binary point, and nothing rejects a large one.
+A limit exists in practice, but it is a limit on the **distance between** binary
+points rather than on any one of them. The modules size their internal signals
+from the widths and from the difference between the binary points they must
+align, so:
+
+- binary points that are large but aligned with each other cost nothing. A
+  conversion from `(4, 1000000000)` to `(4, 1000000000)` elaborates and runs.
+- binary points far apart cost the difference. A conversion from `(4, 0)` to
+  `(4, 1000000000)` asks for an internal object of about a gigabyte and fails.
+
+So the practical bound is on `|source binpnt - destination binpnt|`, and on the
+corresponding differences inside the arithmetic modules, not on the absolute
+value of a binary point.
+
+What the committed regression actually exercises is much smaller than either:
+binary points from 0 to 14 and widths from 1 to 8, chosen so that every input
+value of every geometry can be enumerated exhaustively. Run
+`python scripts/gen_format_vectors.py --coverage` for the current figures.
+
+The conversion helpers in `lm_math_fi_pkg` take their binary points as `integer`
+rather than `natural`, so the package accepts a wider domain than any entity can
+express: a negative binary point, meaning a word whose least significant bit
+carries a weight above `2**0`. Entities cannot be given one, because their
+generics are `natural`.
+
 ## Clocking, Clock Enable, And Reset
 
 All sequential modules use `clk_i`. No module currently has a reset port.

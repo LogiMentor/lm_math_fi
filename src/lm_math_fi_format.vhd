@@ -15,11 +15,11 @@ use lm_math_fi_lib.lm_math_fi_pkg.all;
 entity lm_math_fi_format is
   generic(
     -- Input width
-    g_din_w          : natural := 18;
+    g_din_w          : positive := 18;
     -- Input binary point
     g_din_binpnt     : natural := 17;
     -- Output width
-    g_dout_w         : natural := 18;
+    g_dout_w         : positive := 18;
     -- Output binary point
     g_dout_binpnt    : natural := 17;
     -- Number of output register stages
@@ -47,6 +47,31 @@ architecture a_rtl of lm_math_fi_format is
   signal s_dout : std_logic_vector(g_dout_w - 1 downto 0);
 
 begin
+
+  -----------------------------------------------------------------------------
+  -- Generic-domain checks
+  --
+  -- Every condition below depends on generics only, so each is decided once
+  -- when the instance starts and never re-evaluated on a clock edge. A failure
+  -- here means the generic map is wrong, not that the data was wrong.
+  -----------------------------------------------------------------------------
+  assert f_lm_valid_representation(g_representation)
+    report "lm_math_fi_format: generic g_representation = " & integer'image(g_representation)
+         & " is not a supported value."
+         & " Set g_representation to " & f_lm_representation_values & "."
+    severity failure;
+
+  assert f_lm_valid_round_mode(g_round_mode)
+    report "lm_math_fi_format: generic g_round_mode = " & integer'image(g_round_mode)
+         & " is not a supported value."
+         & " Set g_round_mode to one of " & f_lm_round_mode_values & "."
+    severity failure;
+
+  assert f_lm_valid_overflow(g_overflow)
+    report "lm_math_fi_format: generic g_overflow = " & integer'image(g_overflow)
+         & " is not a supported value."
+         & " Set g_overflow to " & f_lm_overflow_values & "."
+    severity failure;
 
   s_dout <= f_lm_quantize(din_i,
                            g_dout_w, g_dout_binpnt, g_representation,

@@ -49,8 +49,30 @@ jobs:
       - name: Run VHDL self-checking testbenches
         run: python3 scripts/run_ghdl_tests.py
 
+      - name: Gate the generic domains of the public entities
+        run: python3 scripts/run_ghdl_generic_domain_tests.py
+
       - name: Verify generated outputs stayed under build
         run: python3 scripts/check_repo_hygiene.py --no-history
+
+  gate-mutations:
+    name: Gate mutation checks
+    runs-on: ubuntu-latest
+    # Edits tracked files while it runs, so it is not part of the per-push gate.
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install GHDL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ghdl
+          ghdl --version
+
+      - name: Require the generic-domain gate to fail when it should
+        run: python3 scripts/check_gate_mutations.py
 
   js-model-port:
     name: JavaScript port golden-vector check

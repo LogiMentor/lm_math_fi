@@ -13,17 +13,17 @@ use lm_math_fi_lib.lm_math_fi_pkg.all;
 
 entity lm_math_fi_mult_add is
   generic(
-    g_din_a_w          : natural   := 24;   -- Input A width
+    g_din_a_w          : positive   := 24;   -- Input A width
     g_din_a_binpnt     : natural   := 15;   -- Input A binary point
-    g_din_b_w          : natural   := 18;   -- Input B width
+    g_din_b_w          : positive   := 18;   -- Input B width
     g_din_b_binpnt     : natural   := 12;   -- Input B binary point
-    g_din_c_w          : natural   := 46;   -- Input C width
+    g_din_c_w          : positive   := 46;   -- Input C width
     g_din_c_binpnt     : natural   := 27;   -- Input C binary point
-    g_dout_w           : natural   := 46;   -- Output width
+    g_dout_w           : positive   := 46;   -- Output width
     g_dout_binpnt      : natural   := 27;   -- Output binary point
     g_add_sub          : natural   := C_LM_ADD;    -- C_LM_ADD or C_LM_SUB
-    g_round_mode       : integer   := C_LM_ROUND_EVEN;   -- Output rounding mode
-    g_representation   : integer   := C_LM_SIGNED;  -- Numeric representation
+    g_round_mode       : natural   := C_LM_ROUND_EVEN;   -- Output rounding mode
+    g_representation   : natural   := C_LM_SIGNED;  -- Numeric representation
     g_overflow         : natural   := C_LM_WRAP;    -- Overflow style: C_LM_SATURATE or C_LM_WRAP
     -- Extra stages after the product/addend register; total latency is g_pipe_stages + 1 clocks
     g_pipe_stages      : natural   := 3
@@ -44,8 +44,30 @@ architecture a_rtl of lm_math_fi_mult_add is
   constant C_MULT_BINPNT  : natural := g_din_a_binpnt + g_din_b_binpnt;
   constant C_MULT_WIDTH   : natural := g_din_a_w + g_din_b_w;
   constant C_SUM_BINPNT   : natural := f_lm_max(C_MULT_BINPNT, g_din_c_binpnt);
-  constant C_MULT_INT_W   : natural := C_MULT_WIDTH - C_MULT_BINPNT;
-  constant C_ADDEND_INT_W : natural := g_din_c_w - g_din_c_binpnt;
+
+  -- Bits above the binary point. These are integer, not natural, on purpose: a
+  -- binary point may legally equal or exceed its width, which makes the value
+  -- purely fractional and the integer-bit count zero or negative. C_SUM_W below
+  -- stays correct for a negative count, because the count is added back to
+  -- C_SUM_BINPNT, which is at least as large in magnitude.
+  constant C_MULT_INT_W   : integer := C_MULT_WIDTH - C_MULT_BINPNT;
+  constant C_ADDEND_INT_W : integer := g_din_c_w - g_din_c_binpnt;
+
+  -- Wide enough for both operands aligned to C_SUM_BINPNT, plus one guard bit
+  -- for the sum. Over ordinary integers this is at least
+  -- f_lm_max(C_MULT_WIDTH, g_din_c_w) + 1, because
+  -- f_lm_max(C_MULT_INT_W, C_ADDEND_INT_W) + C_SUM_BINPNT is at least
+  -- C_MULT_WIDTH (taking the product term, since C_SUM_BINPNT >= C_MULT_BINPNT)
+  -- and at least g_din_c_w (taking the addend term), so it is always positive.
+  --
+  -- That argument is about arithmetic, not about VHDL's integer type, which is
+  -- finite. What bounds a binary point in practice is not its own size but how
+  -- far it sits from the others: the internal widths grow with the DIFFERENCE
+  -- between binary points, and with the widths, not with the absolute value of
+  -- any one binary point. Binary points of 10**9 that are aligned with each
+  -- other elaborate and run; the same binary point against a binary point of 0
+  -- asks for an object of about a gigabyte and does not. No constraint is
+  -- imposed here for a configuration nobody writes; the limit is recorded.
   constant C_SUM_W        : natural := f_lm_max(C_MULT_INT_W, C_ADDEND_INT_W) + C_SUM_BINPNT + 1;
 
   type t_pipe is array (0 to g_pipe_stages) of std_logic_vector(C_SUM_W - 1 downto 0);
@@ -55,6 +77,42 @@ architecture a_rtl of lm_math_fi_mult_add is
   signal s_sum            : std_logic_vector(C_SUM_W - 1 downto 0);
   signal s_pipe_reg       : t_pipe;
 begin
+
+  -----------------------------------------------------------------------------
+  -- Generic-domain checks
+  --
+  -- Every condition below depends on generics only, so each is decided once
+  -- when the instance starts and never re-evaluated on a clock edge. A failure
+  -- here means the generic map is wrong, not that the data was wrong.
+  -----------------------------------------------------------------------------
+  assert g_add_sub = C_LM_ADD or g_add_sub = C_LM_SUB
+    report "lm_math_fi_mult_add: generic g_add_sub = " & integer'image(g_add_sub)
+         & " is not a supported value."
+         & " This entity implements a fixed add or a fixed subtract only:"
+         & " set g_add_sub to C_LM_ADD (" & integer'image(C_LM_ADD) & ")"
+         & " or C_LM_SUB (" & integer'image(C_LM_SUB) & ")."
+         & " C_LM_ADDSUB (" & integer'image(C_LM_ADDSUB) & ") is not accepted here because"
+         & " lm_math_fi_mult_add has no run-time select port; use lm_math_fi_add_sub with"
+         & " g_direction = C_LM_ADDSUB and its sel_add_i port if you need one."
+    severity failure;
+
+  assert f_lm_valid_representation(g_representation)
+    report "lm_math_fi_mult_add: generic g_representation = " & integer'image(g_representation)
+         & " is not a supported value."
+         & " Set g_representation to " & f_lm_representation_values & "."
+    severity failure;
+
+  assert f_lm_valid_round_mode(g_round_mode)
+    report "lm_math_fi_mult_add: generic g_round_mode = " & integer'image(g_round_mode)
+         & " is not a supported value."
+         & " Set g_round_mode to one of " & f_lm_round_mode_values & "."
+    severity failure;
+
+  assert f_lm_valid_overflow(g_overflow)
+    report "lm_math_fi_mult_add: generic g_overflow = " & integer'image(g_overflow)
+         & " is not a supported value."
+         & " Set g_overflow to " & f_lm_overflow_values & "."
+    severity failure;
 
   proc_mult : process(clk_i)
   begin
