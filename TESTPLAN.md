@@ -47,7 +47,7 @@ Positive half:
 | Unit | Checks |
 |---|---|
 | `tb_legal_sweep` | every entity across the full legal cross-product of its discrete-domain generics, including all nine rounding modes, all four alias spellings, the minimum legal width, and degenerate binary points on all four quantizing entities; no assertion may fire |
-| `tb_quantize_vectors` | replays the committed `f_lm_quantize` vectors, and enforces its own coverage policy on them: every geometry must carry all `2**old_width` distinct input values, and the declared geometries must cover all eight geometry families the bench names |
+| `tb_quantize_vectors` | replays the committed `f_lm_quantize` vectors, and enforces its own coverage policy on them: every geometry must carry all `2**old_width` distinct input values and every rounding and overflow mode `lm_math_fi_pkg` accepts, and the declared geometries must cover all eight geometry families the bench names. Which modes are required is asked of the package on each run, so a mode added there is demanded of the vectors rather than silently uncovered |
 | `tb_degenerate_formats` | value checks driving all four quantizing entities across every geometry family, in both signednesses at width 1 |
 | `tb_neg_*` with no override | each negative testbench runs to completion, proving that all of its defaults are legal |
 

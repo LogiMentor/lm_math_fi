@@ -28,8 +28,18 @@ in `lm_math_fi_mult_add`, and the gates that hold both in place.
   domains in both directions, using the units under `sim/generic_domain/`: a
   legal value must never be rejected, and an illegal one must be rejected in the
   phase the case declares, attributed to the specific assertion or generic
-  subtype that case exists to exercise. It re-runs the generator with `--check`
-  on every invocation.
+  subtype that case exists to exercise. Attribution is by source location,
+  derived from `src/` on each run; two assertions keyed on the same thing are an
+  ambiguity it refuses to resolve rather than one it picks from. It re-runs the
+  generator with `--check` on every invocation.
+- A coverage policy stated in `sim/generic_domain/tb_quantize_vectors.vhd`
+  rather than derived from the vector file: every geometry must carry all
+  `2**old_width` distinct input values and every rounding and overflow mode
+  `lm_math_fi_pkg` accepts, and the declared geometries must cover all eight
+  geometry families the bench classifies for itself. Which modes are required is
+  asked of the package on each run, so a mode added there is demanded of the
+  vectors rather than left silently uncovered. A vector set reduced but kept
+  internally consistent fails.
 - `sim/generic_domain/f_lm_quantize_vectors.txt` and
   `sim/generic_domain/tb_degenerate_formats.vhd`, the committed expectations, and
   `sim/generic_domain/tb_legal_sweep.vhd`, which instantiates every entity across
