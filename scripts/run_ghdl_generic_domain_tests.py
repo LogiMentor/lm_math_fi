@@ -77,10 +77,13 @@ SUPPORT_FILES = [
 POSITIVE_UNITS = ["tb_legal_sweep", "tb_quantize_vectors", "tb_degenerate_formats"]
 
 # Per-unit simulation window, for the units that need more than the default.
-# tb_degenerate_formats walks 192 checks two clock edges apart and finishes at
-# 3836 ns; everything else finishes well inside the default. Five of the six
-# negative benches run a free-running clock that is never stopped, so the window
-# is what ends those runs - another reason to keep it tight for them.
+# tb_degenerate_formats walks its checks two clock edges apart and needs more
+# room than the rest; the window below is an upper bound, not a measurement, and
+# the bench reports how many checks it ran and at what time when it passes. No
+# count or duration is written down here, because either would go stale silently.
+# Five of the six negative benches run a free-running clock that is never
+# stopped, so the window is what ends those runs - another reason to keep it
+# tight for them.
 UNIT_STOP_TIME = {
     "tb_degenerate_formats": "10us",
 }
@@ -389,17 +392,21 @@ def ghdl_common(ghdl: str, verb: str) -> list[str]:
     return [ghdl, verb, "--std=08", "--work=lm_math_fi_lib", f"--workdir={BUILD}", f"-P{BUILD}"]
 
 
-def locate_assertions(rel: str) -> dict[str, int]:
-    """Where each assertion in a source file is, keyed by what it checks.
+def locate_assertions(rel: str) -> dict[str, list[int]]:
+    """Where the assertions in a source file are, keyed by what each checks.
 
     Derived from the source on every run, never written down. Move an assertion
     and the expected line moves with it; delete one, or change its message so it
     can no longer be keyed, and the case that needs it fails with a message
     saying the assertion could not be located - which is the right outcome,
     because the gate can no longer prove which assertion fired.
+
+    EVERY line is recorded, not the first. Two assertions in one file keyed on
+    the same thing are ambiguous: the gate cannot then say which of them a
+    diagnostic came from, so it must refuse the case rather than pick one.
     """
     text = (ROOT / rel).read_text(encoding="utf-8")
-    found: dict[str, int] = {}
+    found: dict[str, list[int]] = {}
     lines = text.splitlines()
     index = 0
     while index < len(lines):
@@ -415,11 +422,11 @@ def locate_assertions(rel: str) -> dict[str, int]:
             joined = squash(" ".join(body))
             match = ANCHOR_GENERIC_RE.search(joined)
             if match:
-                found.setdefault(match.group("generic"), start)
+                found.setdefault(match.group("generic"), []).append(start)
             else:
                 for anchor in PACKAGE_ANCHOR.values():
                     if anchor in joined:
-                        found.setdefault(anchor, start)
+                        found.setdefault(anchor, []).append(start)
             index = scan + 1
         else:
             index += 1
@@ -433,10 +440,16 @@ def expected_assertion_site(case: "Case") -> tuple[str, int] | str:
         return f"no source file is recorded for {case.unit}"
     anchor = PACKAGE_ANCHOR[case.generic] if case.unit == "tb_neg_pkg" else case.generic
     sites = locate_assertions(rel)
-    if anchor not in sites:
+    lines = sites.get(anchor, [])
+    if not lines:
         return (f"no assertion keyed on {anchor!r} could be located in {rel}; "
                 "it has been deleted or its message no longer names what it checks")
-    return rel, sites[anchor]
+    if len(lines) > 1:
+        return (f"{len(lines)} assertions in {rel} are keyed on {anchor!r} "
+                f"(lines {', '.join(str(n) for n in lines)}); the gate cannot prove "
+                "which of them a diagnostic came from, so it will not accept any "
+                "of them as evidence for this case")
+    return rel, lines[0]
 
 
 def check_interface_declarations() -> list[str]:

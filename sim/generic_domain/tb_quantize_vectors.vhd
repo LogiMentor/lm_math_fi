@@ -22,7 +22,17 @@
 --        families this bench names, classified here from each geometry's own
 --        widths and binary points;
 --     3. no geometry may be wider than this bench can enumerate, so that
---        requirement 1 is always checkable rather than quietly skipped.
+--        requirement 1 is always checkable rather than quietly skipped;
+--     4. every geometry must carry every rounding mode THE PACKAGE DEFINES;
+--     5. every geometry must carry every overflow mode THE PACKAGE DEFINES.
+--
+--   Requirements 4 and 5 are asked of lm_math_fi_pkg, not of the file and not
+--   of a list written here: this bench sweeps a window of integers, asks
+--   f_lm_valid_round_mode and f_lm_valid_overflow which of them the package
+--   accepts, and requires a vector for each. Add a tenth rounding mode to the
+--   package and this testbench demands vectors for it on the next run. It also
+--   refuses to run if a valid mode sits at the edge of the window it sweeps,
+--   since a mode outside the window would otherwise go unnoticed.
 --
 --   The manifest is still enforced on top of that, because it catches a file
 --   inconsistent with itself:
@@ -30,7 +40,8 @@
 --     #! 1 <old_w> <old_bp> <new_w> <new_bp> <count> expected rows per geometry
 --
 --   Between them: truncating the file, padding it, dropping a geometry, deleting
---   the manifest, and regenerating a reduced-but-consistent set all fail.
+--   the manifest, regenerating a reduced-but-consistent set, and regenerating
+--   with the rounding or overflow sweep collapsed all fail.
 --
 -- Each vector carries its own geometry, so one file covers many formats.
 --
@@ -109,6 +120,46 @@ architecture a_tb of tb_quantize_vectors is
     end case;
   end function;
 
+  -- REQUIREMENTS 4 AND 5: WHICH MODES ARE REQUIRED IS THE PACKAGE'S ANSWER.
+  -- The window below is swept and each value put to the package's own domain
+  -- predicate. Nothing here lists the modes, so nothing here can fall behind
+  -- the package: a mode added to lm_math_fi_pkg becomes required immediately.
+  constant C_MODE_LO : integer := -32;
+  constant C_MODE_HI : integer := 255;
+  type t_mode_set is array (C_MODE_LO to C_MODE_HI) of boolean;
+
+  function f_valid_round_modes return t_mode_set is
+    variable v : t_mode_set := (others => false);
+  begin
+    for m in C_MODE_LO to C_MODE_HI loop
+      v(m) := f_lm_valid_round_mode(m);
+    end loop;
+    return v;
+  end function;
+
+  function f_valid_overflow_modes return t_mode_set is
+    variable v : t_mode_set := (others => false);
+  begin
+    for m in C_MODE_LO to C_MODE_HI loop
+      v(m) := f_lm_valid_overflow(m);
+    end loop;
+    return v;
+  end function;
+
+  function f_mode_count(s : t_mode_set) return integer is
+    variable v : integer := 0;
+  begin
+    for m in C_MODE_LO to C_MODE_HI loop
+      if s(m) then
+        v := v + 1;
+      end if;
+    end loop;
+    return v;
+  end function;
+
+  constant C_REQUIRED_ROUNDS : t_mode_set := f_valid_round_modes;
+  constant C_REQUIRED_OVFS   : t_mode_set := f_valid_overflow_modes;
+
 begin
 
   proc_main : process
@@ -132,6 +183,7 @@ begin
     end record;
     type t_geometry_array is array (0 to C_MAX_GEOM - 1) of t_geometry;
     type t_seen_array is array (0 to C_MAX_GEOM - 1) of t_seen;
+    type t_mode_seen_array is array (0 to C_MAX_GEOM - 1) of t_mode_set;
 
     file     f_vec      : text;
     variable v_stat     : file_open_status;
@@ -140,6 +192,8 @@ begin
 
     variable v_geoms      : t_geometry_array;
     variable v_seen       : t_seen_array := (others => (others => false));
+    variable v_round_seen : t_mode_seen_array := (others => (others => false));
+    variable v_ovf_seen   : t_mode_seen_array := (others => (others => false));
     variable v_geom_count : integer := 0;
     variable v_declared   : integer := -1;
     variable v_directive  : integer;
@@ -167,6 +221,8 @@ begin
     variable v_short    : integer := 0;
     variable v_thin     : integer := 0;
     variable v_absent   : integer := 0;
+    variable v_no_round : integer := 0;
+    variable v_no_ovf   : integer := 0;
 
     procedure read_field(variable l : inout line; variable v : out integer;
                          constant what : string) is
@@ -178,6 +234,22 @@ begin
         severity failure;
     end procedure;
   begin
+    -- The swept window must strictly contain the package's valid modes.
+    -- If a valid mode sits on the edge, a mode beyond the edge could exist and
+    -- go unrequired, which is exactly the silence requirements 4 and 5 exist to
+    -- prevent.
+    assert not C_REQUIRED_ROUNDS(C_MODE_LO) and not C_REQUIRED_ROUNDS(C_MODE_HI)
+       and not C_REQUIRED_OVFS(C_MODE_LO) and not C_REQUIRED_OVFS(C_MODE_HI)
+      report "tb_quantize_vectors: a mode the package accepts sits at the edge of"
+           & " the window this testbench sweeps (" & integer'image(C_MODE_LO) & " to "
+           & integer'image(C_MODE_HI) & "); widen C_MODE_LO/C_MODE_HI, because a"
+           & " mode outside the window would not be required of the vectors"
+      severity failure;
+    assert f_mode_count(C_REQUIRED_ROUNDS) > 0 and f_mode_count(C_REQUIRED_OVFS) > 0
+      report "tb_quantize_vectors: the package accepts no rounding or no overflow"
+           & " mode in the swept window, so requirements 4 and 5 would be vacuous"
+      severity failure;
+
     file_open(v_stat, f_vec, g_vector_file, read_mode);
     assert v_stat = open_ok
       report "tb_quantize_vectors: cannot open vector file '" & g_vector_file & "'"
@@ -273,6 +345,17 @@ begin
              & integer'image(v_new_w) & "," & integer'image(v_new_bp) & ")"
              & " which the manifest does not declare"
         severity failure;
+      assert v_round >= C_MODE_LO and v_round <= C_MODE_HI
+         and v_overflow >= C_MODE_LO and v_overflow <= C_MODE_HI
+        report "tb_quantize_vectors: a vector carries rounding mode "
+             & integer'image(v_round) & " or overflow mode "
+             & integer'image(v_overflow) & ", outside the window this testbench"
+             & " sweeps (" & integer'image(C_MODE_LO) & " to "
+             & integer'image(C_MODE_HI) & ")"
+        severity failure;
+      v_round_seen(v_index)(v_round)   := true;
+      v_ovf_seen(v_index)(v_overflow)  := true;
+
       v_geoms(v_index).rows := v_geoms(v_index).rows + 1;
       if not v_seen(v_index)(v_value) then
         v_seen(v_index)(v_value) := true;
@@ -373,6 +456,42 @@ begin
            & "any declared geometry"
       severity failure;
 
+    -- Requirements 4 and 5: every mode the PACKAGE defines, per geometry ------
+    for g in 0 to v_geom_count - 1 loop
+      for m in C_MODE_LO to C_MODE_HI loop
+        if C_REQUIRED_ROUNDS(m) and not v_round_seen(g)(m) then
+          v_no_round := v_no_round + 1;
+          report "tb_quantize_vectors: geometry ("
+               & integer'image(v_geoms(g).old_w) & "," & integer'image(v_geoms(g).old_bp)
+               & ")->(" & integer'image(v_geoms(g).new_w) & ","
+               & integer'image(v_geoms(g).new_bp) & ") carries no vector with"
+               & " rounding mode " & integer'image(m) & ", which the package accepts"
+            severity note;
+        end if;
+        if C_REQUIRED_OVFS(m) and not v_ovf_seen(g)(m) then
+          v_no_ovf := v_no_ovf + 1;
+          report "tb_quantize_vectors: geometry ("
+               & integer'image(v_geoms(g).old_w) & "," & integer'image(v_geoms(g).old_bp)
+               & ")->(" & integer'image(v_geoms(g).new_w) & ","
+               & integer'image(v_geoms(g).new_bp) & ") carries no vector with"
+               & " overflow mode " & integer'image(m) & ", which the package accepts"
+            severity note;
+        end if;
+      end loop;
+    end loop;
+    assert v_no_round = 0
+      report "tb_quantize_vectors: " & integer'image(v_no_round)
+           & " (geometry, rounding mode) pairs are missing; the package defines "
+           & integer'image(f_mode_count(C_REQUIRED_ROUNDS))
+           & " rounding modes and every geometry must exercise all of them"
+      severity failure;
+    assert v_no_ovf = 0
+      report "tb_quantize_vectors: " & integer'image(v_no_ovf)
+           & " (geometry, overflow mode) pairs are missing; the package defines "
+           & integer'image(f_mode_count(C_REQUIRED_OVFS))
+           & " overflow modes and every geometry must exercise all of them"
+      severity failure;
+
     assert v_mismatch = 0
       report "tb_quantize_vectors: " & integer'image(v_mismatch) & " of "
            & integer'image(v_checked) & " vectors do not match"
@@ -382,7 +501,10 @@ begin
          & " f_lm_quantize vectors over " & integer'image(v_geom_count)
          & " geometries, every input space enumerated, all "
          & integer'image(t_family'pos(t_family'high) + 1)
-         & " required families covered)" severity note;
+         & " required families covered, all "
+         & integer'image(f_mode_count(C_REQUIRED_ROUNDS)) & " rounding and "
+         & integer'image(f_mode_count(C_REQUIRED_OVFS))
+         & " overflow modes the package defines present per geometry)" severity note;
     wait;
   end process proc_main;
 

@@ -49,6 +49,7 @@ TB_FORMAT = "sim/generic_domain/tb_neg_format.vhd"
 SRC_DELAY = "src/lm_math_fi_delay.vhd"
 SRC_ADD_SUB = "src/lm_math_fi_add_sub.vhd"
 SRC_MULT_ADD = "src/lm_math_fi_mult_add.vhd"
+SRC_MULT = "src/lm_math_fi_mult.vhd"
 VECTORS = "sim/generic_domain/f_lm_quantize_vectors.txt"
 
 TOUCHED = [RUNNER, GEN, TB_DELAY, TB_FORMAT, SRC_DELAY, SRC_ADD_SUB,
@@ -181,6 +182,30 @@ def m8_corrupt_one_reference() -> None:
           "            return value")
 
 
+def m9_duplicate_diagnostic_earlier_in_the_file() -> None:
+    """Review round 3: give an EARLIER assertion the diagnostic of a later one,
+    leaving the later one in place.
+
+    Attribution used to key each generic to the first assertion in the file that
+    named it, so the earlier copy won and the case was satisfied by a diagnostic
+    from a line that is not the assertion it targets. It passed, reporting the
+    wrong origin - and went on passing once the real assertion was neutered,
+    which is what made it a blocker rather than a cosmetic complaint.
+
+    Two assertions keyed on one generic is now an ambiguity the gate refuses to
+    resolve, because it cannot tell which of them a diagnostic came from.
+    """
+    _edit(SRC_MULT,
+          "  assert f_lm_valid_representation(g_din_a_type)",
+          "  assert f_lm_valid_representation(g_din_b_type)\n"
+          "    report \"lm_math_fi_mult: generic g_din_b_type = \"\n"
+          "         & integer'image(g_din_b_type)\n"
+          "         & \" is not a valid representation\"\n"
+          "    severity failure;\n"
+          "\n"
+          "  assert f_lm_valid_representation(g_din_a_type)")
+
+
 GATE_MUTATIONS = [
     # Each entry lists the (check, reason) pairs that count as catching it. More
     # than one is allowed only where the CHECK that notices legitimately differs
@@ -217,6 +242,9 @@ GATE_MUTATIONS = [
     ("M8", "saturation corrupted in one reference only",
      m8_corrupt_one_reference,
      [(GEN, "references disagree")]),
+    ("M9", "review round 3: an earlier assertion carries a later one's diagnostic",
+     m9_duplicate_diagnostic_earlier_in_the_file,
+     [("tb_neg_mult[g_din_b_type=0]", "are keyed on 'g_din_b_type'")]),
 ]
 
 
@@ -304,6 +332,29 @@ def v_zero_input_padded(text: str) -> str:
     return "\n".join(prose + _remanifest(out) + out) + "\n"
 
 
+def _keep_where(text: str, field: int, value: str) -> str:
+    """Keep only the rows whose field matches, and rebuild a manifest that is
+    exactly consistent with what is left - a regenerated reduction, not a
+    damaged file. Every input value survives, so requirement 1 still passes."""
+    prose = [l for l in text.splitlines() if l.startswith("#") and not l.startswith("#!")]
+    _head, rows = _split(text)
+    kept = [r for r in rows if r.split()[field] == value]
+    return "\n".join(prose + _remanifest(kept) + kept) + "\n"
+
+
+def v_one_rounding_mode(text: str) -> str:
+    """Review round 3: the generator emits only C_LM_TRUNC_BITS. Every geometry
+    is declared, every count matches, every input value is enumerated and all
+    eight families are present - only eight of the nine rounding modes the
+    package defines have gone."""
+    return _keep_where(text, 6, "0")
+
+
+def v_one_overflow_mode(text: str) -> str:
+    """The same reduction over overflow: only C_LM_SATURATE survives."""
+    return _keep_where(text, 7, "1")
+
+
 VECTOR_MUTATIONS = [
     ("V1", "vector file truncated to a single data row", v_truncate,
      "the vector file has been truncated or padded"),
@@ -318,6 +369,12 @@ VECTOR_MUTATIONS = [
     ("V5", "review round 2: zero input padded back to the original row counts",
      v_zero_input_padded,
      "do not enumerate their whole input space"),
+    ("V6", "review round 3: regenerated with only one rounding mode",
+     v_one_rounding_mode,
+     "(geometry, rounding mode) pairs are missing"),
+    ("V7", "review round 3: regenerated with only one overflow mode",
+     v_one_overflow_mode,
+     "(geometry, overflow mode) pairs are missing"),
 ]
 
 
