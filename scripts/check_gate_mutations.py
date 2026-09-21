@@ -53,7 +53,7 @@ SRC_MULT = "src/lm_math_fi_mult.vhd"
 VECTORS = "sim/generic_domain/f_lm_quantize_vectors.txt"
 
 TOUCHED = [RUNNER, GEN, TB_DELAY, TB_FORMAT, SRC_DELAY, SRC_ADD_SUB,
-           SRC_MULT_ADD, VECTORS]
+           SRC_MULT, SRC_MULT_ADD, VECTORS]
 
 # Text that means the harness itself, or the environment, went wrong - never a
 # detection.
