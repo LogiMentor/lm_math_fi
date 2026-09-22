@@ -12,11 +12,17 @@ output under `build/`.
 ## Regression Commands
 
 ```bash
-python scripts/check_repo_hygiene.py --no-history
+python scripts/check_repo_hygiene.py --all-refs
 python scripts/run_python_model_tests.py
+python scripts/gen_js_golden_vectors.py --check
 python scripts/run_ghdl_tests.py
+python scripts/run_ghdl_generic_domain_tests.py
 python scripts/check_repo_hygiene.py --no-history
+node --test js/test/golden.test.mjs
 ```
+
+That is every check CI runs on a push, in the order CI runs it, across all three
+of its jobs. Running the list locally and running CI test the same things.
 
 ## VHDL Testbenches
 
@@ -28,6 +34,43 @@ python scripts/check_repo_hygiene.py --no-history
 | `tb_lm_math_fi_add_sub` | 12 | unsigned add/sub, signed add/sub, signed fractional rounding, dynamic select, input/output clock-enable behavior |
 | `tb_lm_math_fi_mult` | 13 | unsigned max/wrap/saturation, signed minimum operand, mixed signedness, signed/unsigned fractional rounding, pipeline |
 | `tb_lm_math_fi_mult_add` | 11 | add, subtract, fractional multiply-add, wide addend alignment, saturation, pipeline |
+
+## Generic-Domain Gate
+
+`scripts/run_ghdl_generic_domain_tests.py` drives the units under
+`sim/generic_domain/`. There is one testbench per entity under test; its
+generics mirror the entity's own, with legal defaults, and a case is selected by
+a top-level generic override rather than by a dedicated file.
+
+Positive half:
+
+| Unit | Checks |
+|---|---|
+| `tb_legal_sweep` | every entity across the full legal cross-product of its discrete-domain generics, including all nine rounding modes, all four alias spellings, the minimum legal width, and degenerate binary points on all four quantizing entities; no assertion may fire |
+| `tb_quantize_vectors` | replays the committed `f_lm_quantize` vectors, and enforces its own coverage policy on them: every geometry must carry all `2**old_width` distinct input values and every rounding and overflow mode `lm_math_fi_pkg` accepts, and the declared geometries must cover all eight geometry families the bench names. Which modes are required is asked of the package on each run, so a mode added there is demanded of the vectors rather than silently uncovered |
+| `tb_degenerate_formats` | value checks driving all four quantizing entities across every geometry family, in both signednesses at width 1 |
+| `tb_neg_*` with no override | each negative testbench runs to completion, proving that all of its defaults are legal |
+
+Counts are deliberately absent here. Each testbench reports its own totals when
+it runs, and `python scripts/gen_format_vectors.py --coverage` prints the current
+coverage matrix. A number copied into a document is wrong within two commits.
+
+Negative half, one case per generic-domain check:
+
+| Entity | Rejected by an assertion | Rejected by the generic's subtype |
+|---|---|---|
+| `lm_math_fi_pkg.f_lm_quantize` | rounding mode, overflow mode | — |
+| `lm_math_fi_delay` | — | `g_data_w`, `g_delay` |
+| `lm_math_fi_format` | `g_representation`, `g_round_mode`, `g_overflow` | `g_din_w`, `g_dout_w` |
+| `lm_math_fi_add_sub` | `g_direction`, `g_representation`, `g_round_mode` | `g_pipeline_input`, `g_din1_w`, `g_din2_w`, `g_dout_w` |
+| `lm_math_fi_mult` | `g_din_a_type`, `g_din_b_type`, `g_dout_type`, `g_round_mode`, `g_overflow` | `g_pipe_stages`, `g_din_a_w`, `g_din_b_w`, `g_dout_w` |
+| `lm_math_fi_mult_add` | `g_add_sub`, `g_representation`, `g_round_mode`, `g_overflow` | `g_pipe_stages`, `g_din_a_w`, `g_din_b_w`, `g_din_c_w`, `g_dout_w` |
+
+Assertion cases are matched on the diagnostic text, which this repository owns.
+Subtype cases are matched on the failing phase and the generic's name only,
+because GHDL's wording for an out-of-subtype value is tool output that changes
+across versions. The runner additionally pins the subtype each entity declares,
+so a subtype case cannot pass if an entity's own declaration were widened.
 
 ## Python Reference Tests
 
