@@ -32,7 +32,7 @@ to fail once per case and must not be added to `scripts/run_ghdl_tests.py` or
 If you change a gate, run `python scripts/check_gate_mutations.py`. It breaks the
 repository in known ways and requires the gate to notice. It edits tracked files
 while it runs, so it refuses to start unless your tree is clean, and it is not
-part of CI.
+part of the per-push gate; pull-request CI runs it.
 
 Install the local hooks with:
 

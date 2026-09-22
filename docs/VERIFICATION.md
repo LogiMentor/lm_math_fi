@@ -23,8 +23,9 @@ of its jobs. Running the list locally and running CI test the same things.
 CI splits them across three jobs: repository hygiene with full ref inspection;
 the Python model tests, the JavaScript golden-vector check, the GHDL regression,
 the generic-domain gate and a post-regression hygiene check; and the Node golden
-test. `scripts/check_gate_mutations.py` is deliberately not in CI, because it
-edits tracked files while it runs; run it by hand when changing a gate.
+test. `scripts/check_gate_mutations.py` is deliberately not in the per-push
+gate, because it edits tracked files while it runs; pull-request CI runs it in a
+fourth job, and you can run it by hand when changing a gate.
 
 ## Scope
 

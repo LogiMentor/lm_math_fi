@@ -206,6 +206,20 @@ def m9_duplicate_diagnostic_earlier_in_the_file() -> None:
           "  assert f_lm_valid_representation(g_din_a_type)")
 
 
+def m10_remove_a_subtype_case() -> None:
+    """Review round 4: delete the negative case for a pinned declaration.
+
+    The gate used to report a count of interface declarations verified while
+    exercising fewer of them, because nothing tied the two lists together.
+    Pinning proves what an entity SAYS; only a negative case proves the tool
+    enforces it. Removing a case must now fail the gate rather than quietly
+    shrink what it covers."""
+    _edit(RUNNER,
+          '    subtype_case("tb_neg_format", "g_pipe_stages", "-1",\n'
+          '                 "a negative pipeline depth is not a configuration"),\n',
+          "")
+
+
 GATE_MUTATIONS = [
     # Each entry lists the (check, reason) pairs that count as catching it. More
     # than one is allowed only where the CHECK that notices legitimately differs
@@ -245,6 +259,9 @@ GATE_MUTATIONS = [
     ("M9", "review round 3: an earlier assertion carries a later one's diagnostic",
      m9_duplicate_diagnostic_earlier_in_the_file,
      [("tb_neg_mult[g_din_b_type=0]", "are keyed on 'g_din_b_type'")]),
+    ("M10", "review round 4: a pinned declaration loses its negative case",
+     m10_remove_a_subtype_case,
+     [("interface declaration", "no subtype case on tb_neg_format exercises it")]),
 ]
 
 
@@ -355,6 +372,40 @@ def v_one_overflow_mode(text: str) -> str:
     return _keep_where(text, 7, "1")
 
 
+def v_out_of_domain_values(text: str) -> str:
+    """Review round 4: satisfy the distinct-value count with values that are not
+    inputs to the source format.
+
+    Keep only each geometry's zero-input rows and replicate that block
+    2**old_width times, relabelling the value 0, 2**ow, 2*2**ow, ... Every one
+    of those truncates back to 0, so the expectation already on the row is still
+    the right answer and nothing mismatches - but the bench used to index its
+    distinct-value tracking with the raw value, so it counted 2**ow distinct
+    inputs while exercising exactly one. Row counts, the manifest, the families
+    and every mode are untouched."""
+    prose = [l for l in text.splitlines() if l.startswith("#") and not l.startswith("#!")]
+    manifest = [l for l in text.splitlines() if l.startswith("#!")]
+    _head, rows = _split(text)
+    by_geom, order = {}, []
+    for row in rows:
+        f = row.split()
+        key = (f[0], f[1], f[3], f[4])
+        if key not in by_geom:
+            by_geom[key] = []
+            order.append(key)
+        by_geom[key].append(f)
+    out = []
+    for key in order:
+        span = 1 << int(key[0])
+        zero = [f for f in by_geom[key] if f[8] == "0"]
+        for k in range(span):
+            for f in zero:
+                g = list(f)
+                g[8] = str(k * span)
+                out.append(" ".join(g))
+    return "\n".join(prose + manifest + out) + "\n"
+
+
 VECTOR_MUTATIONS = [
     ("V1", "vector file truncated to a single data row", v_truncate,
      "the vector file has been truncated or padded"),
@@ -375,6 +426,9 @@ VECTOR_MUTATIONS = [
     ("V7", "review round 3: regenerated with only one overflow mode",
      v_one_overflow_mode,
      "(geometry, overflow mode) pairs are missing"),
+    ("V8", "review round 4: distinct-value count met with out-of-domain values",
+     v_out_of_domain_values,
+     "is outside the domain of a"),
 ]
 
 

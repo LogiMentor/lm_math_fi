@@ -177,6 +177,18 @@ ANCHOR_GENERIC_RE = re.compile(r"generic (?P<generic>g_[a-z_0-9]+)")
 # selector) do NOT get a range here: their admissible set can grow and is not
 # contiguous in every case, and a range duplicated across entities would drift
 # from the constants in lm_math_fi_pkg. Those keep their assertions.
+# Which negative testbench mirrors the generics of each entity source. Every
+# declaration below must have a negative case on the unit named here; the gate
+# refuses to pass otherwise, so a declaration cannot be pinned without also
+# being exercised.
+NEGATIVE_UNIT = {
+    "src/lm_math_fi_delay.vhd": "tb_neg_delay",
+    "src/lm_math_fi_format.vhd": "tb_neg_format",
+    "src/lm_math_fi_add_sub.vhd": "tb_neg_add_sub",
+    "src/lm_math_fi_mult.vhd": "tb_neg_mult",
+    "src/lm_math_fi_mult_add.vhd": "tb_neg_mult_add",
+}
+
 INTERFACE_DECLARATIONS = [
     ("src/lm_math_fi_delay.vhd", "g_delay", "natural"),
     ("src/lm_math_fi_delay.vhd", "g_data_w", "positive"),
@@ -275,6 +287,8 @@ CASES = [
     ),
     subtype_case("tb_neg_format", "g_din_w", "0", "a zero-width input is not a configuration"),
     subtype_case("tb_neg_format", "g_dout_w", "0", "a zero-width output is not a configuration"),
+    subtype_case("tb_neg_format", "g_pipe_stages", "-1",
+                 "a negative pipeline depth is not a configuration"),
     # --- lm_math_fi_add_sub -------------------------------------------------
     assertion_case(
         "tb_neg_add_sub", "g_direction", "7",
@@ -296,6 +310,8 @@ CASES = [
     ),
     subtype_case("tb_neg_add_sub", "g_pipeline_input", "2",
                  "the input register stage is one deep or absent, never deeper"),
+    subtype_case("tb_neg_add_sub", "g_pipeline_output", "-1",
+                 "a negative output pipeline depth is not a configuration"),
     subtype_case("tb_neg_add_sub", "g_din1_w", "0", "a zero-width input is not a configuration"),
     subtype_case("tb_neg_add_sub", "g_din2_w", "0", "a zero-width input is not a configuration"),
     subtype_case("tb_neg_add_sub", "g_dout_w", "0", "a zero-width output is not a configuration"),
@@ -478,6 +494,35 @@ def check_interface_declarations() -> list[str]:
         if found != subtype:
             errors.append(
                 f"{rel}: generic {generic} is declared '{found}', expected '{subtype}'"
+            )
+    errors.extend(check_every_declaration_is_exercised())
+    return errors
+
+
+def check_every_declaration_is_exercised() -> list[str]:
+    """Every pinned declaration must have a negative case that exercises it.
+
+    Pinning a subtype proves what the entity SAYS. Only a negative case proves
+    the tool enforces it. Reporting a count of declarations while exercising
+    fewer of them overstates what ran, so the gap is closed as a class here
+    rather than case by case: add a declaration without a case and the gate
+    fails until the case exists.
+    """
+    exercised = {(case.unit, case.generic) for case in CASES if case.kind == "subtype"}
+    errors: list[str] = []
+    for rel, generic, _subtype in INTERFACE_DECLARATIONS:
+        unit = NEGATIVE_UNIT.get(rel)
+        if unit is None:
+            errors.append(
+                f"{rel}: no negative testbench is recorded for this source, so the "
+                f"declaration of {generic} is pinned but never exercised"
+            )
+            continue
+        if (unit, generic) not in exercised:
+            errors.append(
+                f"{rel}: generic {generic} is pinned in INTERFACE_DECLARATIONS but "
+                f"no subtype case on {unit} exercises it; a declaration that is "
+                "never driven out of range proves only what the entity says"
             )
     return errors
 
@@ -758,7 +803,8 @@ def main() -> int:
         failures.append(("interface declaration", error))
         print(f"  FAIL {error}")
     if not decl_errors:
-        print(f"  ok: {len(INTERFACE_DECLARATIONS)} range-constrained generics declared as expected")
+        print(f"  ok: {len(INTERFACE_DECLARATIONS)} range-constrained generics declared as "
+              f"expected, each exercised by a negative case")
 
     ok, reason = analyze(args.ghdl)
     if not ok:

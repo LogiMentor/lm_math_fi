@@ -17,7 +17,8 @@
 --   written here, not taken from the file:
 --
 --     1. every declared geometry must carry all 2**old_width DISTINCT input
---        values, counted as distinct values rather than as rows;
+--        values, each inside the source format's domain and counted as distinct
+--        values rather than as rows;
 --     2. the declared geometries must between them cover all eight geometry
 --        families this bench names, classified here from each geometry's own
 --        widths and binary points;
@@ -345,6 +346,21 @@ begin
              & integer'image(v_new_w) & "," & integer'image(v_new_bp) & ")"
              & " which the manifest does not declare"
         severity failure;
+      -- A value outside the source format's domain is not an input to that
+      -- format. It has to be rejected BEFORE it is counted, because to_unsigned
+      -- truncates: such a value would otherwise be applied as some OTHER input
+      -- while still occupying its own slot in the distinct-value count, so a
+      -- vector set could satisfy requirement 1 while enumerating almost nothing.
+      assert v_value >= 0 and v_value < 2 ** v_old_w
+        report "tb_quantize_vectors: a vector for geometry ("
+             & integer'image(v_old_w) & "," & integer'image(v_old_bp) & ")->("
+             & integer'image(v_new_w) & "," & integer'image(v_new_bp)
+             & ") carries input value " & integer'image(v_value)
+             & ", which is outside the domain of a " & integer'image(v_old_w)
+             & "-bit source (0 to " & integer'image(2 ** v_old_w - 1)
+             & "); it is not an input to this format and will not be counted as one"
+        severity failure;
+
       assert v_round >= C_MODE_LO and v_round <= C_MODE_HI
          and v_overflow >= C_MODE_LO and v_overflow <= C_MODE_HI
         report "tb_quantize_vectors: a vector carries rounding mode "
