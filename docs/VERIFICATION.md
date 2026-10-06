@@ -52,9 +52,10 @@ of its discrete-domain generics and run past time 0, and no assertion may fire;
 every entity is driven at degenerate binary points - equal to the width, above
 the width, bit weights disjoint either way, one bit of overlap, and width 1 - and
 the result is checked, not only that it elaborates; `f_lm_quantize` is replayed
-against committed vectors that pin its arithmetic for every legal rounding and
-overflow mode across fifteen format geometries; and every negative testbench is
-run once with no override, proving its defaults are all legal.
+against committed vectors that pin its arithmetic for every combination of input
+value, source and destination signedness, rounding mode and overflow mode across
+fifteen format geometries; and every negative testbench is run once with no
+override, proving its defaults are all legal.
 
 A binary point may equal or exceed its width; see the binary-point section of
 docs/USER_GUIDE.md. Nothing constrains a binary point against a width, so the

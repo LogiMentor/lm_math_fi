@@ -17,8 +17,9 @@ INDEPENDENCE IS THE POINT OF THIS FILE
   complement when the format is signed. An expectation taken from the code under
   test would certify nothing, so this file must never grow a dependency on it.
 
-TWO COMPLETE REFERENCES, NOT TWO ROUNDING RULES
-  Every expectation is computed by two pipelines that share no arithmetic:
+TWO REFERENCES FOR THE ARITHMETIC, ONE COMPOSITION PER OPERATION
+  Every expectation is computed through two references, A and B, that share
+  none of the arithmetic steps:
 
     reference A   stored value decoded with int(bits, 2) and a 2**n correction;
                   rescaling by floor division and remainder; overflow by masking
@@ -29,16 +30,25 @@ TWO COMPLETE REFERENCES, NOT TWO ROUNDING RULES
                   onto the representable interval for wrap and an explicit
                   comparison chain for saturate
 
-  Decoding, rescaling, rounding, overflow, and all four operations are
-  implemented separately in each. The comparison is on the final emitted bit
-  string, so corrupting any one step in either pipeline is caught.
+  Decoding, rescaling, rounding and overflow are implemented twice, once in
+  each reference, and the two results are compared on the final emitted bit
+  string, so corrupting any one of those steps in either reference is caught.
+
+  The composition of each operation - which intermediate width and binary
+  point a module aligns into, where its accumulator wraps, the sum or product
+  of the decoded integers - is written ONCE (_quantize, _mult, _add_sub,
+  _mult_add) and run with each reference plugged in. A slip in a composition
+  reaches both references alike and is not caught by their agreement; it is
+  checked only by the gate's comparison of these expectations against the RTL.
 
   WHAT THIS DOES NOT BUY. Both references necessarily encode the same model of
-  each module's internal structure - which intermediate format a module aligns
-  into, and that its accumulator wraps there. Two references cannot disagree
-  about a structure they were both told to model. The doubling catches an
-  arithmetic slip; it does not catch a shared misreading of what a module does.
-  That is what the gate's own comparison against the RTL is for.
+  each module's internal structure, because that model is the shared
+  composition: which intermediate format a module aligns into, and that its
+  accumulator wraps there. Two references cannot disagree about a structure
+  they were both handed. The doubling catches an arithmetic slip in decode,
+  rescale, rounding or overflow; it does not catch a shared misreading of what
+  a module does, nor a slip in the composition itself. That is what the gate's
+  own comparison against the RTL is for.
 
 USAGE
   python scripts/gen_format_vectors.py             regenerate both files
@@ -223,7 +233,10 @@ class RefB:
 
 
 # ===========================================================================
-# The operations, once per reference. Each composes only its own helpers.
+# The operations, written once. Each composition is run with either reference
+# plugged in and uses only that reference's helpers. The composition itself is
+# shared, so a slip in it is not caught by the agreement of the two references;
+# only the gate's comparison against the RTL checks it.
 # ===========================================================================
 
 def _quantize(R, inbits, ow, obp, oa, nw, nbp, na, rnd, ovf) -> str:
@@ -381,9 +394,11 @@ def render_vector_file(rows, tally) -> str:
         "# HOW THESE WERE PRODUCED",
         "#   Every value here is emitted by scripts/gen_format_vectors.py, which",
         "#   computes the arithmetic from the documented semantics using Python's",
-        "#   arbitrary-precision integers and fractions. It implements the whole path",
-        "#   from input decoding to emitted expectation twice, in two pipelines that",
-        "#   share no arithmetic, and refuses to emit unless both agree. It imports",
+        "#   arbitrary-precision integers and fractions. Decoding, rescaling, rounding",
+        "#   and overflow are implemented twice, in two references that share none of",
+        "#   that arithmetic, and it refuses to emit unless both agree on every bit",
+        "#   string. The composition of each operation is written once; the gate's",
+        "#   comparison against the RTL is what checks it. The generator imports",
         "#   nothing from src/, model/ or js/.",
         "#",
         "#   Regenerate:      python scripts/gen_format_vectors.py",
@@ -402,9 +417,18 @@ def render_vector_file(rows, tally) -> str:
         "#   value they alias.",
         "#",
         "#   The testbench does not take this on trust. It requires each geometry to",
-        "#   carry every one of its 2**old_width distinct input values, and requires",
-        "#   the declared geometries to cover a set of families it names itself. A",
-        "#   reduced vector set that is internally consistent still fails.",
+        "#   carry every one of its 2**old_width distinct input values, requires the",
+        "#   declared geometries to cover a set of families it names itself, and",
+        "#   requires every combination of input value, source signedness,",
+        "#   destination signedness, rounding mode and overflow mode exactly once per",
+        "#   geometry, the domains being those the package accepts. A reduced vector",
+        "#   set that is internally consistent still fails.",
+        "#",
+        "#   The combination requirement is enforced through the row order: within a",
+        "#   geometry the rows must be strictly increasing in the canonical order",
+        "#   (value, old_arith, new_arith, rounding, overflow), value most",
+        "#   significant, and the geometry must carry exactly as many rows as the",
+        "#   product of its domain sizes. This generator emits in that order.",
         "#",
     ]
     for (label, ow, obp, nw, nbp), (_a, _b, _c, _d, count) in zip(VECTOR_GEOMETRIES, tally):
@@ -745,18 +769,22 @@ def render_entity_tb() -> str:
 --
 -- HOW THE EXPECTED VALUES WERE PRODUCED
 --   By scripts/gen_format_vectors.py, which computes the arithmetic from the
---   documented semantics using arbitrary-precision integers and fractions. It
---   implements the whole path from input decoding to emitted expectation twice,
---   in two pipelines that share no arithmetic, and refuses to emit unless both
---   agree. It imports nothing from src/, model/ or js/.
+--   documented semantics using arbitrary-precision integers and fractions.
+--   Decoding, rescaling, rounding and overflow are implemented twice, in two
+--   references that share none of that arithmetic, and it refuses to emit
+--   unless both agree on every bit string. The composition of each operation is
+--   written once; the gate's comparison against the RTL is what checks it. The
+--   generator imports nothing from src/, model/ or js/.
 --
 --   For the three arithmetic modules the reference also models each module's own
 --   internal intermediate format, because that is part of the library's defined
 --   behaviour: operands are aligned into the internal format and the accumulator
 --   wraps there. That is what makes an unsigned subtraction that goes negative
 --   wrap rather than clamp, which sim/tb/tb_lm_math_fi_add_sub.vhd already
---   relies on. Both references necessarily model that structure the same way;
---   the doubling catches an arithmetic slip, not a shared misreading.
+--   relies on. That structure is the shared composition, so both references
+--   necessarily model it the same way; the doubling catches an arithmetic slip
+--   in decode, rescale, rounding or overflow, not a shared misreading of the
+--   structure.
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -849,7 +877,7 @@ def main() -> int:
     entity_text = render_entity_tb()
 
     if _DISAGREEMENTS:
-        print("error: the two independent references disagree; nothing was written:",
+        print("error: the two references disagree; nothing was written:",
               file=sys.stderr)
         for line in _DISAGREEMENTS[:10]:
             print(f"  {line}", file=sys.stderr)

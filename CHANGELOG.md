@@ -21,9 +21,12 @@ in `lm_math_fi_mult_add`, and the gates that hold both in place.
   wrapping.
 - `scripts/gen_format_vectors.py`, which produces every committed format
   expectation from the documented semantics using arbitrary-precision integers
-  and fractions. It implements the whole path from input decoding to emitted
-  expectation twice, in two pipelines that share no arithmetic, and refuses to
-  emit unless both agree. It imports nothing from `src/`, `model/` or `js/`.
+  and fractions. Decoding, rescaling, rounding and overflow are implemented
+  twice, in two references that share none of that arithmetic, compared on the
+  emitted bit string, and it refuses to emit unless both agree. The composition
+  of each operation is written once and is checked only by the gate's
+  comparison against the RTL. It imports nothing from `src/`, `model/` or
+  `js/`.
 - `scripts/run_ghdl_generic_domain_tests.py`, which gates the generic and format
   domains in both directions, using the units under `sim/generic_domain/`: a
   legal value must never be rejected, and an illegal one must be rejected in the
@@ -33,13 +36,16 @@ in `lm_math_fi_mult_add`, and the gates that hold both in place.
   ambiguity it refuses to resolve rather than one it picks from. It re-runs the
   generator with `--check` on every invocation.
 - A coverage policy stated in `sim/generic_domain/tb_quantize_vectors.vhd`
-  rather than derived from the vector file: every geometry must carry all
-  `2**old_width` distinct input values and every rounding and overflow mode
-  `lm_math_fi_pkg` accepts, and the declared geometries must cover all eight
-  geometry families the bench classifies for itself. Which modes are required is
-  asked of the package on each run, so a mode added there is demanded of the
-  vectors rather than left silently uncovered. A vector set reduced but kept
-  internally consistent fails.
+  rather than derived from the vector file: every geometry must carry every
+  combination of input value, source signedness, destination signedness,
+  rounding mode and overflow mode exactly once, with the signednesses and modes
+  being those `lm_math_fi_pkg` accepts, and the declared geometries must cover
+  all eight geometry families the bench classifies for itself. The product is
+  enforced through a canonical row order the bench defines plus a row count
+  equal to the product of the domain sizes. Which signednesses and modes are
+  required is asked of the package on each run, so a mode added there is
+  demanded of the vectors, in every combination, rather than left silently
+  uncovered. A vector set reduced but kept internally consistent fails.
 - `sim/generic_domain/f_lm_quantize_vectors.txt` and
   `sim/generic_domain/tb_degenerate_formats.vhd`, the committed expectations, and
   `sim/generic_domain/tb_legal_sweep.vhd`, which instantiates every entity across

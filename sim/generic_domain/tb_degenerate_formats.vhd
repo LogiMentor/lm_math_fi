@@ -29,18 +29,22 @@
 --
 -- HOW THE EXPECTED VALUES WERE PRODUCED
 --   By scripts/gen_format_vectors.py, which computes the arithmetic from the
---   documented semantics using arbitrary-precision integers and fractions. It
---   implements the whole path from input decoding to emitted expectation twice,
---   in two pipelines that share no arithmetic, and refuses to emit unless both
---   agree. It imports nothing from src/, model/ or js/.
+--   documented semantics using arbitrary-precision integers and fractions.
+--   Decoding, rescaling, rounding and overflow are implemented twice, in two
+--   references that share none of that arithmetic, and it refuses to emit
+--   unless both agree on every bit string. The composition of each operation is
+--   written once; the gate's comparison against the RTL is what checks it. The
+--   generator imports nothing from src/, model/ or js/.
 --
 --   For the three arithmetic modules the reference also models each module's own
 --   internal intermediate format, because that is part of the library's defined
 --   behaviour: operands are aligned into the internal format and the accumulator
 --   wraps there. That is what makes an unsigned subtraction that goes negative
 --   wrap rather than clamp, which sim/tb/tb_lm_math_fi_add_sub.vhd already
---   relies on. Both references necessarily model that structure the same way;
---   the doubling catches an arithmetic slip, not a shared misreading.
+--   relies on. That structure is the shared composition, so both references
+--   necessarily model it the same way; the doubling catches an arithmetic slip
+--   in decode, rescale, rounding or overflow, not a shared misreading of the
+--   structure.
 
 library ieee;
 use ieee.std_logic_1164.all;

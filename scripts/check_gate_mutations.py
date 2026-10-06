@@ -51,9 +51,10 @@ SRC_ADD_SUB = "src/lm_math_fi_add_sub.vhd"
 SRC_MULT_ADD = "src/lm_math_fi_mult_add.vhd"
 SRC_MULT = "src/lm_math_fi_mult.vhd"
 VECTORS = "sim/generic_domain/f_lm_quantize_vectors.txt"
+ENTITY_TB = "sim/generic_domain/tb_degenerate_formats.vhd"
 
 TOUCHED = [RUNNER, GEN, TB_DELAY, TB_FORMAT, SRC_DELAY, SRC_ADD_SUB,
-           SRC_MULT, SRC_MULT_ADD, VECTORS]
+           SRC_MULT, SRC_MULT_ADD, VECTORS, ENTITY_TB]
 
 # Text that means the harness itself, or the environment, went wrong - never a
 # detection.
@@ -220,6 +221,32 @@ def m10_remove_a_subtype_case() -> None:
           "")
 
 
+def m11_reduced_generator_regenerated() -> None:
+    """Review round 5: reduce the generator so that C_LM_WRAP is emitted only
+    for even input values, then REGENERATE both committed files from it.
+
+    Every input value is still enumerated, every rounding and overflow mode
+    still appears in every geometry, every family is covered, the manifest is
+    exactly consistent with the rows, and --check passes because the file was
+    produced by the generator as it now stands. The old marginal requirements
+    - every value present, every mode present - were all satisfied by this.
+    Only the product is short: odd values never meet WRAP. The bench must
+    notice that per geometry, as a row count below the product of the domains,
+    and nothing earlier in the gate may fail."""
+    _edit(GEN,
+          "                        for ovf in ALL_OVFS:\n"
+          "                            expected = int(\n",
+          "                        for ovf in ALL_OVFS:\n"
+          "                            if ovf == WRAP and value % 2 == 1:\n"
+          "                                continue\n"
+          "                            expected = int(\n")
+    gen = subprocess.run([sys.executable, str(GENERATOR)], cwd=ROOT,
+                         capture_output=True, text=True)
+    if gen.returncode != 0:
+        raise RuntimeError("the reduced generator failed to regenerate:\n"
+                           + (gen.stdout or "") + (gen.stderr or ""))
+
+
 GATE_MUTATIONS = [
     # Each entry lists the (check, reason) pairs that count as catching it. More
     # than one is allowed only where the CHECK that notices legitimately differs
@@ -262,6 +289,11 @@ GATE_MUTATIONS = [
     ("M10", "review round 4: a pinned declaration loses its negative case",
      m10_remove_a_subtype_case,
      [("interface declaration", "no subtype case on tb_neg_format exercises it")]),
+    # The committed files are regenerated from the reduced generator, so the
+    # provenance step passes and the bench is the only thing left to notice.
+    ("M11", "review round 5: generator emits WRAP only for even inputs, files regenerated",
+     m11_reduced_generator_regenerated,
+     [("tb_quantize_vectors", "do not carry every combination")]),
 ]
 
 
@@ -363,13 +395,47 @@ def v_one_rounding_mode(text: str) -> str:
     """Review round 3: the generator emits only C_LM_TRUNC_BITS. Every geometry
     is declared, every count matches, every input value is enumerated and all
     eight families are present - only eight of the nine rounding modes the
-    package defines have gone."""
+    package defines have gone. The rows that remain are still in canonical
+    order, so this surfaces as a geometry short of the product."""
     return _keep_where(text, 6, "0")
 
 
 def v_one_overflow_mode(text: str) -> str:
     """The same reduction over overflow: only C_LM_SATURATE survives."""
     return _keep_where(text, 7, "1")
+
+
+def _first_geometry_rows(text: str):
+    """The prose, the manifest and the data rows, with the index range of the
+    first geometry's rows in the data list."""
+    prose = [l for l in text.splitlines() if l.startswith("#") and not l.startswith("#!")]
+    manifest = [l for l in text.splitlines() if l.startswith("#!")]
+    _head, rows = _split(text)
+    key = tuple(rows[0].split()[i] for i in (0, 1, 3, 4))
+    end = 0
+    while end < len(rows) and tuple(rows[end].split()[i] for i in (0, 1, 3, 4)) == key:
+        end += 1
+    return prose, manifest, rows, end
+
+
+def v_swap_two_rows(text: str) -> str:
+    """Review round 5: two adjacent rows of one geometry exchanged. Every
+    combination is still present exactly once, every count matches, every value
+    is enumerated. The bench requires the canonical order, so the second of the
+    two is reported as not following its predecessor."""
+    prose, manifest, rows, _end = _first_geometry_rows(text)
+    rows[0], rows[1] = rows[1], rows[0]
+    return "\n".join(prose + manifest + rows) + "\n"
+
+
+def v_repeat_a_row(text: str) -> str:
+    """Review round 5: the last row of the first geometry is replaced by a copy
+    of the row before it. The row count, the manifest, every input value, every
+    mode and every family are untouched; one combination now appears twice and
+    one not at all. A count alone cannot see this; the strict order can."""
+    prose, manifest, rows, end = _first_geometry_rows(text)
+    rows[end - 1] = rows[end - 2]
+    return "\n".join(prose + manifest + rows) + "\n"
 
 
 def v_out_of_domain_values(text: str) -> str:
@@ -422,13 +488,19 @@ VECTOR_MUTATIONS = [
      "do not enumerate their whole input space"),
     ("V6", "review round 3: regenerated with only one rounding mode",
      v_one_rounding_mode,
-     "(geometry, rounding mode) pairs are missing"),
+     "do not carry every combination"),
     ("V7", "review round 3: regenerated with only one overflow mode",
      v_one_overflow_mode,
-     "(geometry, overflow mode) pairs are missing"),
+     "do not carry every combination"),
     ("V8", "review round 4: distinct-value count met with out-of-domain values",
      v_out_of_domain_values,
      "is outside the domain of a"),
+    ("V9", "review round 5: two adjacent rows of one geometry exchanged",
+     v_swap_two_rows,
+     "does not follow its predecessor"),
+    ("V10", "review round 5: a row repeated in place of its successor, counts intact",
+     v_repeat_a_row,
+     "does not follow its predecessor"),
 ]
 
 

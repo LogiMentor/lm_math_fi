@@ -9,9 +9,11 @@
 # HOW THESE WERE PRODUCED
 #   Every value here is emitted by scripts/gen_format_vectors.py, which
 #   computes the arithmetic from the documented semantics using Python's
-#   arbitrary-precision integers and fractions. It implements the whole path
-#   from input decoding to emitted expectation twice, in two pipelines that
-#   share no arithmetic, and refuses to emit unless both agree. It imports
+#   arbitrary-precision integers and fractions. Decoding, rescaling, rounding
+#   and overflow are implemented twice, in two references that share none of
+#   that arithmetic, and it refuses to emit unless both agree on every bit
+#   string. The composition of each operation is written once; the gate's
+#   comparison against the RTL is what checks it. The generator imports
 #   nothing from src/, model/ or js/.
 #
 #   Regenerate:      python scripts/gen_format_vectors.py
@@ -30,9 +32,18 @@
 #   value they alias.
 #
 #   The testbench does not take this on trust. It requires each geometry to
-#   carry every one of its 2**old_width distinct input values, and requires
-#   the declared geometries to cover a set of families it names itself. A
-#   reduced vector set that is internally consistent still fails.
+#   carry every one of its 2**old_width distinct input values, requires the
+#   declared geometries to cover a set of families it names itself, and
+#   requires every combination of input value, source signedness,
+#   destination signedness, rounding mode and overflow mode exactly once per
+#   geometry, the domains being those the package accepts. A reduced vector
+#   set that is internally consistent still fails.
+#
+#   The combination requirement is enforced through the row order: within a
+#   geometry the rows must be strictly increasing in the canonical order
+#   (value, old_arith, new_arith, rounding, overflow), value most
+#   significant, and the geometry must carry exactly as many rows as the
+#   product of its domain sizes. This generator emits in that order.
 #
 #     (6,2) -> (4,1)   4608 rows  ordinary narrowing, the original baseline geometry
 #         families: ordinary
