@@ -53,6 +53,16 @@
 --   A strictly increasing sequence drawn from a finite set, as long as the set
 --   itself, is that set in order.
 --
+--   When requirement 4 fails, the bench also says which dimension is short.
+--   For each failing geometry it notes every source signedness, destination
+--   signedness, rounding mode and overflow mode the package defines that
+--   appears in no row of that geometry at all; if every one of them appears
+--   somewhere, it emits one note saying the shortfall is in the combinations
+--   and not in any single dimension. Those notes are attribution only. The
+--   requirement is the product: a set complete in every dimension and short
+--   in the product still fails, and a set short in a dimension is not failed
+--   for that but for the product it therefore cannot complete.
+--
 --   CANONICAL ORDER. Within a geometry, rows are compared as the tuple
 --     (value, old_arith, new_arith, rounding, overflow)
 --   lexicographically: value is the most significant field and overflow the
@@ -237,6 +247,8 @@ begin
     end record;
     type t_geometry_array is array (0 to C_MAX_GEOM - 1) of t_geometry;
     type t_seen_array is array (0 to C_MAX_GEOM - 1) of t_seen;
+    -- Attribution only: which values of each dimension a geometry has shown.
+    type t_mode_seen_array is array (0 to C_MAX_GEOM - 1) of t_mode_set;
 
     -- Requirement 4(b): strictly greater in the canonical order documented in
     -- the header, value most significant and overflow least.
@@ -279,6 +291,10 @@ begin
 
     variable v_geoms      : t_geometry_array;
     variable v_seen       : t_seen_array := (others => (others => false));
+    variable v_oa_seen    : t_mode_seen_array := (others => (others => false));
+    variable v_na_seen    : t_mode_seen_array := (others => (others => false));
+    variable v_rnd_seen   : t_mode_seen_array := (others => (others => false));
+    variable v_ovf_seen   : t_mode_seen_array := (others => (others => false));
     variable v_geom_count : integer := 0;
     variable v_declared   : integer := -1;
     variable v_directive  : integer;
@@ -297,6 +313,7 @@ begin
     variable v_expected  : integer;
     variable v_tuple     : t_tuple;
     variable v_product   : integer;
+    variable v_absent_in : integer;
 
     variable v_in  : std_logic_vector(C_MAX_W - 1 downto 0) := (others => '0');
     variable v_exp : std_logic_vector(C_MAX_W - 1 downto 0) := (others => '0');
@@ -491,6 +508,13 @@ begin
              & integer'image(v_overflow) & ", which the package does not accept"
         severity failure;
 
+      -- Attribution for a requirement 4 failure: which values each dimension
+      -- has shown in this geometry. Not a requirement; see the header.
+      v_oa_seen(v_index)(v_old_arith)  := true;
+      v_na_seen(v_index)(v_new_arith)  := true;
+      v_rnd_seen(v_index)(v_round)     := true;
+      v_ovf_seen(v_index)(v_overflow)  := true;
+
       -- Requirement 4(b): track the canonical order. Only the first violation
       -- per geometry is kept, and it is reported after the file has been read,
       -- so that a file which also fails requirement 1 is reported for that
@@ -648,6 +672,42 @@ begin
              & " overflow modes); expected " & integer'image(v_product)
              & ", found " & integer'image(v_geoms(g).rows)
           severity note;
+        -- Attribution: name every required value that never appeared in this
+        -- geometry, or say that the shortfall is in the combinations.
+        v_absent_in := 0;
+        for m in C_MODE_LO to C_MODE_HI loop
+          if C_REQUIRED_ARITHS(m) and not v_oa_seen(g)(m) then
+            v_absent_in := v_absent_in + 1;
+            report "tb_quantize_vectors: geometry " & f_geometry_image(v_geoms(g))
+                 & ": source signedness " & integer'image(m) & " absent"
+              severity note;
+          end if;
+          if C_REQUIRED_ARITHS(m) and not v_na_seen(g)(m) then
+            v_absent_in := v_absent_in + 1;
+            report "tb_quantize_vectors: geometry " & f_geometry_image(v_geoms(g))
+                 & ": destination signedness " & integer'image(m) & " absent"
+              severity note;
+          end if;
+          if C_REQUIRED_ROUNDS(m) and not v_rnd_seen(g)(m) then
+            v_absent_in := v_absent_in + 1;
+            report "tb_quantize_vectors: geometry " & f_geometry_image(v_geoms(g))
+                 & ": rounding mode " & integer'image(m) & " absent"
+              severity note;
+          end if;
+          if C_REQUIRED_OVFS(m) and not v_ovf_seen(g)(m) then
+            v_absent_in := v_absent_in + 1;
+            report "tb_quantize_vectors: geometry " & f_geometry_image(v_geoms(g))
+                 & ": overflow mode " & integer'image(m) & " absent"
+              severity note;
+          end if;
+        end loop;
+        if v_absent_in = 0 then
+          report "tb_quantize_vectors: geometry " & f_geometry_image(v_geoms(g))
+               & ": every source signedness, destination signedness, rounding mode"
+               & " and overflow mode the package defines is present; the shortfall"
+               & " is in the combinations, not in any single dimension"
+            severity note;
+        end if;
       end if;
     end loop;
     assert v_partial = 0
@@ -655,6 +715,7 @@ begin
            & " geometries do not carry every combination of input value, source"
            & " signedness, destination signedness, rounding mode and overflow mode"
            & " the package defines; see the notes above for expected and found counts"
+           & " and for the dimension that is short"
       severity failure;
 
     assert v_mismatch = 0

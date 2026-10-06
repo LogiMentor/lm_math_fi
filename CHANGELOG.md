@@ -45,15 +45,18 @@ in `lm_math_fi_mult_add`, and the gates that hold both in place.
   equal to the product of the domain sizes. Which signednesses and modes are
   required is asked of the package on each run, so a mode added there is
   demanded of the vectors, in every combination, rather than left silently
-  uncovered. A vector set reduced but kept internally consistent fails.
+  uncovered. A vector set reduced but kept internally consistent fails, and the
+  diagnostic names each signedness or mode absent from the failing geometry, or
+  says that the shortfall is in the combinations rather than in any dimension.
 - `sim/generic_domain/f_lm_quantize_vectors.txt` and
   `sim/generic_domain/tb_degenerate_formats.vhd`, the committed expectations, and
   `sim/generic_domain/tb_legal_sweep.vhd`, which instantiates every entity across
   the full legal cross-product of its discrete-domain generics.
 - `scripts/check_gate_mutations.py`, which breaks the repository in known ways and
   requires the gate to notice each one, naming the check that must fail and what
-  it must say. CI runs it on pull requests; it edits tracked files while it runs,
-  so it is not part of the per-push gate.
+  it must say. Mutations that fail the same check are cross-judged, so that no
+  judge is satisfied by another mutation's output. CI runs it on pull requests;
+  it edits tracked files while it runs, so it is not part of the per-push gate.
 - The binary-point domain in `docs/USER_GUIDE.md`: what a binary point means, that
   it may equal or exceed the width, what actually bounds it in practice, and that
   the package helpers accept a wider domain than the entities can express.

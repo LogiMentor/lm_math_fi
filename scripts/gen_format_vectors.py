@@ -18,8 +18,8 @@ INDEPENDENCE IS THE POINT OF THIS FILE
   test would certify nothing, so this file must never grow a dependency on it.
 
 TWO REFERENCES FOR THE ARITHMETIC, ONE COMPOSITION PER OPERATION
-  Every expectation is computed through two references, A and B, that share
-  none of the arithmetic steps:
+  Every expectation is computed through two references, A and B, each with
+  its own decode, rescale, rounding and overflow:
 
     reference A   stored value decoded with int(bits, 2) and a 2**n correction;
                   rescaling by floor division and remainder; overflow by masking

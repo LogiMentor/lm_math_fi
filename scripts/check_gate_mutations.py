@@ -21,6 +21,13 @@ SCOPE. The gates catch accidental regression. They do not claim to resist
 deliberate tampering, and no mutation here edits a testbench so that it
 misreports. See the verification strategy note in docs/VERIFICATION.md.
 
+A judge can be too loose as well as too strict: if two mutations fail the same
+check, a judge that only looks for that check's failure would accept either
+mutation's output for the other. So the mutations that share a failing check
+are cross-judged after the run - every judge is fed every one of those
+mutations' outputs, and must accept its own and reject the rest. That matrix is
+printed, and a judge satisfied by another mutation's output fails the harness.
+
 This is deliberately not run on every push: it edits tracked files while it runs.
 CI runs it on pull requests. It refuses to start unless the working tree is
 clean, and restores every file it touched even if a mutation fails or raises.
@@ -29,10 +36,12 @@ clean, and restores every file it touched even if a mutation fails or raises.
 from __future__ import annotations
 
 import argparse
+import re
 import shutil
 import subprocess
 import sys
 import time
+from dataclasses import dataclass
 from pathlib import Path
 
 
@@ -63,6 +72,34 @@ INFRASTRUCTURE_SIGNS = [
     "was not found on PATH",
     "SyntaxError",
 ]
+
+
+@dataclass(frozen=True)
+class Judge:
+    """What the failing output must and must not say for a mutation to count.
+
+    Every pattern in `require` must match some line of the output, and no
+    pattern in `forbid` may match any line. Patterns are regular expressions.
+    `forbid` is what keeps a judge honest: a mutation that leaves every
+    dimension complete must not be accepted on the strength of a note that
+    names an absent one, and the other way round."""
+    require: tuple[str, ...]
+    forbid: tuple[str, ...] = ()
+
+    def describe(self) -> str:
+        text = " and ".join(f"say {r!r}" for r in self.require)
+        if self.forbid:
+            text += "; and not " + " nor ".join(f"{f!r}" for f in self.forbid)
+        return text
+
+
+# A note the bench emits only when a geometry is short of the product while
+# every single dimension is complete - the case the marginals could not see.
+COMBINATIONS_NOTE = "shortfall is in the combinations"
+# A note the bench emits per required value that a short geometry never shows.
+ABSENT_SIGNEDNESS = r"signedness -?\d+ absent"
+ABSENT_ROUNDING = r"rounding mode -?\d+ absent"
+ABSENT_OVERFLOW = r"overflow mode -?\d+ absent"
 
 
 def _edit(rel: str, old: str, new: str, *, count: int = 1) -> None:
@@ -291,10 +328,22 @@ GATE_MUTATIONS = [
      [("interface declaration", "no subtype case on tb_neg_format exercises it")]),
     # The committed files are regenerated from the reduced generator, so the
     # provenance step passes and the bench is the only thing left to notice.
+    # Every dimension is still complete, so the bench must attribute the
+    # shortfall to the combinations and must not name any value as absent:
+    # this is the mutation that proves the product catches what the marginals
+    # could not.
     ("M11", "review round 5: generator emits WRAP only for even inputs, files regenerated",
      m11_reduced_generator_regenerated,
-     [("tb_quantize_vectors", "do not carry every combination")]),
+     [("tb_quantize_vectors", "do not carry every combination")],
+     Judge(require=(COMBINATIONS_NOTE,),
+           forbid=(ABSENT_SIGNEDNESS, ABSENT_ROUNDING, ABSENT_OVERFLOW))),
 ]
+
+
+def _gate_entry(entry):
+    """(tag, note, mutate, expectations, judge); the judge is optional."""
+    tag, note, mutate, expectations, *rest = entry
+    return tag, note, mutate, expectations, (rest[0] if rest else Judge(require=()))
 
 
 # ---------------------------------------------------------------------------
@@ -474,34 +523,43 @@ def v_out_of_domain_values(text: str) -> str:
 
 VECTOR_MUTATIONS = [
     ("V1", "vector file truncated to a single data row", v_truncate,
-     "the vector file has been truncated or padded"),
+     Judge(require=("the vector file has been truncated or padded",))),
     ("V2", "every degenerate-format vector dropped, total padded back",
      v_drop_degenerate,
-     "do not carry the number of rows the manifest declares"),
+     Judge(require=("do not carry the number of rows the manifest declares",))),
     ("V3", "the manifest directives are removed", v_strip_manifest,
-     "missing its manifest"),
+     Judge(require=("missing its manifest",))),
     ("V4", "review round 2: regenerated enumerating only the zero input",
      v_zero_input_only,
-     "do not enumerate their whole input space"),
+     Judge(require=("do not enumerate their whole input space",))),
     ("V5", "review round 2: zero input padded back to the original row counts",
      v_zero_input_padded,
-     "do not enumerate their whole input space"),
+     Judge(require=("do not enumerate their whole input space",))),
+    # V6 and V7 fail the same product check as M11. What tells them apart is
+    # the attribution: each must name the dimension it emptied, and nothing
+    # else - not the other dimension, and not the combinations note.
     ("V6", "review round 3: regenerated with only one rounding mode",
      v_one_rounding_mode,
-     "do not carry every combination"),
+     Judge(require=("do not carry every combination", ABSENT_ROUNDING),
+           forbid=(ABSENT_SIGNEDNESS, ABSENT_OVERFLOW, COMBINATIONS_NOTE))),
     ("V7", "review round 3: regenerated with only one overflow mode",
      v_one_overflow_mode,
-     "do not carry every combination"),
+     Judge(require=("do not carry every combination", ABSENT_OVERFLOW),
+           forbid=(ABSENT_SIGNEDNESS, ABSENT_ROUNDING, COMBINATIONS_NOTE))),
     ("V8", "review round 4: distinct-value count met with out-of-domain values",
      v_out_of_domain_values,
-     "is outside the domain of a"),
+     Judge(require=("is outside the domain of a",))),
     ("V9", "review round 5: two adjacent rows of one geometry exchanged",
      v_swap_two_rows,
-     "does not follow its predecessor"),
+     Judge(require=("does not follow its predecessor",))),
     ("V10", "review round 5: a row repeated in place of its successor, counts intact",
      v_repeat_a_row,
-     "does not follow its predecessor"),
+     Judge(require=("does not follow its predecessor",))),
 ]
+
+# The mutations that fail the same check and are told apart only by what the
+# check says about them. Each one's judge is fed every one of these outputs.
+CROSS_JUDGED = ["V6", "V7", "M11"]
 
 
 # ---------------------------------------------------------------------------
@@ -541,7 +599,23 @@ def infrastructure_problem(output: str) -> str | None:
     return None
 
 
-def judge_gate(rc: int, out: str, expectations: list[tuple[str, str]]):
+def notes_problem(out: str, judge: Judge) -> str | None:
+    """None when the output says everything the judge requires and nothing it
+    forbids; otherwise why it does not."""
+    lines = out.splitlines()
+    for pattern in judge.require:
+        if not any(re.search(pattern, line) for line in lines):
+            return f"the output never says {pattern!r}"
+    for pattern in judge.forbid:
+        hit = next((line for line in lines if re.search(pattern, line)), None)
+        if hit is not None:
+            return (f"the output says {pattern!r}, which this mutation must not"
+                    f" provoke: {hit.strip()[:160]}")
+    return None
+
+
+def judge_gate(rc: int, out: str, expectations: list[tuple[str, str]],
+               judge: Judge = Judge(require=())):
     """Caught, not caught, or the harness itself fell over."""
     sign = infrastructure_problem(out)
     if sign is not None:
@@ -553,6 +627,10 @@ def judge_gate(rc: int, out: str, expectations: list[tuple[str, str]]):
     for expect_test, expect_reason in expectations:
         for line in out.splitlines():
             if expect_test in line and expect_reason in line:
+                problem = notes_problem(out, judge)
+                if problem is not None:
+                    return "WRONG", (f"{expect_test} failed with {expect_reason!r},"
+                                     f" but {problem}")
                 return "CAUGHT", line.strip()
     for expect_test, expect_reason in expectations:
         for line in out.splitlines():
@@ -571,16 +649,45 @@ def judge_gate(rc: int, out: str, expectations: list[tuple[str, str]]):
                      + ", and the gate reported nothing recognisable")
 
 
-def judge_bench(rc: int, out: str, expect_reason: str):
+def judge_bench(rc: int, out: str, judge: Judge):
     sign = infrastructure_problem(out)
     if sign is not None:
         return "INFRA", f"the bench did not run cleanly ({sign!r})"
     if rc == 0:
         return "MISSED", "the bench passed; the mutation went undetected"
-    for line in out.splitlines():
-        if expect_reason in line:
-            return "CAUGHT", line.strip()[:170]
-    return "WRONG", f"the bench failed, but not with {expect_reason!r}"
+    problem = notes_problem(out, judge)
+    if problem is not None:
+        return "WRONG", f"the bench failed, but {problem}"
+    first = next(line for line in out.splitlines() if re.search(judge.require[0], line))
+    return "CAUGHT", first.strip()[:170]
+
+
+def cross_judge(captured: dict) -> bool:
+    """Feed every cross-judged mutation's output to every cross-judged judge.
+
+    `captured` maps a tag to (rc, output, judge_fn). The diagonal must be
+    CAUGHT; every other cell must not be, or the judge is loose enough to be
+    satisfied by a different mutation. Prints the matrix and returns whether
+    it is as it must be."""
+    tags = [t for t in CROSS_JUDGED if t in captured]
+    print("=" * 78)
+    print("Cross-judge: each output against each judge (diagonal CAUGHT, rest not)")
+    print("=" * 78)
+    print(f"  {'output \\ judge':16s}" + "".join(f"{t:12s}" for t in tags))
+    ok = True
+    for out_tag in tags:
+        rc, out, _own = captured[out_tag]
+        cells = []
+        for judge_tag in tags:
+            verdict, _detail = captured[judge_tag][2](rc, out)
+            as_it_must = (verdict == "CAUGHT") == (out_tag == judge_tag)
+            ok = ok and as_it_must
+            cells.append(f"{verdict:12s}" if as_it_must else f"{verdict + '!':12s}")
+        print(f"  {out_tag:16s}" + "".join(cells))
+    print("  ok: no judge accepts another mutation's output" if ok else
+          "  FAIL: a cell marked '!' is not what it must be - a judge is too loose"
+          " or a mutation is no longer told apart")
+    return ok
 
 
 def main() -> int:
@@ -590,11 +697,15 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.list:
-        for tag, note, _fn, expectations in GATE_MUTATIONS:
+        for entry in GATE_MUTATIONS:
+            tag, note, _fn, expectations, judge = _gate_entry(entry)
             pairs = "; or ".join(f"{t} must report {r!r}" for t, r in expectations)
             print(f"  {tag}  {note}\n        {pairs}")
-        for tag, note, _fn, reason in VECTOR_MUTATIONS:
-            print(f"  {tag}  {note}\n        tb_quantize_vectors must report {reason!r}")
+            if judge.require:
+                print(f"        and the output must {judge.describe()}")
+        for tag, note, _fn, judge in VECTOR_MUTATIONS:
+            print(f"  {tag}  {note}\n        tb_quantize_vectors must {judge.describe()}")
+        print(f"  cross-judged against each other: {', '.join(CROSS_JUDGED)}")
         return 0
 
     if not tree_is_clean():
@@ -605,6 +716,7 @@ def main() -> int:
 
     started = time.monotonic()
     results = []
+    captured: dict = {}
 
     print("=" * 78)
     print("Baseline: the gate must pass before anything is broken")
@@ -618,7 +730,8 @@ def main() -> int:
     baseline = time.monotonic() - started
     print(f"  ok: gate passes ({baseline:.0f}s)")
 
-    for tag, note, mutate, expectations in GATE_MUTATIONS:
+    for entry in GATE_MUTATIONS:
+        tag, note, mutate, expectations, judge = _gate_entry(entry)
         print("=" * 78)
         print(f"{tag}: {note}")
         print("=" * 78)
@@ -627,13 +740,15 @@ def main() -> int:
             rc, out = run_gate()
         finally:
             restore()
-        verdict, detail = judge_gate(rc, out, expectations)
+        verdict, detail = judge_gate(rc, out, expectations, judge)
         results.append((tag, verdict, detail))
+        captured[tag] = (rc, out, lambda rc, out, e=expectations, j=judge:
+                         judge_gate(rc, out, e, j))
         print(f"  {verdict:6s} {detail[:600]}")
 
     BUILD.mkdir(parents=True, exist_ok=True)
     original = (ROOT / VECTORS).read_text(encoding="utf-8")
-    for tag, note, transform, expect_reason in VECTOR_MUTATIONS:
+    for tag, note, transform, judge in VECTOR_MUTATIONS:
         print("=" * 78)
         print(f"{tag}: {note}")
         print("=" * 78)
@@ -642,9 +757,12 @@ def main() -> int:
         rc, out = run_vector_bench(args.ghdl, mutated)
         shutil.copyfile(mutated, BUILD / mutated.name)
         mutated.unlink(missing_ok=True)
-        verdict, detail = judge_bench(rc, out, expect_reason)
+        verdict, detail = judge_bench(rc, out, judge)
         results.append((tag, verdict, detail))
+        captured[tag] = (rc, out, lambda rc, out, j=judge: judge_bench(rc, out, j))
         print(f"  {verdict:6s} {detail[:600]}")
+
+    cross_ok = cross_judge(captured)
 
     elapsed = time.monotonic() - started
     print("=" * 78)
@@ -654,13 +772,14 @@ def main() -> int:
     infra = [r for r in results if r[1] == "INFRA"]
     print()
     print(f"{len(caught)} of {len(results)} mutations caught, "
-          f"{len(infra)} infrastructure failures, in {elapsed:.0f}s "
+          f"{len(infra)} infrastructure failures, cross-judge "
+          f"{'ok' if cross_ok else 'FAILED'}, in {elapsed:.0f}s "
           f"(baseline gate run {baseline:.0f}s of that)")
     if not tree_is_clean():
         print("error: the working tree is not clean after restoring; check "
               "'git status'", file=sys.stderr)
         return 1
-    return 0 if len(caught) == len(results) else 1
+    return 0 if len(caught) == len(results) and cross_ok else 1
 
 
 if __name__ == "__main__":
