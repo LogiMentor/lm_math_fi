@@ -1,0 +1,786 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 LogiMentor
+
+"""Check that the generic-domain gate actually fails when it should.
+
+A gate that cannot fail is not a gate. This script breaks the repository in a
+known way, runs the gate, and requires it to fail FOR THE STATED REASON - then
+puts everything back.
+
+A mutation counts as caught only when the check it targets is the one that
+failed, identified by name, and the diagnostic that check produced says what the
+mutation declares it should say. A gate that fell over before reaching that check
+is reported as an infrastructure failure, never as a detection: a Python
+traceback or a missing build is not evidence that a gate works.
+
+  python scripts/check_gate_mutations.py          run them all
+  python scripts/check_gate_mutations.py --list   name them without running
+
+SCOPE. The gates catch accidental regression. They do not claim to resist
+deliberate tampering, and no mutation here edits a testbench so that it
+misreports. See the verification strategy note in docs/VERIFICATION.md.
+
+A judge can be too loose as well as too strict: if two mutations fail the same
+check, a judge that only looks for that check's failure would accept either
+mutation's output for the other. So the mutations that share a failing check
+are cross-judged after the run - every judge is fed every one of those
+mutations' outputs, and must accept its own and reject the rest. That matrix is
+printed, and a judge satisfied by another mutation's output fails the harness.
+
+This is deliberately not run on every push: it edits tracked files while it runs.
+CI runs it on pull requests. It refuses to start unless the working tree is
+clean, and restores every file it touched even if a mutation fails or raises.
+"""
+
+from __future__ import annotations
+
+import argparse
+import re
+import shutil
+import subprocess
+import sys
+import time
+from dataclasses import dataclass
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+GATE = ROOT / "scripts" / "run_ghdl_generic_domain_tests.py"
+GENERATOR = ROOT / "scripts" / "gen_format_vectors.py"
+BUILD = ROOT / "build" / "gate_mutations"
+WORKDIR = ROOT / "build" / "ghdl_generic_domain"
+
+RUNNER = "scripts/run_ghdl_generic_domain_tests.py"
+GEN = "scripts/gen_format_vectors.py"
+TB_DELAY = "sim/generic_domain/tb_neg_delay.vhd"
+TB_FORMAT = "sim/generic_domain/tb_neg_format.vhd"
+SRC_DELAY = "src/lm_math_fi_delay.vhd"
+SRC_ADD_SUB = "src/lm_math_fi_add_sub.vhd"
+SRC_MULT_ADD = "src/lm_math_fi_mult_add.vhd"
+SRC_MULT = "src/lm_math_fi_mult.vhd"
+VECTORS = "sim/generic_domain/f_lm_quantize_vectors.txt"
+ENTITY_TB = "sim/generic_domain/tb_degenerate_formats.vhd"
+
+TOUCHED = [RUNNER, GEN, TB_DELAY, TB_FORMAT, SRC_DELAY, SRC_ADD_SUB,
+           SRC_MULT, SRC_MULT_ADD, VECTORS, ENTITY_TB]
+
+# Text that means the harness itself, or the environment, went wrong - never a
+# detection.
+INFRASTRUCTURE_SIGNS = [
+    "Traceback (most recent call last)",
+    "was not found on PATH",
+    "SyntaxError",
+]
+
+
+@dataclass(frozen=True)
+class Judge:
+    """What the failing output must and must not say for a mutation to count.
+
+    Every pattern in `require` must match some line of the output, and no
+    pattern in `forbid` may match any line. Patterns are regular expressions.
+    `forbid` is what keeps a judge honest: a mutation that leaves every
+    dimension complete must not be accepted on the strength of a note that
+    names an absent one, and the other way round."""
+    require: tuple[str, ...]
+    forbid: tuple[str, ...] = ()
+
+    def describe(self) -> str:
+        text = " and ".join(f"say {r!r}" for r in self.require)
+        if self.forbid:
+            text += "; and not " + " nor ".join(f"{f!r}" for f in self.forbid)
+        return text
+
+
+# A note the bench emits only when a geometry is short of the product while
+# every single dimension is complete - the case the marginals could not see.
+COMBINATIONS_NOTE = "shortfall is in the combinations"
+# A note the bench emits per required value that a short geometry never shows.
+ABSENT_SIGNEDNESS = r"signedness -?\d+ absent"
+ABSENT_ROUNDING = r"rounding mode -?\d+ absent"
+ABSENT_OVERFLOW = r"overflow mode -?\d+ absent"
+
+
+def _edit(rel: str, old: str, new: str, *, count: int = 1) -> None:
+    path = ROOT / rel
+    text = path.read_text(encoding="utf-8")
+    found = text.count(old)
+    if found != count:
+        raise SystemExit(
+            f"mutation cannot be applied: expected {count} occurrence(s) of\n"
+            f"  {old[:100]!r}\nin {rel}, found {found}. The file has moved on; "
+            "update the mutation."
+        )
+    path.write_text(text.replace(old, new), encoding="utf-8", newline="\n")
+
+
+# ---------------------------------------------------------------------------
+# Mutations run through the whole gate
+# ---------------------------------------------------------------------------
+
+def m1_wrong_expected_text() -> None:
+    _edit(RUNNER,
+          '"lm_math_fi_mult_add: generic g_add_sub = 2 is not a supported value"',
+          '"lm_math_fi_mult_add: generic g_add_sub = 2 is perfectly acceptable"')
+
+
+def m2_illegal_default() -> None:
+    _edit(TB_FORMAT,
+          "    g_overflow       : natural  := C_LM_WRAP;",
+          "    g_overflow       : natural  := 0;")
+
+
+def m3_widened_entity_generic() -> None:
+    _edit(SRC_DELAY,
+          "    g_data_w : positive := 1",
+          "    g_data_w : natural  := 1")
+
+
+def m4_mult_add_constants() -> None:
+    _edit(SRC_MULT_ADD,
+          "  constant C_MULT_INT_W   : integer := C_MULT_WIDTH - C_MULT_BINPNT;",
+          "  constant C_MULT_INT_W   : natural := C_MULT_WIDTH - C_MULT_BINPNT;")
+    _edit(SRC_MULT_ADD,
+          "  constant C_ADDEND_INT_W : integer := g_din_c_w - g_din_c_binpnt;",
+          "  constant C_ADDEND_INT_W : natural := g_din_c_w - g_din_c_binpnt;")
+
+
+def m5_unrelated_failure_named_after_the_generic() -> None:
+    """Widen the testbench boundary so the override is accepted there, decouple
+    it from the module so elaboration succeeds, and fail at 1 ns for a reason
+    that has nothing to do with the generic. Targets the phase check."""
+    _edit(TB_DELAY, "    g_data_w : positive := 4", "    g_data_w : natural  := 4")
+    _edit(TB_DELAY,
+          "generic map(g_delay => g_delay, g_data_w => g_data_w)",
+          "generic map(g_delay => g_delay, g_data_w => 4)")
+    _edit(TB_DELAY,
+          "  signal s_din  : std_logic_vector(g_data_w - 1 downto 0) := (others => '0');\n"
+          "  signal s_dout : std_logic_vector(g_data_w - 1 downto 0);",
+          "  signal s_din  : std_logic_vector(3 downto 0) := (others => '0');\n"
+          "  signal s_dout : std_logic_vector(3 downto 0);")
+    _edit(TB_DELAY, "  proc_guard : process",
+          "  proc_watchdog : process\n"
+          "  begin\n"
+          "    if g_data_w = 0 then\n"
+          "      wait for 1 ns;\n"
+          '      assert false report "an unrelated failure" severity failure;\n'
+          "    end if;\n"
+          "    wait;\n"
+          "  end process proc_watchdog;\n\n"
+          "  proc_guard : process")
+
+
+def m6_hand_edited_expectation() -> None:
+    path = ROOT / VECTORS
+    lines = path.read_text(encoding="utf-8").splitlines()
+    for index, line in enumerate(lines):
+        if line and not line.startswith("#"):
+            fields = line.split()
+            fields[-1] = str(int(fields[-1]) ^ 1)
+            lines[index] = " ".join(fields)
+            break
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+
+
+def m7_assertion_moves_to_a_sub_entity() -> None:
+    """Neuter lm_math_fi_add_sub's own g_round_mode assertion so the identical
+    check inside the lm_math_fi_format instance it contains fires instead.
+
+    The run still fails at time zero, still on an out-of-domain g_round_mode.
+    Only source-location attribution can see that the entity under test stopped
+    validating and a sub-entity picked up the slack. The assertion is left in
+    place with its message intact, so it is still locatable - the case fails
+    because the failure came from somewhere else, not because the target
+    vanished.
+    """
+    _edit(SRC_ADD_SUB,
+          "  assert f_lm_valid_round_mode(g_round_mode)\n"
+          "    report \"lm_math_fi_add_sub: generic g_round_mode = \"",
+          "  assert true  -- mutation: this entity no longer validates\n"
+          "    report \"lm_math_fi_add_sub: generic g_round_mode = \"")
+
+
+def m8_corrupt_one_reference() -> None:
+    """Corrupt saturation in reference B only. Both references must compute the
+    whole path, so this has to surface as a disagreement rather than as two
+    pipelines quietly sharing a broken helper."""
+    _edit(GEN,
+          "        if ovf == SATURATE:\n"
+          "            if value < low:\n"
+          "                return low\n"
+          "            if value > high:\n"
+          "                return high\n"
+          "            return value",
+          "        if ovf == SATURATE:\n"
+          "            if value < low:\n"
+          "                return low\n"
+          "            if value > high:\n"
+          "                return high - 1\n"
+          "            return value")
+
+
+def m9_duplicate_diagnostic_earlier_in_the_file() -> None:
+    """Review round 3: give an EARLIER assertion the diagnostic of a later one,
+    leaving the later one in place.
+
+    Attribution used to key each generic to the first assertion in the file that
+    named it, so the earlier copy won and the case was satisfied by a diagnostic
+    from a line that is not the assertion it targets. It passed, reporting the
+    wrong origin - and went on passing once the real assertion was neutered,
+    which is what made it a blocker rather than a cosmetic complaint.
+
+    Two assertions keyed on one generic is now an ambiguity the gate refuses to
+    resolve, because it cannot tell which of them a diagnostic came from.
+    """
+    _edit(SRC_MULT,
+          "  assert f_lm_valid_representation(g_din_a_type)",
+          "  assert f_lm_valid_representation(g_din_b_type)\n"
+          "    report \"lm_math_fi_mult: generic g_din_b_type = \"\n"
+          "         & integer'image(g_din_b_type)\n"
+          "         & \" is not a valid representation\"\n"
+          "    severity failure;\n"
+          "\n"
+          "  assert f_lm_valid_representation(g_din_a_type)")
+
+
+def m10_remove_a_subtype_case() -> None:
+    """Review round 4: delete the negative case for a pinned declaration.
+
+    The gate used to report a count of interface declarations verified while
+    exercising fewer of them, because nothing tied the two lists together.
+    Pinning proves what an entity SAYS; only a negative case proves the tool
+    enforces it. Removing a case must now fail the gate rather than quietly
+    shrink what it covers."""
+    _edit(RUNNER,
+          '    subtype_case("tb_neg_format", "g_pipe_stages", "-1",\n'
+          '                 "a negative pipeline depth is not a configuration"),\n',
+          "")
+
+
+def m11_reduced_generator_regenerated() -> None:
+    """Review round 5: reduce the generator so that C_LM_WRAP is emitted only
+    for even input values, then REGENERATE both committed files from it.
+
+    Every input value is still enumerated, every rounding and overflow mode
+    still appears in every geometry, every family is covered, the manifest is
+    exactly consistent with the rows, and --check passes because the file was
+    produced by the generator as it now stands. The old marginal requirements
+    - every value present, every mode present - were all satisfied by this.
+    Only the product is short: odd values never meet WRAP. The bench must
+    notice that per geometry, as a row count below the product of the domains,
+    and nothing earlier in the gate may fail."""
+    _edit(GEN,
+          "                        for ovf in ALL_OVFS:\n"
+          "                            expected = int(\n",
+          "                        for ovf in ALL_OVFS:\n"
+          "                            if ovf == WRAP and value % 2 == 1:\n"
+          "                                continue\n"
+          "                            expected = int(\n")
+    gen = subprocess.run([sys.executable, str(GENERATOR)], cwd=ROOT,
+                         capture_output=True, text=True)
+    if gen.returncode != 0:
+        raise RuntimeError("the reduced generator failed to regenerate:\n"
+                           + (gen.stdout or "") + (gen.stderr or ""))
+
+
+GATE_MUTATIONS = [
+    # Each entry lists the (check, reason) pairs that count as catching it. More
+    # than one is allowed only where the CHECK that notices legitimately differs
+    # between simulators; every pair names a check this gate runs and a reason
+    # this repository writes, never a phrase the simulator chose.
+    ("M1", "runner expects assertion text the library never emits",
+     m1_wrong_expected_text,
+     [("tb_neg_mult_add[g_add_sub=2]", "message no longer contains")]),
+    ("M2", "a negative testbench default is itself illegal",
+     m2_illegal_default,
+     [("tb_neg_format defaults", "at least one default is illegal")]),
+    ("M3", "an entity generic is widened back to natural",
+     m3_widened_entity_generic,
+     [("src/lm_math_fi_delay.vhd", "is declared 'natural', expected 'positive'")]),
+    # A constant whose subtype its value violates is noticed at a different
+    # point by different simulators - while analysing the source, while
+    # elaborating a design that uses it, or once that design runs. All three
+    # checks below are the gate's own, worded by the runner; which one notices
+    # is the simulator's business and not something this repository can pin.
+    ("M4", "the two mult_add bit-count constants go back to natural",
+     m4_mult_add_constants,
+     [("tb_legal_sweep", "simulation failed"),
+      ("tb_legal_sweep", "elaboration failed"),
+      ("source analysis failed", "lm_math_fi_mult_add.vhd")]),
+    ("M5", "review round 1: boundary widened, unrelated failure at 1 ns",
+     m5_unrelated_failure_named_after_the_generic,
+     [("tb_neg_delay[g_data_w=0]", "wrong phase")]),
+    ("M6", "one committed expectation is edited by hand",
+     m6_hand_edited_expectation,
+     [(GEN, "does not match the generator")]),
+    ("M7", "an entity stops validating and its sub-entity's assertion fires instead",
+     m7_assertion_moves_to_a_sub_entity,
+     [("tb_neg_add_sub[g_round_mode=42]", "not from the assertion this case targets")]),
+    ("M8", "saturation corrupted in one reference only",
+     m8_corrupt_one_reference,
+     [(GEN, "references disagree")]),
+    ("M9", "review round 3: an earlier assertion carries a later one's diagnostic",
+     m9_duplicate_diagnostic_earlier_in_the_file,
+     [("tb_neg_mult[g_din_b_type=0]", "are keyed on 'g_din_b_type'")]),
+    ("M10", "review round 4: a pinned declaration loses its negative case",
+     m10_remove_a_subtype_case,
+     [("interface declaration", "no subtype case on tb_neg_format exercises it")]),
+    # The committed files are regenerated from the reduced generator, so the
+    # provenance step passes and the bench is the only thing left to notice.
+    # Every dimension is still complete, so the bench must attribute the
+    # shortfall to the combinations and must not name any value as absent:
+    # this is the mutation that proves the product catches what the marginals
+    # could not.
+    ("M11", "review round 5: generator emits WRAP only for even inputs, files regenerated",
+     m11_reduced_generator_regenerated,
+     [("tb_quantize_vectors", "do not carry every combination")],
+     Judge(require=(COMBINATIONS_NOTE,),
+           forbid=(ABSENT_SIGNEDNESS, ABSENT_ROUNDING, ABSENT_OVERFLOW))),
+]
+
+
+def _gate_entry(entry):
+    """(tag, note, mutate, expectations, judge); the judge is optional."""
+    tag, note, mutate, expectations, *rest = entry
+    return tag, note, mutate, expectations, (rest[0] if rest else Judge(require=()))
+
+
+# ---------------------------------------------------------------------------
+# Vector-file mutations, handed straight to the bench
+# ---------------------------------------------------------------------------
+# Run through the whole gate these would be caught by the provenance step before
+# the bench ever saw them, so they go straight to the bench - which is the thing
+# whose coverage protection they test.
+
+def _split(text):
+    head = [l for l in text.splitlines() if l.startswith("#")]
+    rows = [l for l in text.splitlines() if l and not l.startswith("#")]
+    return head, rows
+
+
+def _remanifest(rows):
+    """Rebuild a manifest that is exactly consistent with the rows given, the way
+    a regenerated reduction would be."""
+    per = {}
+    order = []
+    for row in rows:
+        f = row.split()
+        key = (f[0], f[1], f[3], f[4])
+        if key not in per:
+            per[key] = 0
+            order.append(key)
+        per[key] += 1
+    head = [f"#! 0 {len(rows)}"]
+    for key in order:
+        head.append(f"#! 1 {key[0]} {key[1]} {key[2]} {key[3]} {per[key]}")
+    return head
+
+
+def v_truncate(text: str) -> str:
+    head, rows = _split(text)
+    return "\n".join(head + rows[:1]) + "\n"
+
+
+def v_drop_degenerate(text: str) -> str:
+    _head, rows = _split(text)
+    base = [r for r in rows if tuple(r.split()[i] for i in (0, 1, 3, 4)) == ("6", "2", "4", "1")]
+    dropped = len(rows) - len(base)
+    padded = base + [base[0]] * dropped
+    prose = [l for l in text.splitlines() if l.startswith("#") and not l.startswith("#!")]
+    manifest = [l for l in text.splitlines() if l.startswith("#!")]
+    return "\n".join(prose + manifest + padded) + "\n"
+
+
+def v_strip_manifest(text: str) -> str:
+    return "\n".join(l for l in text.splitlines() if not l.startswith("#!")) + "\n"
+
+
+def v_zero_input_only(text: str) -> str:
+    """Review round 2: regenerate enumerating only the zero input. Every geometry
+    is still declared and every per-geometry count still matches its rows."""
+    prose = [l for l in text.splitlines() if l.startswith("#") and not l.startswith("#!")]
+    _head, rows = _split(text)
+    kept = [r for r in rows if r.split()[8] == "0"]
+    return "\n".join(prose + _remanifest(kept) + kept) + "\n"
+
+
+def v_zero_input_padded(text: str) -> str:
+    """Review round 2: the same reduction, padded back to the original row count
+    per geometry, so the totals and per-geometry counts are untouched."""
+    prose = [l for l in text.splitlines() if l.startswith("#") and not l.startswith("#!")]
+    _head, rows = _split(text)
+    by_geom = {}
+    order = []
+    for row in rows:
+        f = row.split()
+        key = (f[0], f[1], f[3], f[4])
+        if key not in by_geom:
+            by_geom[key] = {"all": [], "zero": []}
+            order.append(key)
+        by_geom[key]["all"].append(row)
+        if f[8] == "0":
+            by_geom[key]["zero"].append(row)
+    out = []
+    for key in order:
+        zero = by_geom[key]["zero"]
+        want = len(by_geom[key]["all"])
+        padded = (zero * ((want // len(zero)) + 1))[:want]
+        out += padded
+    return "\n".join(prose + _remanifest(out) + out) + "\n"
+
+
+def _keep_where(text: str, field: int, value: str) -> str:
+    """Keep only the rows whose field matches, and rebuild a manifest that is
+    exactly consistent with what is left - a regenerated reduction, not a
+    damaged file. Every input value survives, so requirement 1 still passes."""
+    prose = [l for l in text.splitlines() if l.startswith("#") and not l.startswith("#!")]
+    _head, rows = _split(text)
+    kept = [r for r in rows if r.split()[field] == value]
+    return "\n".join(prose + _remanifest(kept) + kept) + "\n"
+
+
+def v_one_rounding_mode(text: str) -> str:
+    """Review round 3: the generator emits only C_LM_TRUNC_BITS. Every geometry
+    is declared, every count matches, every input value is enumerated and all
+    eight families are present - only eight of the nine rounding modes the
+    package defines have gone. The rows that remain are still in canonical
+    order, so this surfaces as a geometry short of the product."""
+    return _keep_where(text, 6, "0")
+
+
+def v_one_overflow_mode(text: str) -> str:
+    """The same reduction over overflow: only C_LM_SATURATE survives."""
+    return _keep_where(text, 7, "1")
+
+
+def _first_geometry_rows(text: str):
+    """The prose, the manifest and the data rows, with the index range of the
+    first geometry's rows in the data list."""
+    prose = [l for l in text.splitlines() if l.startswith("#") and not l.startswith("#!")]
+    manifest = [l for l in text.splitlines() if l.startswith("#!")]
+    _head, rows = _split(text)
+    key = tuple(rows[0].split()[i] for i in (0, 1, 3, 4))
+    end = 0
+    while end < len(rows) and tuple(rows[end].split()[i] for i in (0, 1, 3, 4)) == key:
+        end += 1
+    return prose, manifest, rows, end
+
+
+def v_swap_two_rows(text: str) -> str:
+    """Review round 5: two adjacent rows of one geometry exchanged. Every
+    combination is still present exactly once, every count matches, every value
+    is enumerated. The bench requires the canonical order, so the second of the
+    two is reported as not following its predecessor."""
+    prose, manifest, rows, _end = _first_geometry_rows(text)
+    rows[0], rows[1] = rows[1], rows[0]
+    return "\n".join(prose + manifest + rows) + "\n"
+
+
+def v_repeat_a_row(text: str) -> str:
+    """Review round 5: the last row of the first geometry is replaced by a copy
+    of the row before it. The row count, the manifest, every input value, every
+    mode and every family are untouched; one combination now appears twice and
+    one not at all. A count alone cannot see this; the strict order can."""
+    prose, manifest, rows, end = _first_geometry_rows(text)
+    rows[end - 1] = rows[end - 2]
+    return "\n".join(prose + manifest + rows) + "\n"
+
+
+def v_out_of_domain_values(text: str) -> str:
+    """Review round 4: satisfy the distinct-value count with values that are not
+    inputs to the source format.
+
+    Keep only each geometry's zero-input rows and replicate that block
+    2**old_width times, relabelling the value 0, 2**ow, 2*2**ow, ... Every one
+    of those truncates back to 0, so the expectation already on the row is still
+    the right answer and nothing mismatches - but the bench used to index its
+    distinct-value tracking with the raw value, so it counted 2**ow distinct
+    inputs while exercising exactly one. Row counts, the manifest, the families
+    and every mode are untouched."""
+    prose = [l for l in text.splitlines() if l.startswith("#") and not l.startswith("#!")]
+    manifest = [l for l in text.splitlines() if l.startswith("#!")]
+    _head, rows = _split(text)
+    by_geom, order = {}, []
+    for row in rows:
+        f = row.split()
+        key = (f[0], f[1], f[3], f[4])
+        if key not in by_geom:
+            by_geom[key] = []
+            order.append(key)
+        by_geom[key].append(f)
+    out = []
+    for key in order:
+        span = 1 << int(key[0])
+        zero = [f for f in by_geom[key] if f[8] == "0"]
+        for k in range(span):
+            for f in zero:
+                g = list(f)
+                g[8] = str(k * span)
+                out.append(" ".join(g))
+    return "\n".join(prose + manifest + out) + "\n"
+
+
+VECTOR_MUTATIONS = [
+    ("V1", "vector file truncated to a single data row", v_truncate,
+     Judge(require=("the vector file has been truncated or padded",))),
+    ("V2", "every degenerate-format vector dropped, total padded back",
+     v_drop_degenerate,
+     Judge(require=("do not carry the number of rows the manifest declares",))),
+    ("V3", "the manifest directives are removed", v_strip_manifest,
+     Judge(require=("missing its manifest",))),
+    ("V4", "review round 2: regenerated enumerating only the zero input",
+     v_zero_input_only,
+     Judge(require=("do not enumerate their whole input space",))),
+    ("V5", "review round 2: zero input padded back to the original row counts",
+     v_zero_input_padded,
+     Judge(require=("do not enumerate their whole input space",))),
+    # V6 and V7 fail the same product check as M11. What tells them apart is
+    # the attribution: each must name the dimension it emptied, and nothing
+    # else - not the other dimension, and not the combinations note.
+    ("V6", "review round 3: regenerated with only one rounding mode",
+     v_one_rounding_mode,
+     Judge(require=("do not carry every combination", ABSENT_ROUNDING),
+           forbid=(ABSENT_SIGNEDNESS, ABSENT_OVERFLOW, COMBINATIONS_NOTE))),
+    ("V7", "review round 3: regenerated with only one overflow mode",
+     v_one_overflow_mode,
+     Judge(require=("do not carry every combination", ABSENT_OVERFLOW),
+           forbid=(ABSENT_SIGNEDNESS, ABSENT_ROUNDING, COMBINATIONS_NOTE))),
+    ("V8", "review round 4: distinct-value count met with out-of-domain values",
+     v_out_of_domain_values,
+     Judge(require=("is outside the domain of a",))),
+    ("V9", "review round 5: two adjacent rows of one geometry exchanged",
+     v_swap_two_rows,
+     Judge(require=("does not follow its predecessor",))),
+    ("V10", "review round 5: a row repeated in place of its successor, counts intact",
+     v_repeat_a_row,
+     Judge(require=("does not follow its predecessor",))),
+]
+
+# The mutations that fail the same check and are told apart only by what the
+# check says about them. Each one's judge is fed every one of these outputs.
+CROSS_JUDGED = ["V6", "V7", "M11"]
+
+
+# ---------------------------------------------------------------------------
+
+def tree_is_clean() -> bool:
+    out = subprocess.run(["git", "status", "--porcelain"], cwd=ROOT,
+                         capture_output=True, text=True).stdout.strip()
+    return out == ""
+
+
+def restore() -> None:
+    subprocess.run(["git", "checkout", "--"] + TOUCHED, cwd=ROOT,
+                   capture_output=True, text=True)
+
+
+def run_gate() -> tuple[int, str]:
+    r = subprocess.run([sys.executable, str(GATE)], cwd=ROOT,
+                       capture_output=True, text=True)
+    return r.returncode, (r.stdout or "") + (r.stderr or "")
+
+
+def run_vector_bench(ghdl: str, vector_path: Path) -> tuple[int, str]:
+    r = subprocess.run(
+        [ghdl, "-r", "--std=08", "--work=lm_math_fi_lib", f"--workdir={WORKDIR}",
+         f"-P{WORKDIR}", "tb_quantize_vectors",
+         f"-gg_vector_file={vector_path.name}",
+         "--assert-level=error", "--stop-time=1us"],
+        cwd=WORKDIR, capture_output=True, text=True,
+    )
+    return r.returncode, (r.stdout or "") + (r.stderr or "")
+
+
+def infrastructure_problem(output: str) -> str | None:
+    for sign in INFRASTRUCTURE_SIGNS:
+        if sign in output:
+            return sign
+    return None
+
+
+def notes_problem(out: str, judge: Judge) -> str | None:
+    """None when the output says everything the judge requires and nothing it
+    forbids; otherwise why it does not."""
+    lines = out.splitlines()
+    for pattern in judge.require:
+        if not any(re.search(pattern, line) for line in lines):
+            return f"the output never says {pattern!r}"
+    for pattern in judge.forbid:
+        hit = next((line for line in lines if re.search(pattern, line)), None)
+        if hit is not None:
+            return (f"the output says {pattern!r}, which this mutation must not"
+                    f" provoke: {hit.strip()[:160]}")
+    return None
+
+
+def judge_gate(rc: int, out: str, expectations: list[tuple[str, str]],
+               judge: Judge = Judge(require=())):
+    """Caught, not caught, or the harness itself fell over."""
+    sign = infrastructure_problem(out)
+    if sign is not None:
+        return "INFRA", f"the gate did not run cleanly ({sign!r})"
+    if rc == 0:
+        return "MISSED", "the gate passed; the mutation went undetected"
+    # The failing line has to be one of the checks this mutation targets, and
+    # it has to say what the mutation declares for that check.
+    for expect_test, expect_reason in expectations:
+        for line in out.splitlines():
+            if expect_test in line and expect_reason in line:
+                problem = notes_problem(out, judge)
+                if problem is not None:
+                    return "WRONG", (f"{expect_test} failed with {expect_reason!r},"
+                                     f" but {problem}")
+                return "CAUGHT", line.strip()
+    for expect_test, expect_reason in expectations:
+        for line in out.splitlines():
+            if expect_test in line and line.strip().startswith(("FAIL", "-")):
+                return "WRONG", (f"{expect_test} failed, but not with "
+                                 f"{expect_reason!r}: {line.strip()[:300]}")
+    # Nothing matched. Show what the gate did say, so a mismatch is diagnosable
+    # from a CI log without another round trip.
+    said = [l.strip() for l in out.splitlines()
+            if l.strip().startswith(("FAIL", "- ")) or "error:" in l][:6]
+    wanted = " or ".join(f"{t} / {r!r}" for t, r in expectations)
+    if said:
+        return "WRONG", ("none of the expected checks failed: wanted " + wanted
+                         + ". The gate reported: " + " | ".join(said))
+    return "WRONG", ("none of the expected checks failed: wanted " + wanted
+                     + ", and the gate reported nothing recognisable")
+
+
+def judge_bench(rc: int, out: str, judge: Judge):
+    sign = infrastructure_problem(out)
+    if sign is not None:
+        return "INFRA", f"the bench did not run cleanly ({sign!r})"
+    if rc == 0:
+        return "MISSED", "the bench passed; the mutation went undetected"
+    problem = notes_problem(out, judge)
+    if problem is not None:
+        return "WRONG", f"the bench failed, but {problem}"
+    first = next(line for line in out.splitlines() if re.search(judge.require[0], line))
+    return "CAUGHT", first.strip()[:170]
+
+
+def cross_judge(captured: dict) -> bool:
+    """Feed every cross-judged mutation's output to every cross-judged judge.
+
+    `captured` maps a tag to (rc, output, judge_fn). The diagonal must be
+    CAUGHT; every other cell must not be, or the judge is loose enough to be
+    satisfied by a different mutation. Prints the matrix and returns whether
+    it is as it must be."""
+    tags = [t for t in CROSS_JUDGED if t in captured]
+    print("=" * 78)
+    print("Cross-judge: each output against each judge (diagonal CAUGHT, rest not)")
+    print("=" * 78)
+    print(f"  {'output \\ judge':16s}" + "".join(f"{t:12s}" for t in tags))
+    ok = True
+    for out_tag in tags:
+        rc, out, _own = captured[out_tag]
+        cells = []
+        for judge_tag in tags:
+            verdict, _detail = captured[judge_tag][2](rc, out)
+            as_it_must = (verdict == "CAUGHT") == (out_tag == judge_tag)
+            ok = ok and as_it_must
+            cells.append(f"{verdict:12s}" if as_it_must else f"{verdict + '!':12s}")
+        print(f"  {out_tag:16s}" + "".join(cells))
+    print("  ok: no judge accepts another mutation's output" if ok else
+          "  FAIL: a cell marked '!' is not what it must be - a judge is too loose"
+          " or a mutation is no longer told apart")
+    return ok
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--list", action="store_true", help="Name the mutations and exit.")
+    parser.add_argument("--ghdl", default="ghdl", help="GHDL executable")
+    args = parser.parse_args()
+
+    if args.list:
+        for entry in GATE_MUTATIONS:
+            tag, note, _fn, expectations, judge = _gate_entry(entry)
+            pairs = "; or ".join(f"{t} must report {r!r}" for t, r in expectations)
+            print(f"  {tag}  {note}\n        {pairs}")
+            if judge.require:
+                print(f"        and the output must {judge.describe()}")
+        for tag, note, _fn, judge in VECTOR_MUTATIONS:
+            print(f"  {tag}  {note}\n        tb_quantize_vectors must {judge.describe()}")
+        print(f"  cross-judged against each other: {', '.join(CROSS_JUDGED)}")
+        return 0
+
+    if not tree_is_clean():
+        print("error: the working tree has uncommitted changes. This script edits "
+              "tracked files and restores them with 'git checkout --', which would "
+              "discard your work. Commit or stash first.", file=sys.stderr)
+        return 2
+
+    started = time.monotonic()
+    results = []
+    captured: dict = {}
+
+    print("=" * 78)
+    print("Baseline: the gate must pass before anything is broken")
+    print("=" * 78)
+    rc, out = run_gate()
+    if rc != 0:
+        print("error: the gate does not pass on an unmodified tree; fix that first",
+              file=sys.stderr)
+        print(out[-2000:], file=sys.stderr)
+        return 1
+    baseline = time.monotonic() - started
+    print(f"  ok: gate passes ({baseline:.0f}s)")
+
+    for entry in GATE_MUTATIONS:
+        tag, note, mutate, expectations, judge = _gate_entry(entry)
+        print("=" * 78)
+        print(f"{tag}: {note}")
+        print("=" * 78)
+        try:
+            mutate()
+            rc, out = run_gate()
+        finally:
+            restore()
+        verdict, detail = judge_gate(rc, out, expectations, judge)
+        results.append((tag, verdict, detail))
+        captured[tag] = (rc, out, lambda rc, out, e=expectations, j=judge:
+                         judge_gate(rc, out, e, j))
+        print(f"  {verdict:6s} {detail[:600]}")
+
+    BUILD.mkdir(parents=True, exist_ok=True)
+    original = (ROOT / VECTORS).read_text(encoding="utf-8")
+    for tag, note, transform, judge in VECTOR_MUTATIONS:
+        print("=" * 78)
+        print(f"{tag}: {note}")
+        print("=" * 78)
+        mutated = WORKDIR / f"mutated_{tag}.txt"
+        mutated.write_text(transform(original), encoding="utf-8", newline="\n")
+        rc, out = run_vector_bench(args.ghdl, mutated)
+        shutil.copyfile(mutated, BUILD / mutated.name)
+        mutated.unlink(missing_ok=True)
+        verdict, detail = judge_bench(rc, out, judge)
+        results.append((tag, verdict, detail))
+        captured[tag] = (rc, out, lambda rc, out, j=judge: judge_bench(rc, out, j))
+        print(f"  {verdict:6s} {detail[:600]}")
+
+    cross_ok = cross_judge(captured)
+
+    elapsed = time.monotonic() - started
+    print("=" * 78)
+    for tag, verdict, detail in results:
+        print(f"  {verdict:6s} {tag}: {detail[:200]}")
+    caught = [r for r in results if r[1] == "CAUGHT"]
+    infra = [r for r in results if r[1] == "INFRA"]
+    print()
+    print(f"{len(caught)} of {len(results)} mutations caught, "
+          f"{len(infra)} infrastructure failures, cross-judge "
+          f"{'ok' if cross_ok else 'FAILED'}, in {elapsed:.0f}s "
+          f"(baseline gate run {baseline:.0f}s of that)")
+    if not tree_is_clean():
+        print("error: the working tree is not clean after restoring; check "
+              "'git status'", file=sys.stderr)
+        return 1
+    return 0 if len(caught) == len(results) and cross_ok else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

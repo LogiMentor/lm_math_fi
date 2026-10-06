@@ -11,7 +11,7 @@ use ieee.std_logic_1164.all;
 entity lm_math_fi_delay is
   generic(
     g_delay  : natural := 1;
-    g_data_w : natural := 1
+    g_data_w : positive := 1
     );
   port(
     clk_i  : in  std_logic;

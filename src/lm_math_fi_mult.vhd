@@ -13,19 +13,19 @@ use lm_math_fi_lib.lm_math_fi_pkg.all;
 
 entity lm_math_fi_mult is
   generic(
-    g_din_a_w      : natural   := 24;   -- Input A width
+    g_din_a_w      : positive   := 24;   -- Input A width
     g_din_a_binpnt : natural   := 0;    -- Input A binary point
-    g_din_b_w      : natural   := 24;   -- Input B width
+    g_din_b_w      : positive   := 24;   -- Input B width
     g_din_b_binpnt : natural   := 0;    -- Input B binary point
-    g_dout_w       : natural   := 48;   -- Output width
+    g_dout_w       : positive   := 48;   -- Output width
     g_dout_binpnt  : natural   := 0;    -- Output binary point
-    g_round_mode   : integer   := C_LM_TRUNC_BITS;   -- Output rounding mode
-    g_din_a_type   : integer   := C_LM_SIGNED;  -- Input A representation
-    g_din_b_type   : integer   := C_LM_SIGNED;  -- Input B representation
-    g_dout_type    : integer   := C_LM_SIGNED;  -- Output representation
+    g_round_mode   : natural   := C_LM_TRUNC_BITS;   -- Output rounding mode
+    g_din_a_type   : natural   := C_LM_SIGNED;  -- Input A representation
+    g_din_b_type   : natural   := C_LM_SIGNED;  -- Input B representation
+    g_dout_type    : natural   := C_LM_SIGNED;  -- Output representation
     g_overflow     : natural   := C_LM_WRAP;    -- Overflow style: C_LM_SATURATE or C_LM_WRAP
     -- Extra stages after the product register; total latency is g_pipe_stages + 1 clocks
-    g_pipe_stages  : integer   := 3
+    g_pipe_stages  : natural   := 3
     );
   port(
     clk_i  : in  std_logic;             -- Clock
@@ -48,6 +48,47 @@ architecture a_rtl of lm_math_fi_mult is
   signal s_prod_type     : integer range C_LM_UNSIGNED to C_LM_SIGNED;
 
 begin
+
+  -----------------------------------------------------------------------------
+  -- Generic-domain checks
+  --
+  -- Every condition below depends on generics only, so each is decided once
+  -- when the instance starts and never re-evaluated on a clock edge. A failure
+  -- here means the generic map is wrong, not that the data was wrong.
+  --
+  -- g_pipe_stages and the width generics are not checked here: their domains are
+  -- contiguous numeric bounds carried by the generics' own subtypes, so an
+  -- out-of-domain value is rejected before this point.
+  -----------------------------------------------------------------------------
+  assert f_lm_valid_representation(g_din_a_type)
+    report "lm_math_fi_mult: generic g_din_a_type = " & integer'image(g_din_a_type)
+         & " is not a supported value."
+         & " Set g_din_a_type to " & f_lm_representation_values & "."
+    severity failure;
+
+  assert f_lm_valid_representation(g_din_b_type)
+    report "lm_math_fi_mult: generic g_din_b_type = " & integer'image(g_din_b_type)
+         & " is not a supported value."
+         & " Set g_din_b_type to " & f_lm_representation_values & "."
+    severity failure;
+
+  assert f_lm_valid_representation(g_dout_type)
+    report "lm_math_fi_mult: generic g_dout_type = " & integer'image(g_dout_type)
+         & " is not a supported value."
+         & " Set g_dout_type to " & f_lm_representation_values & "."
+    severity failure;
+
+  assert f_lm_valid_round_mode(g_round_mode)
+    report "lm_math_fi_mult: generic g_round_mode = " & integer'image(g_round_mode)
+         & " is not a supported value."
+         & " Set g_round_mode to one of " & f_lm_round_mode_values & "."
+    severity failure;
+
+  assert f_lm_valid_overflow(g_overflow)
+    report "lm_math_fi_mult: generic g_overflow = " & integer'image(g_overflow)
+         & " is not a supported value."
+         & " Set g_overflow to " & f_lm_overflow_values & "."
+    severity failure;
 
   s_prod_type <= C_LM_UNSIGNED when (g_din_a_type = C_LM_UNSIGNED and g_din_b_type = C_LM_UNSIGNED)
                  else C_LM_SIGNED;

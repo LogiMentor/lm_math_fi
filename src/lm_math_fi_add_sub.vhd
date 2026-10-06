@@ -13,23 +13,23 @@ use lm_math_fi_lib.lm_math_fi_pkg.all;
 entity lm_math_fi_add_sub is
   generic(
     -- C_LM_ADD, C_LM_SUB, or C_LM_ADDSUB with sel_add_i
-    g_direction       : integer   := C_LM_ADD;
+    g_direction       : natural   := C_LM_ADD;
     -- Numeric representation
     g_representation  : natural   := C_LM_SIGNED;
-    -- Optional input register stage
-    g_pipeline_input  : natural   := 0;
+    -- Optional input register stage: 0 for none, 1 for one stage
+    g_pipeline_input  : natural range 0 to 1 := 0;
     -- Number of output register stages
     g_pipeline_output : natural   := 1;
     -- Input 1 width
-    g_din1_w          : natural   := 8;
+    g_din1_w          : positive   := 8;
     -- Input 1 binary point
     g_din1_binpnt     : natural   := 2;
     -- Input 2 width
-    g_din2_w          : natural   := 8;
+    g_din2_w          : positive   := 8;
     -- Input 2 binary point
     g_din2_binpnt     : natural   := 2;
     -- Output width
-    g_dout_w          : natural   := 9;
+    g_dout_w          : positive   := 9;
     -- Output binary point
     g_dout_binpnt     : natural   := 2;
     -- Output rounding mode
@@ -69,6 +69,37 @@ architecture a_rtl of lm_math_fi_add_sub is
   signal s_result_tmp   : std_logic_vector(C_RES_W - 1 downto 0);
 
 begin
+
+  -----------------------------------------------------------------------------
+  -- Generic-domain checks
+  --
+  -- Every condition below depends on generics only, so each is decided once
+  -- when the instance starts and never re-evaluated on a clock edge. A failure
+  -- here means the generic map is wrong, not that the data was wrong.
+  --
+  -- g_pipeline_input and the width generics are not checked here: their domains
+  -- are contiguous numeric bounds carried by the generics' own subtypes, so an
+  -- out-of-domain value is rejected before this point.
+  -----------------------------------------------------------------------------
+  assert g_direction = C_LM_ADD or g_direction = C_LM_SUB or g_direction = C_LM_ADDSUB
+    report "lm_math_fi_add_sub: generic g_direction = " & integer'image(g_direction)
+         & " is not a supported value."
+         & " Set g_direction to C_LM_ADD (" & integer'image(C_LM_ADD) & ") for a fixed add,"
+         & " C_LM_SUB (" & integer'image(C_LM_SUB) & ") for a fixed subtract, or"
+         & " C_LM_ADDSUB (" & integer'image(C_LM_ADDSUB) & ") to select at run time with sel_add_i."
+    severity failure;
+
+  assert f_lm_valid_representation(g_representation)
+    report "lm_math_fi_add_sub: generic g_representation = " & integer'image(g_representation)
+         & " is not a supported value."
+         & " Set g_representation to " & f_lm_representation_values & "."
+    severity failure;
+
+  assert f_lm_valid_round_mode(g_round_mode)
+    report "lm_math_fi_add_sub: generic g_round_mode = " & integer'image(g_round_mode)
+         & " is not a supported value."
+         & " Set g_round_mode to one of " & f_lm_round_mode_values & "."
+    severity failure;
 
   s_in_add <= '1' when g_direction = C_LM_ADD or (g_direction = C_LM_ADDSUB and sel_add_i = '1') else '0';
 
