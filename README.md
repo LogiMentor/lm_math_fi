@@ -12,6 +12,111 @@ All synthesizable sources compile into `lm_math_fi_lib`. Verification
 testbenches are self-checking: each bench reports `TEST PASSED` on success and
 raises `severity failure` on mismatch.
 
+## Quick Start From A Q Format
+
+`lm_math_fi` is a synthesizable VHDL-2008 fixed-point library whose generics and
+ports use only standard types, released under the Apache-2.0 license.
+
+### From A Q Format To Generics
+
+The [fixed-point calculator](https://logimentor.com/tools/fixed-point) writes
+`Qm.n` with the sign bit counted in `m`, and `UQm.n` for unsigned, so the width
+is `m + n` and the binary point is `n`. Its fields map to generics as follows:
+
+| Calculator | Generic | Names |
+|---|---|---|
+| Width | width | `g_din_w`, `g_dout_w` (`lm_math_fi_format`); `g_din1_w`, `g_din2_w`, `g_dout_w` (`lm_math_fi_add_sub`); `g_din_a_w`, `g_din_b_w`, `g_dout_w` (`lm_math_fi_mult`); `g_din_a_w`, `g_din_b_w`, `g_din_c_w`, `g_dout_w` (`lm_math_fi_mult_add`) |
+| Frac | binary point | the same names with `_binpnt` in place of `_w`, for example `g_din_binpnt` |
+| Signed | representation | `g_representation`, or `g_din_a_type`, `g_din_b_type` and `g_dout_type` on `lm_math_fi_mult`: `C_LM_SIGNED` when checked, `C_LM_UNSIGNED` when not |
+
+| Calculator format | Width generic | Binary-point generic | Representation |
+|---|---:|---:|---|
+| `Q4.12` | 16 | 12 | `C_LM_SIGNED` |
+| `Q1.15` | 16 | 15 | `C_LM_SIGNED` |
+| `UQ0.8` | 8 | 8 | `C_LM_UNSIGNED` |
+
+The calculator offers the rounding and overflow keys of the reference model in
+`model/lm_math_fi_model`, which `docs/USER_GUIDE.md` describes as using the same
+vocabulary as the VHDL generics. The table pairs each option with the constant
+of the same name in `src/lm_math_fi_pkg.vhd`; `bit_trunc` and the `nearest_*`
+options are the model's other spellings of the mode they share a row with.
+
+| Calculator option | VHDL constant | Note |
+|---|---|---|
+| `trunc_bits`, `bit_trunc` | `C_LM_TRUNC_BITS` | |
+| `trunc` | `C_LM_TRUNC` | alias of `C_LM_TRUNC_BITS` |
+| `trunc_zero` | `C_LM_TRUNC_ZERO` | |
+| `fix` | none | no VHDL constant |
+| `floor` | `C_LM_FLOOR` | |
+| `ceil` | `C_LM_CEIL` | |
+| `round_even`, `nearest_even` | `C_LM_ROUND_EVEN` | |
+| `round` | `C_LM_ROUND` | alias of `C_LM_ROUND_EVEN` |
+| none | `C_LM_ROUND_NEAREST` | alias of `C_LM_ROUND_EVEN`; no calculator option |
+| `round_pos_inf`, `nearest_posinf` | `C_LM_ROUND_POS_INF` | |
+| `round_neg_inf`, `nearest_neginf` | `C_LM_ROUND_NEG_INF` | |
+| `round_zero`, `nearest_zero` | `C_LM_ROUND_ZERO` | |
+| `round_away`, `nearest_away` | `C_LM_ROUND_AWAY` | |
+| `round_inf` | `C_LM_ROUND_INF` | alias of `C_LM_ROUND_AWAY` |
+| `wrap` (Overflow) | `C_LM_WRAP` | |
+| `saturate` (Overflow) | `C_LM_SATURATE` | |
+
+The RTL and the calculator share the `Qm.n` convention and these mode names; no
+check in this repository compares their results.
+
+`lm_math_fi_add_sub` has no overflow generic; see Known limitations in
+[CHANGELOG.md](CHANGELOG.md).
+
+### Minimal Instantiation
+
+Convert `Q4.12` signed to `Q2.6` signed, rounding to nearest and saturating:
+
+```vhdl
+library lm_math_fi_lib;
+use lm_math_fi_lib.lm_math_fi_pkg.all;
+
+-- In the architecture body:
+
+-- Q4.12 signed (16 bits) -> Q2.6 signed (8 bits),
+-- round to nearest (ties to even), saturate on overflow.
+-- Latency: g_pipe_stages clock cycles (1 here); 0 makes it combinational.
+u_q4_12_to_q2_6 : entity lm_math_fi_lib.lm_math_fi_format
+  generic map(
+    g_din_w          => 16,               -- Q4.12: width = 4 + 12
+    g_din_binpnt     => 12,
+    g_dout_w         => 8,                -- Q2.6: width = 2 + 6
+    g_dout_binpnt    => 6,
+    g_pipe_stages    => 1,
+    g_round_mode     => C_LM_ROUND_EVEN,  -- calculator: round_even or round
+    g_overflow       => C_LM_SATURATE,    -- calculator: saturate
+    g_representation => C_LM_SIGNED       -- applies to din_i and dout_o
+    )
+  port map(
+    clk_i  => clk,
+    ce_i   => '1',
+    din_i  => q4_12_data,                 -- std_logic_vector(15 downto 0)
+    dout_o => q2_6_data                   -- std_logic_vector(7 downto 0)
+    );
+```
+
+### Adding It To A Project
+
+Compile the files in `src/` as VHDL-2008 into a library named `lm_math_fi_lib`,
+in the order `scripts/run_ghdl_tests.py` and `sim/questasim/compile_lib.do` use:
+
+1. `src/lm_math_fi_pkg.vhd`
+2. `src/lm_math_fi_delay.vhd`
+3. `src/lm_math_fi_format.vhd`
+4. `src/lm_math_fi_add_sub.vhd`
+5. `src/lm_math_fi_mult.vhd`
+6. `src/lm_math_fi_mult_add.vhd`
+
+Try formats and modes first in the
+[fixed-point calculator](https://logimentor.com/tools/fixed-point).
+
+For integration and verification details, see
+[docs/USER_GUIDE.md](docs/USER_GUIDE.md) and
+[docs/VERIFICATION.md](docs/VERIFICATION.md).
+
 ## Repository Layout
 
 ```text
