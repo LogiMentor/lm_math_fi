@@ -141,13 +141,17 @@ included in this entry.
   compute the same values: `C_RES_BINPNT` is the larger of the two input binary
   points, and `C_RES_W` is the larger of the two inputs' integer-bit counts
   (width minus binary point) plus `C_RES_BINPNT` plus 1.
-- The workaround does not cover an unsigned subtraction whose result is
-  negative. That result already wraps within the full-precision format, as
-  `sim/tb/tb_lm_math_fi_add_sub.vhd` asserts, so saturating it afterwards gives
-  the largest unsigned value rather than zero.
+- The workaround does not recover an unsigned subtraction whose mathematical
+  result is negative. That result has already wrapped within the full-precision
+  format, as `sim/tb/tb_lm_math_fi_add_sub.vhd` asserts, so downstream
+  saturation passes the wrapped value through when it fits the output format
+  and clamps it to the largest unsigned value when it does not; in neither case
+  is the result zero.
 - `lm_math_fi_mult_add` with `g_representation => C_LM_UNSIGNED` and
   `g_add_sub => C_LM_SUB` behaves the same way: a negative difference wraps in
   the internal accumulator before `g_overflow` is applied, so `C_LM_SATURATE`
-  gives the largest unsigned value rather than zero.
+  passes the wrapped value through when it fits the output format and clamps it
+  to the largest unsigned value when it does not; in neither case is the result
+  zero.
 
 [0.1.0]: https://github.com/LogiMentor/lm_math_fi/releases/tag/v0.1.0
