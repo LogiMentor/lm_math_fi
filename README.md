@@ -38,15 +38,17 @@ is `m + n` and the binary point is `n`. Its fields map to generics as follows:
 The calculator offers the rounding and overflow keys of the reference model in
 `model/lm_math_fi_model`, which `docs/USER_GUIDE.md` describes as using the same
 vocabulary as the VHDL generics. The table pairs each option with the constant
-of the same name in `src/lm_math_fi_pkg.vhd`; `bit_trunc` and the `nearest_*`
-options are the model's other spellings of the mode they share a row with.
+of the same name in `src/lm_math_fi_pkg.vhd`, except `fix`, which it pairs by
+the toward-zero rounding both implementations show; `bit_trunc` and the
+`nearest_*` options are the model's other spellings of the mode they share a
+row with.
 
 | Calculator option | VHDL constant | Note |
 |---|---|---|
 | `trunc_bits`, `bit_trunc` | `C_LM_TRUNC_BITS` | |
 | `trunc` | `C_LM_TRUNC` | alias of `C_LM_TRUNC_BITS` |
 | `trunc_zero` | `C_LM_TRUNC_ZERO` | |
-| `fix` | none | no VHDL constant |
+| `fix` | `C_LM_TRUNC_ZERO` | no constant of this name; the reference model rounds it toward zero, as `C_LM_TRUNC_ZERO` does |
 | `floor` | `C_LM_FLOOR` | |
 | `ceil` | `C_LM_CEIL` | |
 | `round_even`, `nearest_even` | `C_LM_ROUND_EVEN` | |
